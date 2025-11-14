@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->nullable();
-            $table->integer('role_id');
-            $table->integer('is_active')->default(1);
+        Schema::create('uoms', function (Blueprint $table) {
+            $table->id();
+            $table->string('uom_name');
+            $table->string('uom_unit');
+            $table->timestamps();
             $table->softDeletes();
         });
     }
@@ -24,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('uoms');
     }
 };

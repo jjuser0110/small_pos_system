@@ -81,13 +81,64 @@ $currentRoute = request()->route()->getName();
                 </li>
             </ul>
         </li>
-
-        <li class="menu-item">
-            <a href="{{ route('bank.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-grid"></i>
-                <div>Bank</div>
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text" data-i18n="Company Setting">Company Setting</span>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">
+            <a href="{{ route('batch.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Stock Batches</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'product.index') ? 'active' : ''}}">
+            <a href="{{ route('product.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Product</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'category.index') ? 'active' : ''}}">
+            <a href="{{ route('category.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Category</div>
+            </a>
+        </li>
+        @if(auth()->user()->role_id != 5 )
+        <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
+            <a href="{{ route('company_staff.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Company Staff</div>
+            </a>
+        </li>
+        @endif
+        @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2)
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text" data-i18n="Master Setting">Master Setting</span>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'company_manager.index') ? 'active' : ''}}">
+            <a href="{{ route('company_manager.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Company Manager</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'company.index') ? 'active' : ''}}">
+            <a href="{{ route('company.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Company</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'branch.index') ? 'active' : ''}}">
+            <a href="{{ route('branch.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Branch</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'uom.index') ? 'active' : ''}}">
+            <a href="{{ route('uom.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>UOM</div>
+            </a>
+        </li>
+        @endif
     </ul>
 </aside>
 <!-- end: sidebar -->

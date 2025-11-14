@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->nullable();
-            $table->integer('role_id');
-            $table->integer('is_active')->default(1);
-            $table->softDeletes();
+            $table->integer('branch_id')->nullable();
+            $table->integer('company_id')->nullable();
         });
     }
 

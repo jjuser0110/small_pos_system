@@ -11,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->nullable();
-            $table->integer('role_id');
-            $table->integer('is_active')->default(1);
+        Schema::create('categories', function (Blueprint $table) {
+            $table->id();
+            $table->integer('branch_id');
+            $table->integer('company_id');
+            $table->string('category_name');
+            $table->integer('arrangement')->nullable();
+            $table->timestamps();
             $table->softDeletes();
         });
     }
@@ -24,8 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('categories');
     }
 };

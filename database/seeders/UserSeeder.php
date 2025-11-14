@@ -32,13 +32,13 @@ class UserSeeder extends Seeder
         $bouncerRole = $user->getRoles()->first();
         Bouncer::allow($bouncerRole)->to($abilities);
 
-        $user = User::where('username','system')->first();
-        $role = Bouncer::role()->where('name','superadmin')->first();
+        $user = User::where('username','admin')->first();
+        $role = Bouncer::role()->where('name','admin')->first();
         if(!isset($user)){
             $data = [
-                'name'     => 'System Admin',
-                'username'     => 'system',
-                'email'     => 'system@gmail.com',
+                'name'     => 'Admin',
+                'username'     => 'admin',
+                'email'     => 'admin@gmail.com',
                 'password'     => Hash::make('admin99999'),
                 'role_id'     => $role->id,
                 'is_active'     => 1,
