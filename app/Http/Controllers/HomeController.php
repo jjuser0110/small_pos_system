@@ -9,6 +9,9 @@ use App\Models\Package;
 use App\Models\PackageInvoice;
 use App\Models\BankAccount;
 use App\Models\DailyReport;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\PaymentMethod;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -58,5 +61,32 @@ class HomeController extends Controller
         ]);
 
         return redirect()->route('home')->withSuccess('Password changed successfully.');
+    }
+
+    public function counter(Request $request)
+    {
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $category = Category::where('branch_id',$login_user->branch_id)->get();
+            $products = Product::where('branch_id',$login_user->branch_id)->get();
+        }else if($login_user->role_id == 4){
+            $category = Category::where('company_id',$login_user->company_id)->get();
+            $products = Product::where('company_id',$login_user->company_id)->get();
+        }else{
+            $category = Category::all();
+            $products = Product::all();
+        }
+        return view('counter')->with('category',$category)->with('products',$products);
+    }
+
+    public function checkout(Request $request)
+    {
+        $payment_method = PaymentMethod::all();
+        return view('checkout')->with('payment_method',$payment_method);
+    }
+
+    public function receipt(Request $request)
+    {
+        return view('receipt');
     }
 }

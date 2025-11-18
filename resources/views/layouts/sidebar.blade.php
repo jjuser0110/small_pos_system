@@ -81,6 +81,12 @@ $currentRoute = request()->route()->getName();
                 </li>
             </ul>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'counter') ? 'active' : ''}}">
+            <a href="{{ route('counter') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Go to Counter</div>
+            </a>
+        </li>
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text" data-i18n="Company Setting">Company Setting</span>
         </li>
@@ -136,6 +142,12 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('uom.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>UOM</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'payment_method.index') ? 'active' : ''}}">
+            <a href="{{ route('payment_method.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Payment Method</div>
             </a>
         </li>
         @endif

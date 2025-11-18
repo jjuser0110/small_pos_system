@@ -57,7 +57,11 @@ class LoginController extends Controller
             
             return redirect()->route('login')->withErrors('Your account has been locked. Please contact your Boss!');
         }else{
-            return redirect()->route('home')->withSuccess('Successfully Login');
+            if($user->role_id == 5){
+                return redirect()->route('counter');
+            }else{
+                return redirect()->route('home')->withSuccess('Successfully Login');
+            }
         }
     }
 }

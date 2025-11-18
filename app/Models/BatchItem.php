@@ -20,6 +20,7 @@ class BatchItem extends Model
         'quantity',
         'total_cost',
         'cost_per_unit',
+        'balance'
     ];
 
     public function branch()
