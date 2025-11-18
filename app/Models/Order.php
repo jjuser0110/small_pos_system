@@ -46,4 +46,9 @@ class Order extends Model
     {
         return $this->hasMany(\App\Models\OrderItem::class, 'order_id');
     }
+
+    public function profit_items()
+    {
+        return $this->hasMany(\App\Models\OrderItemProfit::class, 'order_id');
+    }
 }

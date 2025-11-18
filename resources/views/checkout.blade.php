@@ -568,12 +568,7 @@
         }
 
         function printReceipt() {
-            // Set receipt date/time
-            const now = new Date();
-            document.getElementById('receiptDate').textContent = now.toLocaleString('en-MY');
-            
-            // Trigger print
-            window.print();
+            alert('pending');
         }
 
         function completeOrder() {

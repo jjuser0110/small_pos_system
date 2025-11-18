@@ -66,20 +66,11 @@ $currentRoute = request()->route()->getName();
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1">
-        <!-- Dashboards -->
-        <li class="menu-item active open">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons bx bx-home-circle"></i>
-                <div data-i18n="Dashboards">Dashboards</div>
-                <div class="badge bg-primary rounded-pill ms-auto">5</div>
+        <li class="menu-item {{ Str::contains($currentRoute, 'home') ? 'active' : ''}}">
+            <a href="{{ route('home') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Home</div>
             </a>
-            <ul class="menu-sub">
-                <li class="menu-item active">
-                    <a href="{{ route('home') }}" class="menu-link">
-                        <div data-i18n="Analytics">Analytics</div>
-                    </a>
-                </li>
-            </ul>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'counter') ? 'active' : ''}}">
             <a href="{{ route('counter') }}" class="menu-link">
@@ -87,8 +78,15 @@ $currentRoute = request()->route()->getName();
                 <div>Go to Counter</div>
             </a>
         </li>
+        @if(auth()->user()->role_id != 5 )
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text" data-i18n="Company Setting">Company Setting</span>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'order.index') ? 'active' : ''}}">
+            <a href="{{ route('order.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Order</div>
+            </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">
             <a href="{{ route('batch.index') }}" class="menu-link">
@@ -108,7 +106,6 @@ $currentRoute = request()->route()->getName();
                 <div>Category</div>
             </a>
         </li>
-        @if(auth()->user()->role_id != 5 )
         <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
             <a href="{{ route('company_staff.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
