@@ -23,6 +23,11 @@ class BatchItem extends Model
         'balance'
     ];
 
+    public function batch()
+    {
+        return $this->belongsTo('App\Models\Batch');
+    }
+
     public function branch()
     {
         return $this->belongsTo('App\Models\Branch');

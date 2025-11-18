@@ -158,7 +158,7 @@ class BatchController extends Controller
     public function addBatchItem(Request $request, Batch $batch)
     {
         $product = Product::find($request->product_id);
-        $request->merge(['branch_id'=>$product->branch_id,'company_id'=>$product->company_id,'category_id'=>$product->category_id,'batch_id'=>$batch->id]);
+        $request->merge(['branch_id'=>$product->branch_id,'company_id'=>$product->company_id,'category_id'=>$product->category_id,'batch_id'=>$batch->id,'balance'=>$request->quantity]);
         // dd($request->all());
         $batch_items = BatchItem::create($request->all());
         return redirect()->back()->withSuccess('Data updated');

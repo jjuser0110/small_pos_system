@@ -85,222 +85,147 @@ class CartController extends Controller
 
     public function place(Request $request)
     {
-        $login_user = Auth::user();
-        $payment_method = $request->payment_method;
-        $amount_received = $request->amount_received;
-        $change = $request->change;
+        // dd($request->all());
+        $user = Auth::user();
 
-        $carts = Cart::where('user_id', $login_user->id)->get();
+        $order = $this->createOrder($user, $request);
 
-        $year = Carbon::now()->year;
-        $month = Carbon::now()->month;
-        $day = Carbon::now()->day;
-
-        // find running number
-        $check = RunningNumber::where('name', 'order')
-            ->where('year', $year)
-            ->where('month', $month)
-            ->where('day', $day)
-            ->first();
-
-        if (!$check) {
-            $check = RunningNumber::create([
-                'code' => 'OD',
-                'name' => 'order',
-                'year' => $year,
-                'month' => $month, // FIXED
-                'day' => $day,
-                'no_of_digit_behind' => 4,
-                'running_no' => 1,
-            ]);
-        }
-
-        // generate order number
-        $order_no =
-            $check->code .
-            $check->year .
-            sprintf('%02d', $check->month) .
-            sprintf('%02d', $check->day) .
-            sprintf('%0' . $check->no_of_digit_behind . 'd', $check->running_no);
-
-        // create order
-        $order = Order::create([
-            'branch_id' => $login_user->branch_id,
-            'company_id' => $login_user->company_id,
-            'user_id' => $login_user->id,
-            'order_no' => $order_no,
-            'order_date' => Carbon::now(),
-        ]);
+        $carts = Cart::where('user_id', $user->id)->get();
 
         foreach ($carts as $cart) {
+            $this->processItem($order, $cart);
+            $cart->delete();
+        }
 
-            $product = Product::find($cart->product_id);
+        $this->finalizeOrder($order, $request);
 
-            // create order item
-            $order_item = OrderItem::create([
-                'order_id' => $order->id,
-                'branch_id' => $order->branch_id,
-                'company_id' => $order->company_id,
-                'category_id' => $product->category_id,
-                'product_id' => $cart->product_id,
-                'single_price' => $cart->single_price,
-                'quantity' => $cart->quantity,
-                'total_price' => $cart->total_price,
-            ]);
+        return response()->json(['status' => 'success']);
+    }
 
-            //-------------------------------
-            // FIRST BATCH CONSUME
-            //-------------------------------
-            $batch_item = BatchItem::where('product_id', $cart->product_id)
+    private function createOrder($user, $request)
+    {
+        $now = Carbon::now();
+        $year = $now->year;
+        $month = $now->month;
+        $day = $now->day;
+
+        $rn = RunningNumber::firstOrCreate(
+            ['name' => 'order', 'year' => $year, 'month' => $month, 'day' => $day],
+            ['code' => 'OD', 'no_of_digit_behind' => 4, 'running_no' => 1]
+        );
+
+        $order_no = $rn->code .
+            $rn->year .
+            sprintf('%02d', $rn->month) .
+            sprintf('%02d', $rn->day) .
+            sprintf('%0'.$rn->no_of_digit_behind.'d', $rn->running_no);
+
+        return Order::create([
+            'branch_id' => $user->branch_id,
+            'company_id' => $user->company_id,
+            'user_id' => $user->id,
+            'order_no' => $order_no,
+            'order_date' => $now,
+        ]);
+    }
+
+    private function processItem($order, $cart)
+    {
+        $product = Product::find($cart->product_id);
+
+        // Create order item
+        $item = OrderItem::create([
+            'order_id' => $order->id,
+            'branch_id' => $order->branch_id,
+            'company_id' => $order->company_id,
+            'category_id' => $product->category_id,
+            'product_id' => $product->id,
+            'single_price' => $cart->single_price,
+            'quantity' => $cart->quantity,
+            'total_price' => $cart->total_price,
+        ]);
+
+        // FIFO deduction logic (clean function)
+        $this->deductStockFIFO($product, $item, $cart->quantity);
+    }
+
+    private function deductStockFIFO($product, $orderItem, $qty_needed)
+    {
+        while ($qty_needed > 0) {
+
+            $batch = BatchItem::where('product_id', $product->id)
                 ->where('balance', '>', 0)
                 ->orderBy('created_at', 'ASC')
                 ->first();
 
-            $balance = $batch_item->balance;
+            if (!$batch) break;
 
-            if ($cart->quantity > $balance) {
-                $new_balance = $cart->quantity - $balance;
-                $quantity = $balance;
-                $batch_balance = 0;
-            } else {
-                $new_balance = 0;
-                $quantity = $cart->quantity;
-                $batch_balance = $balance - $cart->quantity;
-            }
+            $take = min($qty_needed, $batch->balance);
 
-            // calculate cost + profit
-            $earning = round($order_item->single_price - $batch_item->cost_per_unit, 2);
-            $total_cost_price = round($batch_item->cost_per_unit * $quantity, 2);
-            $total_selling_price = round($order_item->single_price * $quantity, 2);
-            $total_earning = round($total_selling_price - $total_cost_price, 2);
+            // Create order profit entry
+            $order_item_profit = $this->createProfitEntry($orderItem, $batch, $take);
 
-            // create profit
-            $orderItemProfit = OrderItemProfit::create([
-                'order_id' => $order_item->order_id,
-                'branch_id' => $order_item->branch_id,
-                'company_id' => $order_item->company_id,
-                'order_item_id' => $order_item->id,
-                'category_id' => $order_item->category_id,
-                'product_id' => $order_item->product_id,
-                'batch_id' => $batch_item->batch_id,
-                'batch_item_id' => $batch_item->id,
-                'cost_price' => $batch_item->cost_per_unit,
-                'selling_price' => $order_item->single_price,
-                'earning' => $earning,
-                'quantity' => $quantity,
-                'total_cost_price' => $total_cost_price,
-                'total_selling_price' => $total_selling_price,
-                'total_earning' => $total_earning,
-            ]);
+            // Update batch
+            $batch->update(['balance' => $batch->balance - $take]);
 
-            // update batch balance
-            $batch_item->update(['balance' => $batch_balance]);
+            // Update stock
+            $before = $product->stock_quantity;
+            $after = $before - $take;
+            $product->update(['stock_quantity' => $after]);
 
-            // update product stock
-            $before_stock = $product->stock_quantity;
-            $after_stock = $before_stock - $quantity;
-            $product->update(['stock_quantity' => $after_stock]);
-
-            // stock logs
-            $orderItemProfit->stock_logs()->create([
-                'branch_id' => $orderItemProfit->branch_id,
-                'company_id' => $orderItemProfit->company_id,
-                'category_id' => $orderItemProfit->category_id,
-                'product_id' => $orderItemProfit->product_id,
+            // Stock log
+            $order_item_profit->stock_logs()->create([
+                'branch_id' => $orderItem->branch_id,
+                'company_id' => $orderItem->company_id,
+                'category_id' => $orderItem->category_id,
+                'product_id' => $product->id,
                 'type' => 'stock_out',
-                'description' => $batch_item->batch->batch_no ?? '',
-                'before_stock' => $before_stock,
-                'quantity' => $quantity,
-                'after_stock' => $after_stock,
+                'description' => $batch->batch->batch_no ?? '',
+                'before_stock' => $before,
+                'quantity' => $take,
+                'after_stock' => $after,
             ]);
 
-            //-------------------------------
-            // MULTI-BATCH LOOP
-            //-------------------------------
-            while ($new_balance > 0) {
-
-                $batch_item = BatchItem::where('product_id', $cart->product_id)
-                    ->where('balance', '>', 0)
-                    ->orderBy('created_at', 'ASC')
-                    ->first();
-
-                if (!$batch_item) break;
-
-                $balance = $batch_item->balance;
-
-                if ($new_balance > $balance) {
-                    $quantity = $balance;
-                    $new_balance -= $balance;
-                    $batch_balance = 0;
-                } else {
-                    $quantity = $new_balance;
-                    $batch_balance = $balance - $new_balance;
-                    $new_balance = 0;
-                }
-
-                // cost & profit
-                $earning = round($order_item->single_price - $batch_item->cost_per_unit, 2);
-                $total_cost_price = round($batch_item->cost_per_unit * $quantity, 2);
-                $total_selling_price = round($order_item->single_price * $quantity, 2);
-                $total_earning = round($total_selling_price - $total_cost_price, 2);
-
-                $orderItemProfit = OrderItemProfit::create([
-                    'order_id' => $order_item->order_id,
-                    'branch_id' => $order_item->branch_id,
-                    'company_id' => $order_item->company_id,
-                    'order_item_id' => $order_item->id,
-                    'category_id' => $order_item->category_id,
-                    'product_id' => $order_item->product_id,
-                    'batch_id' => $batch_item->batch_id,
-                    'batch_item_id' => $batch_item->id,
-                    'cost_price' => $batch_item->cost_per_unit,
-                    'selling_price' => $order_item->single_price,
-                    'earning' => $earning,
-                    'quantity' => $quantity,
-                    'total_cost_price' => $total_cost_price,
-                    'total_selling_price' => $total_selling_price,
-                    'total_earning' => $total_earning,
-                ]);
-
-                $batch_item->update(['balance' => $batch_balance]);
-
-                // stock update
-                $before_stock = $product->stock_quantity;
-                $after_stock = $before_stock - $quantity;
-                $product->update(['stock_quantity' => $after_stock]);
-
-                $orderItemProfit->stock_logs()->create([
-                    'branch_id' => $orderItemProfit->branch_id,
-                    'company_id' => $orderItemProfit->company_id,
-                    'category_id' => $orderItemProfit->category_id,
-                    'product_id' => $orderItemProfit->product_id,
-                    'type' => 'stock_out',
-                    'description' => $batch_item->batch->batch_no ?? '',
-                    'before_stock' => $before_stock,
-                    'quantity' => $quantity,
-                    'after_stock' => $after_stock,
-                ]);
-            }
-
-            // remove cart
-            $cart->delete();
+            // reduce remaining needed quantity
+            $qty_needed -= $take;
         }
+    }
 
-        // update final order summary
+    private function createProfitEntry($orderItem, $batch, $qty)
+    {
+        $cost = $batch->cost_per_unit;
+        $sell = $orderItem->single_price;
+
+        return OrderItemProfit::create([
+            'order_id' => $orderItem->order_id,
+            'branch_id' => $orderItem->branch_id,
+            'company_id' => $orderItem->company_id,
+            'order_item_id' => $orderItem->id,
+            'category_id' => $orderItem->category_id,
+            'product_id' => $orderItem->product_id,
+            'batch_id' => $batch->batch_id,
+            'batch_item_id' => $batch->id,
+            'cost_price' => $cost,
+            'selling_price' => $sell,
+            'earning' => round($sell - $cost, 2),
+            'quantity' => $qty,
+            'total_cost_price' => round($cost * $qty, 2),
+            'total_selling_price' => round($sell * $qty, 2),
+            'total_earning' => round(($sell - $cost) * $qty, 2),
+        ]);
+    }
+
+    private function finalizeOrder($order, $request)
+    {
         $order->update([
             'total_product' => $order->items->count(),
             'total_item' => $order->items->sum('quantity'),
             'total_price' => $order->items->sum('total_price'),
             'tax_amount' => 0,
             'final_total' => $order->items->sum('total_price'),
-            'payment_method' => $payment_method,
-            'amount_received' => $amount_received,
-            'change' => $change,
-        ]);
-
-        return response()->json([
-            'status' => 'success'
+            'payment_method' => $request->payment_method,
+            'amount_received' => $request->amount_received,
+            'change' => $request->change,
         ]);
     }
-
 }

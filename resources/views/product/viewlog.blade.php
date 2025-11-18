@@ -27,10 +27,10 @@
                     <tbody>
                         @foreach($product->stock_logs as $index => $row)
                         <tr>
-                            <td>{{$row->type??""}}</td>
+                            <td>{{ ucfirst(str_replace('_', ' ', $row->type ?? '')) }}</td>
                             <td>{{$row->description??""}}</td>
                             <td>{{$row->before_stock??""}}</td>
-                            <td>{{$row->quantity??""}}</td>
+                            <td @if($row->type== 'stock_out') style="color:red" @else style="color:green" @endif>@if($row->type== 'stock_out') - @endif{{$row->quantity??""}}</td>
                             <td>{{$row->after_stock??""}}</td>
                         </tr>
                         @endforeach
