@@ -12,12 +12,18 @@ use App\Models\DailyReport;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\PaymentMethod;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\OrderItemProfit;
+use App\Models\ReceiptSetting;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DB;
+use Mike42\Escpos\PrintConnectors\WindowsPrintConnector;
+use Mike42\Escpos\Printer;
 
 class HomeController extends Controller
 {
@@ -84,8 +90,10 @@ class HomeController extends Controller
         return view('checkout')->with('payment_method',$payment_method);
     }
 
-    public function receipt(Request $request)
+    public function receipt(Request $request, $order_id)
     {
-        return view('receipt');
+        $order = Order::find($order_id);
+        $receipt_setting = ReceiptSetting::find(1);
+        return view('receipt')->with('order',$order)->with('receipt_setting',$receipt_setting);
     }
 }

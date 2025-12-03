@@ -99,7 +99,7 @@ class CartController extends Controller
 
         $this->finalizeOrder($order, $request);
 
-        return response()->json(['status' => 'success']);
+        return response()->json(['status' => 'success','order_id'=>$order->id]);
     }
 
     private function createOrder($user, $request)

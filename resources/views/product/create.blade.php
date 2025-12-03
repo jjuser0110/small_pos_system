@@ -50,6 +50,7 @@
                     class="form-control"
                     placeholder="1231239328272"
                     name="barcode" 
+                    id="barcode"
                     value="{{$product->barcode??''}}"/>
                 </div>
                 <div class="col-md-6">
@@ -105,4 +106,29 @@
 @endsection
 
 @section('scripts')
+<script>
+    let buffer = "";
+    let last = Date.now();
+
+    // which input should receive scanned value
+    const targetInputId = "barcode";
+
+    document.addEventListener("keydown", function(e) {
+        const now = Date.now();
+
+        // Reset if slow typing (to avoid mixing with keyboard typing)
+        if (now - last > 50) buffer = "";
+
+        // If ENTER = scanner finished
+        if (e.key === "Enter") {
+            document.getElementById(targetInputId).value = buffer;
+            buffer = "";
+            return;
+        }
+
+        // Add scanned char
+        buffer += e.key;
+        last = now;
+    });
+</script>
 @endsection

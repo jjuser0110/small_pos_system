@@ -147,6 +147,12 @@ $currentRoute = request()->route()->getName();
                 <div>Payment Method</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'receipt_setting.index') ? 'active' : ''}}">
+            <a href="{{ route('receipt_setting.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Receipt Setting</div>
+            </a>
+        </li>
         @endif
     </ul>
 </aside>

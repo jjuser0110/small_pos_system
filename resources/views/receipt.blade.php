@@ -6,8 +6,6 @@
     <title>Receipt Preview</title>
     <style>
         body {
-            margin: 0;
-            padding: 20px;
             background: #f5f5f5;
             font-family: 'Courier New', monospace;
             display: flex;
@@ -142,30 +140,54 @@
             letter-spacing: 2px;
         }
 
+        
         @media print {
-            body {
-                background: white;
-                padding: 0;
+            @page {
+                size: 72mm auto; /* 72mm wide, auto height */
+                margin: 2mm 2mm 2mm 2mm; /* small margin top/right/bottom/left */
             }
-            .receipt {
-                box-shadow: none;
+
+            body {
                 margin: 0;
+                padding: 0;
+                background: white;
+            }
+
+            .receipt {
+                width: 68mm; /* slightly smaller than page to avoid cutting */
+                padding: 2mm; /* reduce padding for print */
+                margin: 0 auto;
+                box-shadow: none;
+            }
+
+            button {
+                display: none !important; /* hide the print button */
             }
         }
+
     </style>
 </head>
 <body>
+     <button onclick="window.print()" 
+        style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 18px;
+            background: #000;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 999;
+        ">
+        Print Receipt
+    </button>
     <div class="receipt">
         <!-- Header -->
         <div class="receipt-header">
-            <div class="shop-name">Boy Shop</div>
-            <div class="shop-info">
-                No. 123, Jalan Example,<br>
-                Taman ABC, 93350 Kuching,<br>
-                Sarawak, Malaysia<br>
-                Tel: +60 12-345 6789<br>
-                Email: shop@example.com
-            </div>
+            {!! $receipt_setting->header !!}
         </div>
 
         <!-- Receipt Title -->
@@ -175,15 +197,15 @@
         <div class="receipt-info">
             <div class="info-row">
                 <span>Receipt No:</span>
-                <span><strong>RCP-20250117-001</strong></span>
+                <span><strong>{{$order->order_no??''}}</strong></span>
             </div>
             <div class="info-row">
                 <span>Date:</span>
-                <span>17/01/2025 14:32:15</span>
+                <span>{{$order->created_at??''}}</span>
             </div>
             <div class="info-row">
                 <span>Cashier:</span>
-                <span>Admin</span>
+                <span>{{$order->user->username??''}}</span>
             </div>
         </div>
 
@@ -196,69 +218,26 @@
 
         <!-- Items Section -->
         <div class="items-section">
+            @foreach($order->items as $item)
             <div class="item">
                 <div class="item-row">
-                    <span class="item-name">Laptop</span>
-                    <span style="text-align: center;">1</span>
-                    <span style="text-align: right;">999.99</span>
+                    <span class="item-name">{{$item->product->product_name??''}}</span>
+                    <span style="text-align: center;">{{$item->quantity??0}}</span>
+                    <span style="text-align: right;">{{number_format($item->total_price??0,2)}}</span>
                 </div>
                 <div style="font-size: 10px; color: #666; margin-left: 5px;">
-                    @ RM 999.99 each
+                    @ RM {{number_format($item->single_price??0,2)}} each
                 </div>
             </div>
-
-            <div class="item">
-                <div class="item-row">
-                    <span class="item-name">Wireless Mouse</span>
-                    <span style="text-align: center;">2</span>
-                    <span style="text-align: right;">59.98</span>
-                </div>
-                <div style="font-size: 10px; color: #666; margin-left: 5px;">
-                    @ RM 29.99 each
-                </div>
-            </div>
-
-            <div class="item">
-                <div class="item-row">
-                    <span class="item-name">USB Cable Type-C</span>
-                    <span style="text-align: center;">3</span>
-                    <span style="text-align: right;">44.97</span>
-                </div>
-                <div style="font-size: 10px; color: #666; margin-left: 5px;">
-                    @ RM 14.99 each
-                </div>
-            </div>
-
-            <div class="item">
-                <div class="item-row">
-                    <span class="item-name">Keyboard Mechanical</span>
-                    <span style="text-align: center;">1</span>
-                    <span style="text-align: right;">299.00</span>
-                </div>
-                <div style="font-size: 10px; color: #666; margin-left: 5px;">
-                    @ RM 299.00 each
-                </div>
-            </div>
+            @endforeach
         </div>
 
         <!-- Totals -->
         <div class="totals">
-            <div class="total-row">
-                <span>Subtotal:</span>
-                <span>RM 1,403.94</span>
-            </div>
-            <div class="total-row">
-                <span>Tax (6%):</span>
-                <span>RM 84.24</span>
-            </div>
-            <div class="total-row">
-                <span>Discount:</span>
-                <span>RM 0.00</span>
-            </div>
             
             <div class="total-row grand-total">
                 <span>TOTAL:</span>
-                <span>RM 1,488.18</span>
+                <span>RM {{number_format($order->total_price??0,2)}}</span>
             </div>
         </div>
 
@@ -266,29 +245,21 @@
         <div class="payment-info">
             <div class="payment-row">
                 <span>Payment Method:</span>
-                <span><strong>CASH</strong></span>
+                <span><strong>{{$order->payment_method??''}}</strong></span>
             </div>
             <div class="payment-row">
                 <span>Amount Paid:</span>
-                <span>RM 1,500.00</span>
+                <span>RM {{number_format($order->amount_received??0,2)}}</span>
             </div>
             <div class="payment-row" style="font-weight: bold;">
                 <span>Change:</span>
-                <span>RM 11.82</span>
+                <span>RM {{number_format($order->change??0,2)}}</span>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="receipt-footer">
-            <div class="thank-you">THANK YOU!</div>
-            <div>Please keep this receipt for<br>exchange or refund purposes.</div>
-            <div style="margin-top: 10px;">
-                Valid for 7 days from purchase date
-            </div>
-            <div style="margin-top: 15px; font-size: 10px;">
-                ** GOODS SOLD ARE NOT REFUNDABLE **<br>
-                EXCHANGE ONLY WITH ORIGINAL RECEIPT
-            </div>
+            {!! $receipt_setting->footer !!}
         </div>
     </div>
 </body>

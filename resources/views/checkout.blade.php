@@ -607,7 +607,7 @@
                     alert(`Order completed successfully!\n\nTotal: RM ${totalAmount.toFixed(2)}\nReceived: RM ${received.toFixed(2)}\nChange: RM ${change.toFixed(2)}\n\nThank you!`);
                     
                     // Clear cart and redirect
-                    window.location.href = '/counter';
+                    window.location.href = '/receipt/'+data.order_id;
                 } else {
                     alert('Failed to place order: ' + (data.message || 'Unknown error'));
                 }

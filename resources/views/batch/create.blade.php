@@ -172,9 +172,13 @@
                         <label class="col-form-label">Product</label>
                         <select id="product_id" name="product_id" class="select2 form-select" data-allow-clear="true" required>
                             @foreach($product as $prod)
-                                <option value="{{$prod->id}}">{{$prod->product_name??''}}</option>
+                                <option value="{{$prod->id}}" data-barcode="{{$prod->barcode??''}}">{{$prod->product_name??''}}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="col-form-label">Barcode</label>
+                        <input class="form-control" type="text" name="barcode" id="barcode">
                     </div>
                     <div class="col-12">
                         <label class="col-form-label">Quantity</label>
@@ -231,5 +235,54 @@
             }
         }
     }
-  </script>
+
+    let buffer = "";
+    let last = Date.now();
+
+    // which input should receive scanned value
+    const targetInputId = "barcode";
+
+    document.addEventListener("keydown", function(e) {
+        const now = Date.now();
+
+        // Reset if input is slow (keyboard typing)
+        if (now - last > 50) buffer = "";
+
+        // When scanner sends ENTER
+        if (e.key === "Enter") {
+
+            let barcode = buffer;
+            document.getElementById(targetInputId).value = barcode;
+            buffer = "";
+
+            console.log("Scanned barcode:", barcode);
+
+            let found = false;
+            let select = document.getElementById("product_id");
+
+            select.querySelectorAll("option").forEach(option => {
+                console.log("Checking option:", option.dataset.barcode);
+                if (option.dataset.barcode == barcode) {
+                    option.selected = true;
+                    found = true;
+                }
+            });
+
+            // If using Select2, trigger update
+            $('#product_id').trigger('change');
+
+            // If no product, show alert
+            if (!found) {
+                alert("No such product!");
+            }
+
+            return;
+        }
+
+        // Add scanned characters
+        buffer += e.key;
+        last = now;
+    });
+    </script>
+
 @endsection

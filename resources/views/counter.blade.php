@@ -114,7 +114,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
     <div class="left-panel">
         <h1>Select Products</h1>
         <div class="barcode-scanner">
-            <input type="text" id="barcodeInput" class="barcode-input" placeholder="Scan barcode here..." autocomplete="off">
+            <input type="text" id="barcode" name="barcode" class="barcode-input" placeholder="Scan barcode here..." autocomplete="off">
         </div>
         <div class="categories" id="categories">
             @foreach($category as $index=> $cat)
@@ -150,6 +150,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
                 <span>Total:</span>
                 <span id="total">$0.00</span>
             </div>
+
             <button class="checkout-btn" onclick="checkout()">Checkout</button>
         </div>
     </div>
@@ -163,6 +164,7 @@ const products = {
         {
             id: "{{ $p->id }}",
             name: "{{ $p->product_name }}",
+            barcode: "{{ $p->barcode??null }}",
             price: {{ number_format($p->selling_price, 2, '.', '') }},
             stock: {{ $p->stock_quantity }}
         }@if(!$loop->last), @endif
@@ -195,7 +197,7 @@ function loadCartFromServer() {
 }
 
 // Barcode scanner
-const barcodeInput = document.getElementById('barcodeInput');
+const barcodeInput = document.getElementById('barcode');
 let barcodeTimeout;
 barcodeInput.addEventListener('input', e => {
     clearTimeout(barcodeTimeout);
@@ -207,10 +209,38 @@ barcodeInput.addEventListener('input', e => {
 barcodeInput.addEventListener('keypress', e => {
     if(e.key==='Enter'){ clearTimeout(barcodeTimeout); const barcode=e.target.value.trim(); if(barcode){ processBarcode(barcode); e.target.value=''; } }
 });
+let buffer = "";
+let last = Date.now();
+document.addEventListener("keydown", function(e) {
+    if (document.activeElement === barcodeInput) return;
+
+    const now = Date.now();
+
+    if (now - last > 50) buffer = "";
+
+    if (e.key === "Enter") {
+        let scanned = buffer.trim();
+        buffer = "";
+
+        if (scanned) {
+            barcodeInput.value = scanned;
+
+            processBarcode(scanned);
+
+            barcodeInput.value = "";
+        }
+
+        return;
+    }
+
+    // Add character to buffer
+    buffer += e.key;
+    last = now;
+});
 function processBarcode(barcode) {
     let found = null;
     for(let cat in products){
-        found = products[cat].find(p=>p.id==barcode);
+        found = products[cat].find(p=>p.barcode==barcode);
         if(found) break;
     }
     if(found) addToCart(found);
