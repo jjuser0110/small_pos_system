@@ -8,10 +8,3 @@
 <meta name="description" content="" />
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<script>
-$.ajaxSetup({
-    headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    }
-});
-</script>

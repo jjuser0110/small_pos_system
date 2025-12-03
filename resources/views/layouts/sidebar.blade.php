@@ -4,7 +4,7 @@ $currentRoute = request()->route()->getName();
 
 @endphp
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-    <div class="app-brand demo">
+    <div class="app-brand demo" >
         <a href="{{ route('home') }}" class="app-brand-link">
             <span class="app-brand-logo demo">
             <svg
@@ -65,7 +65,7 @@ $currentRoute = request()->route()->getName();
 
     <div class="menu-inner-shadow"></div>
 
-    <ul class="menu-inner py-1">
+    <ul class="menu-inner py-1" style="overflow-y:auto">
         <li class="menu-item {{ Str::contains($currentRoute, 'home') ? 'active' : ''}}">
             <a href="{{ route('home') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
