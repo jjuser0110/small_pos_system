@@ -97,7 +97,7 @@ class BatchController extends Controller
             $product = Product::where('branch_id',$login_user->branch_id)->get();
         }else if($login_user->role_id == 4){
             $company = Company::where('id',$login_user->company_id)->get();
-            $product = Product::where('id',$login_user->company_id)->get();
+            $product = Product::where('company_id',$login_user->company_id)->get();
         }else{
             $company = Company::all();
             $product = Product::all();
