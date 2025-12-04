@@ -102,6 +102,19 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
     color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px;
     transition: all 0.3s;
 }
+.home-btn {
+    width: 100%; 
+    padding: 12px; 
+    background: linear-gradient(135deg, #fd9800ff 0%, #fdf900ff 100%);
+    color: black; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 15px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: 10px;
+    transition: all 0.3s;
+}
 .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
 .checkout-btn:active { transform: translateY(0); }
 
@@ -152,6 +165,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
             </div>
 
             <button class="checkout-btn" onclick="checkout()">Checkout</button>
+            <button class="home-btn" onclick="window.location.href='/home'">Home</button>
         </div>
     </div>
 </div>

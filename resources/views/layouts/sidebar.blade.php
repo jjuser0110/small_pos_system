@@ -88,6 +88,12 @@ $currentRoute = request()->route()->getName();
                 <div>Order</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
+            <a href="{{ route('shift_closing.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Shift Closing</div>
+            </a>
+        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">
             <a href="{{ route('batch.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>

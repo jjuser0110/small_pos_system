@@ -451,9 +451,9 @@
                     </div>
 
                     <div class="btn-group">
-                        <button class="btn btn-print" id="printBtn" onclick="printReceipt()" disabled>
+                        <!-- <button class="btn btn-print" id="printBtn" onclick="printReceipt()" disabled>
                             🖨️ Print Receipt
-                        </button>
+                        </button> -->
                         <button class="btn btn-complete" id="completeBtn" onclick="completeOrder()" disabled>
                             ✓ Complete
                         </button>
@@ -545,24 +545,24 @@
 
             const changeDisplay = document.getElementById('changeDisplay');
             const insufficientMsg = document.getElementById('insufficientMsg');
-            const printBtn = document.getElementById('printBtn');
+            // const printBtn = document.getElementById('printBtn');
             const completeBtn = document.getElementById('completeBtn');
 
             if (received === 0) {
                 changeDisplay.style.display = 'none';
                 insufficientMsg.style.display = 'none';
-                printBtn.disabled = true;
+                // printBtn.disabled = true;
                 completeBtn.disabled = true;
             } else if (change < 0) {
                 changeDisplay.style.display = 'none';
                 insufficientMsg.style.display = 'block';
-                printBtn.disabled = true;
+                // printBtn.disabled = true;
                 completeBtn.disabled = true;
             } else {
                 changeDisplay.style.display = 'block';
                 insufficientMsg.style.display = 'none';
                 document.getElementById('changeAmount').textContent = `RM ${change.toFixed(2)}`;
-                printBtn.disabled = false;
+                // printBtn.disabled = false;
                 completeBtn.disabled = false;
             }
         }

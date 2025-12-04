@@ -168,6 +168,11 @@
     </style>
 </head>
 <body>
+     <button 
+        onclick="window.location.href='/counter'"
+        style="position: fixed; top: 20px; left: 20px; padding: 10px 18px; background:#444; color:#fff; border: none; border-radius: 6px; cursor: pointer; z-index: 999;">
+        Back
+    </button>
      <button onclick="window.print()" 
         style="
             position: fixed;

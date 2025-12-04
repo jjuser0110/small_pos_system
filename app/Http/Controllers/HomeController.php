@@ -16,6 +16,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemProfit;
 use App\Models\ReceiptSetting;
+use App\Models\ShiftClosing;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -40,7 +41,10 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
-        return view('home');
+        $user = Auth::user();
+        $shift_data = ShiftClosing::where('user_id',$user->id)->whereNull('closing_time')->first();
+
+        return view('home')->with('shift_data',$shift_data);
     }
 
     public function change_password(Request $request){
@@ -95,5 +99,22 @@ class HomeController extends Controller
         $order = Order::find($order_id);
         $receipt_setting = ReceiptSetting::find(1);
         return view('receipt')->with('order',$order)->with('receipt_setting',$receipt_setting);
+    }
+
+    public function shift_closing(Request $request)
+    {
+        $user = Auth::user();
+        $shift = ShiftClosing::where('user_id', $user->id)
+            ->whereNull('closing_time')
+            ->first();
+
+        if(isset($shift)){
+            $shift->update([
+                'closing_time'=>Carbon::now()
+            ]);
+            return redirect()->back()->withInfo("Shift Closed");
+        }else{
+            return redirect()->back()->withInfo('Nothing To Close');
+        }
     }
 }

@@ -109,25 +109,37 @@
 <script>
     let buffer = "";
     let last = Date.now();
-
-    // which input should receive scanned value
     const targetInputId = "barcode";
 
-    document.addEventListener("keydown", function(e) {
+    document.addEventListener("keydown", function (e) {
         const now = Date.now();
+        const diff = now - last;
 
-        // Reset if slow typing (to avoid mixing with keyboard typing)
-        if (now - last > 50) buffer = "";
+        // Detect scanner input (<30ms between keys)
+        const isScanner = diff < 30;
 
-        // If ENTER = scanner finished
-        if (e.key === "Enter") {
-            document.getElementById(targetInputId).value = buffer;
-            buffer = "";
+        if (isScanner) {
+            // STOP key from going into any input box
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+                e.preventDefault();
+            }
+
+            // When scanner presses Enter → barcode finished
+            if (e.key === "Enter") {
+                e.preventDefault();
+                document.getElementById(targetInputId).value = buffer;
+                buffer = "";
+                return;
+            }
+
+            // Add scanned char
+            buffer += e.key;
+            last = now;
             return;
         }
 
-        // Add scanned char
-        buffer += e.key;
+        // Human typing → reset scanner buffer
+        buffer = "";
         last = now;
     });
 </script>

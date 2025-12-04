@@ -23,6 +23,7 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::post('/change_password', [App\Http\Controllers\HomeController::class, 'change_password'])->name('change_password');
 Route::get('/counter', [App\Http\Controllers\HomeController::class, 'counter'])->name('counter');
 Route::get('/checkout', [App\Http\Controllers\HomeController::class, 'checkout'])->name('checkout');
+Route::get('/shift_closing', [App\Http\Controllers\HomeController::class, 'shift_closing'])->name('shift_closing');
 Route::get('/receipt/{order_id}', [App\Http\Controllers\HomeController::class, 'receipt'])->name('receipt');
 Route::get('/cart/load', [App\Http\Controllers\CartController::class, 'load']);
 Route::post('/cart/add', [App\Http\Controllers\CartController::class, 'add']);

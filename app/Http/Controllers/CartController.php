@@ -10,6 +10,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemProfit;
 use App\Models\BatchItem;
+use App\Models\ShiftClosing;
+use App\Models\ShiftMethodClosing;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -217,15 +219,53 @@ class CartController extends Controller
 
     private function finalizeOrder($order, $request)
     {
+        $totalProduct = $order->items->count();
+        $totalQty     = $order->items->sum('quantity');
+        $totalPrice   = $order->items->sum('total_price');
+
         $order->update([
-            'total_product' => $order->items->count(),
-            'total_item' => $order->items->sum('quantity'),
-            'total_price' => $order->items->sum('total_price'),
-            'tax_amount' => 0,
-            'final_total' => $order->items->sum('total_price'),
-            'payment_method' => $request->payment_method,
+            'total_product'   => $totalProduct,
+            'total_item'      => $totalQty,
+            'total_price'     => $totalPrice,
+            'tax_amount'      => 0,
+            'final_total'     => $totalPrice,
+            'payment_method'  => $request->payment_method,
             'amount_received' => $request->amount_received,
-            'change' => $request->change,
+            'change'          => $request->change,
         ]);
+
+        $user  = Auth::user();
+        $shift = ShiftClosing::where('user_id', $user->id)
+            ->whereNull('closing_time')
+            ->first();
+
+        if ($shift) {
+            $shift->update([
+                'total_order_count'  => $shift->total_order_count + $totalProduct,
+                'total_order_amount' => round($shift->total_order_amount + $totalPrice, 2),
+            ]);
+
+        } else {
+            $shift = ShiftClosing::create([
+                'user_id'            => $user->id,
+                'total_order_count'  => $totalProduct,
+                'total_order_amount' => $totalPrice,
+                'first_sale_time'    => Carbon::now(),
+            ]);
+        }
+        
+        $checkShiftMethod = ShiftMethodClosing::where('shift_closing_id', $shift->id)->where('payment_method',$request->payment_method)->first();
+        if(isset($checkShiftMethod)){
+            $shift->update([
+                'amount' => round($checkShiftMethod->amount + $totalPrice, 2),
+            ]);
+        }else{
+            ShiftMethodClosing::create([
+                'shift_closing_id'=>$shift->id,
+                'payment_method'=>$request->payment_method,
+                'amount'=>$totalPrice
+            ]);
+        }
+
     }
 }
