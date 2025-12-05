@@ -8,18 +8,43 @@
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
-                <div class="head-label">
+                <div class="head-label" style="margin-bottom:10px">
                     <h5 class="card-title mb-0">Order Listing</h5>
                 </div>
-                <!-- <div class="dt-action-buttons text-end pt-3 pt-md-0">
-                    <div class="dt-buttons"> 
-                        <a class="dt-button create-new btn btn-primary" type="button" href="{{route('order.create')}}" onclick="showLoading()">
-                            <span><i class="bx bx-plus me-sm-1"></i> 
-                                <span class="d-none d-sm-inline-block">Add New Record</span>
-                            </span>
-                        </a> 
+                <div class="col-md-6 col-12 mb-4">
+                    <form method="GET">
+                        <div class="input-group input-daterange" >
+                            <input type="datetime-local" class="form-control" name="date_from" value="{{$date_from??''}}"/>
+                            <span class="input-group-text">to</span>
+                            <input type="datetime-local" class="form-control" name="date_to" value="{{$date_to??''}}"/>
+                            <button class="btn btn-primary" type="submit" >Filter</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 col-lg-3 mb-3">
+                        <div class="card card-border-shadow-primary h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2 pb-1">
+                            <h4 class="ms-1 mb-0">Total Order</h4>
+                            </div>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{$order->count()??0}}</p>
+                            </p>
+                        </div>
+                        </div>
                     </div>
-                </div> -->
+                    <div class="col-sm-3 col-lg-3 mb-3">
+                        <div class="card card-border-shadow-primary h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2 pb-1">
+                            <h4 class="ms-1 mb-0">Total Amount</h4>
+                            </div>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{number_format($order->sum('final_total')??0,2)}}</p>
+                            </p>
+                        </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-datatable text-nowrap">
                 <table class="dt-column-search table table-bordered" id="mytable">

@@ -19,7 +19,7 @@
                     <select id="select2Basic" name="category_id" class="select2 form-select" data-allow-clear="true">
                         @foreach($category as $cat)
                             <option value="{{ $cat->id }}" @if(isset($product) && $product->category_id == $cat->id) selected @endif>
-                                {{ $cat->category_name ?? '' }}
+                                {{ $cat->category_name ?? '' }} ({{ $cat->company->company_name ??''}})
                             </option>
                         @endforeach
                     </select>

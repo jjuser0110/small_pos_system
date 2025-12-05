@@ -11,6 +11,16 @@
                 <div class="head-label">
                     <h5 class="card-title mb-0">Shift Closing Listing</h5>
                 </div>
+                <div class="col-md-6 col-12 mb-4">
+                    <form method="GET">
+                        <div class="input-group input-daterange" >
+                            <input type="date" class="form-control" name="date_from" value="{{$date_from??''}}"/>
+                            <span class="input-group-text">to</span>
+                            <input type="date" class="form-control" name="date_to" value="{{$date_to??''}}"/>
+                            <button class="btn btn-primary" type="submit" >Filter</button>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="card-datatable text-nowrap">
                 <table class="dt-column-search table table-bordered" id="mytable">
