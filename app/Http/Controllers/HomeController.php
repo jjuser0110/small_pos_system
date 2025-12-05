@@ -78,7 +78,7 @@ class HomeController extends Controller
         if($login_user->role_id == 3){
             $category = Category::where('branch_id',$login_user->branch_id)->get();
             $products = Product::where('branch_id',$login_user->branch_id)->get();
-        }else if($login_user->role_id == 4){
+        }else if($login_user->role_id == 4 || $login_user->role_id == 5){
             $category = Category::where('company_id',$login_user->company_id)->get();
             $products = Product::where('company_id',$login_user->company_id)->get();
         }else{

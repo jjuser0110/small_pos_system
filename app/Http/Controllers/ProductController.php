@@ -31,7 +31,15 @@ class ProductController extends Controller
 
     public function create()
     {
-        $category = Category::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $category = Category::where('branch_id',$login_user->branch_id)->get();
+        }else if($login_user->role_id == 4){
+            $category = Category::where('company_id',$login_user->company_id)->get();
+        }else{
+            $category = Category::all();
+        }
+
         $uom = Uom::all();
         return view('product.create')->with('category',$category)->with('uom',$uom);
     }
@@ -48,7 +56,14 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $category = Category::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $category = Category::where('branch_id',$login_user->branch_id)->get();
+        }else if($login_user->role_id == 4){
+            $category = Category::where('company_id',$login_user->company_id)->get();
+        }else{
+            $category = Category::all();
+        }
         $uom = Uom::all();
         return view('product.create')->with('product',$product)->with('category',$category)->with('uom',$uom);
     }

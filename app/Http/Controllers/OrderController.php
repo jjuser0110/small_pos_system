@@ -17,11 +17,11 @@ class OrderController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $order = Order::where('branch_id',$login_user->branch_id)->get();
+            $order = Order::where('branch_id',$login_user->branch_id)->orderBy('created_at','DESC')->get();
         }else if($login_user->role_id == 4){
-            $order = Order::where('company_id',$login_user->company_id)->get();
+            $order = Order::where('company_id',$login_user->company_id)->orderBy('created_at','DESC')->get();
         }else{
-            $order = Order::all();
+            $order = Order::orderBy('created_at','DESC')->get();
         }
 
         return view('order.index')->with('order',$order);
@@ -30,19 +30,6 @@ class OrderController extends Controller
     public function view(Order $order)
     {
         return view('order.view')->with('order',$order);
-    }
-
-    public function update(Request $request, Order $order)
-    {
-        $order->update($request->all());
-        return redirect()->route('order.index')->withSuccess('Data updated');
-    }
-
-    public function destroy(Order $order)
-    {
-        $order->delete();
-
-        return redirect()->route('order.index')->withSuccess('Data deleted');
     }
 
 }

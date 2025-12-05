@@ -256,7 +256,7 @@ class CartController extends Controller
         
         $checkShiftMethod = ShiftMethodClosing::where('shift_closing_id', $shift->id)->where('payment_method',$request->payment_method)->first();
         if(isset($checkShiftMethod)){
-            $shift->update([
+            $checkShiftMethod->update([
                 'amount' => round($checkShiftMethod->amount + $totalPrice, 2),
             ]);
         }else{
