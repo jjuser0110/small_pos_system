@@ -22,7 +22,7 @@
 <script src="{{ asset('assets/vendor/libs/@form-validation/umd/plugin-auto-focus/index.min.js') }}"></script>
 
 <!-- Main JS -->
-<!-- <script src="{{ asset('assets/js/main.js') }}"></script> -->
+<script src="{{ asset('assets/js/main.js') }}"></script>
 <!-- <script src="{{ asset('assets/js/ui-modals.js') }}"></script> -->
 
 <!-- Page JS -->
