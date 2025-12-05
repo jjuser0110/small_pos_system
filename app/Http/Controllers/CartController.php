@@ -270,4 +270,10 @@ class CartController extends Controller
         }
 
     }
+
+    public function empty_cart()
+    {
+        Cart::where('user_id', auth()->id())->delete();
+        return redirect()->back();
+    }
 }

@@ -26,6 +26,7 @@ Route::get('/checkout', [App\Http\Controllers\HomeController::class, 'checkout']
 Route::get('/shift_closing', [App\Http\Controllers\HomeController::class, 'shift_closing'])->name('shift_closing');
 Route::get('/receipt/{order_id}', [App\Http\Controllers\HomeController::class, 'receipt'])->name('receipt');
 Route::get('/cart/load', [App\Http\Controllers\CartController::class, 'load']);
+Route::get('empty_cart', [App\Http\Controllers\CartController::class, 'empty_cart'])->name('empty_cart');
 Route::post('/cart/add', [App\Http\Controllers\CartController::class, 'add']);
 Route::post('/cart/update', [App\Http\Controllers\CartController::class, 'update']);
 Route::post('/cart/remove', [App\Http\Controllers\CartController::class, 'remove']);

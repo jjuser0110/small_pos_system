@@ -9,8 +9,8 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
     font-size: 13px;
 }
 .container {
@@ -120,6 +120,47 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
 
 .empty-cart { text-align: center; color: #999; padding: 30px 15px; }
 .empty-cart-icon { font-size: 36px; margin-bottom: 8px; }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    body {
+        height: auto;
+        overflow-y: auto;
+    }
+    
+    .container {
+        grid-template-columns: 1fr;
+        height: auto;
+        max-height: none;
+        gap: 15px;
+        padding: 10px;
+    }
+    
+    .left-panel {
+        max-height: none;
+        order: 1;
+    }
+    
+    .right-panel {
+        max-height: none;
+        order: 2;
+        min-height: 400px;
+    }
+    
+    .cart-items {
+        max-height: 300px;
+    }
+    
+    .products {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 8px;
+    }
+    
+    .categories {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 5px;
+    }
+}
 </style>
 </head>
 <body>
@@ -163,7 +204,8 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
                 <span>Total:</span>
                 <span id="total">$0.00</span>
             </div>
-
+    
+            <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to empty shopping cart?')){window.location.href='{{ route('empty_cart') }}'}">Empty Cart</a>
             <button class="checkout-btn" onclick="checkout()">Checkout</button>
             <button class="home-btn" onclick="window.location.href='/home'">Home</button>
         </div>
