@@ -248,6 +248,8 @@ class CartController extends Controller
         } else {
             $shift = ShiftClosing::create([
                 'user_id'            => $user->id,
+                'branch_id'            => $user->branch_id,
+                'company_id'            => $user->company_id,
                 'total_order_count'  => $totalProduct,
                 'total_order_amount' => $totalPrice,
                 'first_sale_time'    => Carbon::now(),
