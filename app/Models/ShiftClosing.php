@@ -12,6 +12,8 @@ class ShiftClosing extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'branch_id',
+        'company_id',
         'user_id',
         'total_order_count',
         'total_order_amount',

@@ -28,6 +28,7 @@
                             <th>No</th>
                             <th>Order No</th>
                             <th>Order Date</th>
+                            <th>Cashier</th>
                             <th>Total Product</th>
                             <th>Total Quantity</th>
                             <th>Total Price</th>
@@ -43,6 +44,7 @@
                             <td>{{$index+1??""}}</td>
                             <td>{{$row->order_no??""}}</td>
                             <td>{{$row->created_at??""}}</td>
+                            <td>{{$row->user->username??""}}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
                             <td>{{$row->final_total??""}}</td>
