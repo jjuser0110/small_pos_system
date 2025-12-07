@@ -105,12 +105,14 @@
                                 <thead>
                                     <tr>
                                         <th>No</th>
-                                        <th>Product Code</th>
                                         <th>Barcode</th>
                                         <th>Product Name</th>
                                         <th>Quantity</th>
                                         <th>Total Cost Per Unit</th>
                                         <th>Total Cost</th>
+                                        <th>Balance</th>
+                                        <th>Created At</th>
+                                        <th>Updated At</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -118,12 +120,14 @@
                                     @foreach($batch->batch_items as $index => $row)
                                     <tr>
                                         <td>{{$index+1??""}}</td>
-                                        <td>{{$row->product->product_code??""}}</td>
                                         <td>{{$row->product->barcode??""}}</td>
                                         <td>{{$row->product->product_name??""}}</td>
                                         <td style="text-align:center">{{$row->quantity??""}}</td>
                                         <td style="text-align:center">{{number_format($row->cost_per_unit??0,2)}}</td>
                                         <td style="text-align:center">{{number_format($row->total_cost??0,2)}}</td>
+                                        <td style="text-align:center">{{$row->balance??""}}</td>
+                                        <td style="text-align:center">{{$row->created_at??""}}</td>
+                                        <td style="text-align:center">{{$row->updated_at??""}}</td>
                                         <td>
                                             @if($batch->status == 'Open')
                                             <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('batch.destroyItem',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
@@ -172,7 +176,7 @@
                         <label class="col-form-label">Product</label>
                         <select id="product_id" name="product_id" class="select2 form-select" data-allow-clear="true" required>
                             @foreach($product as $prod)
-                                <option value="{{$prod->id}}" data-barcode="{{$prod->barcode??''}}">{{$prod->product_name??''}}</option>
+                                <option value="{{$prod->id}}" data-barcode="{{$prod->barcode??''}}">{{$prod->product_name??''}} ({{$prod->uom_dt->uom_unit??''}})</option>
                             @endforeach
                         </select>
                     </div>

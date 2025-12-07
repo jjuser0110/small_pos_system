@@ -152,10 +152,10 @@ class ProductController extends Controller
                 $connected_product->update(['stock_quantity' => round($connected_product->stock_quantity + $product->connected_product_quantity)]);
 
             }else{
-                return redirect()->route('product.index')->withErrors('No batch item found for this product');
+                return redirect()->route('product.index')->withError('No batch item found for this product');
             }
         }else{
-            return redirect()->route('product.index')->withSuccess('Stock Not Enough');
+            return redirect()->route('product.index')->withError('Stock Not Enough');
         }
         
         return redirect()->route('product.index')->withSuccess('Item converted');
