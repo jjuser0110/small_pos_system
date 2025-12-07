@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Uom;
 use App\Models\Product;
+use App\Models\BatchItem;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -34,14 +35,17 @@ class ProductController extends Controller
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $category = Category::where('branch_id',$login_user->branch_id)->get();
+            $product_link = Product::where('branch_id',$login_user->branch_id)->get();
         }else if($login_user->role_id == 4){
             $category = Category::where('company_id',$login_user->company_id)->get();
+            $product_link = Product::where('company_id',$login_user->company_id)->get();
         }else{
             $category = Category::all();
+            $product_link = Product::all();
         }
 
         $uom = Uom::all();
-        return view('product.create')->with('category',$category)->with('uom',$uom);
+        return view('product.create')->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
     }
 
     public function store(Request $request)
@@ -59,13 +63,16 @@ class ProductController extends Controller
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $category = Category::where('branch_id',$login_user->branch_id)->get();
+            $product_link = Product::where('branch_id',$login_user->branch_id)->where('id','!=',$product->id)->get();
         }else if($login_user->role_id == 4){
-            $category = Category::where('company_id',$login_user->company_id)->get();
+            $category = Category::where('company_id',$login_user->company_id)->where('id','!=',$product->id)->get();
+            $product_link = Product::where('company_id',$login_user->company_id)->where('id','!=',$product->id)->get();
         }else{
             $category = Category::all();
+            $product_link = Product::where('id','!=',$product->id)->get();
         }
         $uom = Uom::all();
-        return view('product.create')->with('product',$product)->with('category',$category)->with('uom',$uom);
+        return view('product.create')->with('product',$product)->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
     }
 
     public function update(Request $request, Product $product)
@@ -87,6 +94,71 @@ class ProductController extends Controller
     public function viewlog(Product $product)
     {
         return view('product.viewlog')->with('product',$product);
+    }
+
+    public function convert(Product $product)
+    {
+        // dd($request->all());
+        if($product->stock_quantity > 0){
+            $batch = BatchItem::where('product_id', $product->id)
+                ->where('balance', '>', 0)
+                ->orderBy('created_at', 'ASC')
+                ->first();
+            if(isset($batch)){
+                $batch->stock_logs()->create([
+                    'branch_id' => $product->branch_id,
+                    'company_id' => $product->company_id,
+                    'category_id' => $product->category_id,
+                    'product_id' => $product->id,
+                    'type' => 'convert_out',
+                    'description' => $batch->batch->batch_no ?? '',
+                    'before_stock' => $product->stock_quantity,
+                    'quantity' => 1,
+                    'after_stock' => $product->stock_quantity - 1,
+                ]);
+                $batch->update([
+                    'balance'=>$batch->balance - 1,
+                    'quantity'=>$batch->quantity - 1,
+                    'total_cost'=>round($batch->cost_per_unit*($batch->quantity - 1),2),
+                ]);
+                $product->update(['stock_quantity' => $product->stock_quantity -1]);
+
+                $connected_product = Product::find($product->connected_product_id);
+                $total_cost = $batch->cost_per_unit;
+                $cost_per_unit = round($total_cost / $product->connected_product_quantity,2);
+                $batch_item = BatchItem::create([
+                    'batch_id'=> $batch->batch_id,
+                    'branch_id'=> $batch->branch_id,
+                    'company_id'=> $batch->company_id,
+                    'category_id'=> $batch->category_id,
+                    'product_id'=> $product->connected_product_id,
+                    'quantity'=> $product->connected_product_quantity,
+                    'total_cost'=> $total_cost,
+                    'cost_per_unit'=> $cost_per_unit,
+                    'balance'=> $product->connected_product_quantity,
+                ]);
+
+                $batch_item->stock_logs()->create([
+                    'branch_id' => $connected_product->branch_id,
+                    'company_id' => $connected_product->company_id,
+                    'category_id' => $connected_product->category_id,
+                    'product_id' => $connected_product->id,
+                    'type' => 'convert_in',
+                    'description' => $batch->batch->batch_no ?? '',
+                    'before_stock' => $connected_product->stock_quantity,
+                    'quantity' => $product->connected_product_quantity,
+                    'after_stock' => round($connected_product->stock_quantity + $product->connected_product_quantity),
+                ]);
+                $connected_product->update(['stock_quantity' => round($connected_product->stock_quantity + $product->connected_product_quantity)]);
+
+            }else{
+                return redirect()->route('product.index')->withErrors('No batch item found for this product');
+            }
+        }else{
+            return redirect()->route('product.index')->withSuccess('Stock Not Enough');
+        }
+        
+        return redirect()->route('product.index')->withSuccess('Item converted');
     }
 
 }

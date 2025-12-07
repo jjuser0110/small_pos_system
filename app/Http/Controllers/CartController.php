@@ -22,6 +22,7 @@ class CartController extends Controller
         $cart = Cart::with('product')
             ->where('user_id', auth()->id())
             ->get();
+            
         foreach($cart as $ca){
             $ca->product_name = $ca->product->product_name;
             $ca->stock = $ca->product->stock_quantity;

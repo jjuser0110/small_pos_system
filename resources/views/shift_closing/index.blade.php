@@ -8,7 +8,7 @@
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
-                <div class="head-label">
+                <div class="head-label"  style="margin-bottom:10px">
                     <h5 class="card-title mb-0">Shift Closing Listing</h5>
                 </div>
                 <div class="col-md-6 col-12 mb-4">

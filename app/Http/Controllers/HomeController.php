@@ -85,6 +85,7 @@ class HomeController extends Controller
             $category = Category::all();
             $products = Product::all();
         }
+
         return view('counter')->with('category',$category)->with('products',$products);
     }
 

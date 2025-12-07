@@ -27,7 +27,6 @@
                         <tr>
                             <th>No</th>
                             <th>Product Name</th>
-                            <th>Product Code</th>
                             <th>Category</th>
                             <th>Barcode</th>
                             <th>Selling Price</th>
@@ -45,7 +44,6 @@
                         <tr>
                             <td>{{$index+1??""}}</td>
                             <td>{{$row->product_name??""}}</td>
-                            <td>{{$row->product_code??""}}</td>
                             <td>{{$row->category->category_name??""}}</td>
                             <td>{{$row->barcode??""}}</td>
                             <td>{{$row->selling_price??""}}</td>
@@ -56,6 +54,9 @@
                             <td>{{$row->arrangement??""}}</td>
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>
+                                @if($row->connected_product_quantity > 0)
+                                <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to convert this product to smaller unit?')){window.location.href='{{ route('product.convert',$row) }}'}"><i class="fa-solid fa-exchange-alt"></i></a>
+                                @endif
                                 <a href="{{ route('product.viewlog',$row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a>
                                 <a href="{{ route('product.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('product.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>

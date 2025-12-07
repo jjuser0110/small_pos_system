@@ -23,6 +23,8 @@ class Product extends Model
         'stock_quantity',
         'is_active',
         'arrangement',
+        'connected_product_id',
+        'connected_product_quantity',
     ];
 
     public function branch()

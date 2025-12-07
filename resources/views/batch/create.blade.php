@@ -250,7 +250,7 @@
 
         // When scanner sends ENTER
         if (e.key === "Enter") {
-
+            e.preventDefault();
             let barcode = buffer;
             document.getElementById(targetInputId).value = barcode;
             buffer = "";

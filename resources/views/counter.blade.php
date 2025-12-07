@@ -221,6 +221,7 @@ const products = {
             id: "{{ $p->id }}",
             name: "{{ $p->product_name }}",
             barcode: "{{ $p->barcode??null }}",
+            uom: "{{ $p->uom_dt->uom_unit??null }}",
             price: {{ number_format($p->selling_price, 2, '.', '') }},
             stock: {{ $p->stock_quantity }}
         }@if(!$loop->last), @endif
@@ -313,7 +314,7 @@ function displayProducts(category){
         if(p.stock===0){ card.style.opacity=0.5; card.style.pointerEvents='none'; }
         else card.onclick=()=>addToCart(p);
         card.innerHTML=`<div class="product-name">${p.name}</div>
-                        <div class="product-price">RM ${p.price.toFixed(2)}</div>
+                        <div class="product-price">RM ${p.price.toFixed(2)}/${p.uom}</div>
                         ${p.stock===0?'<div class="out-of-stock">Out of Stock</div>':''}`;
         container.appendChild(card);
     });
