@@ -65,7 +65,7 @@
                             <td>{{ $item->product->product_name ?? '' }}</td>
                             <td>{{ $item->batch->batch_no ?? '' }}</td>
                             <td>{{ number_format($item->cost_price ?? 0, 2) }}</td>
-                            <td>{{ number_format($item->selling_price ?? 0, 0) }}</td>
+                            <td>{{ number_format($item->selling_price ?? 0, 2) }}</td>
                             <td>{{ number_format($item->quantity ?? 0, 2) }}</td>
                             <td>{{ number_format($item->total_cost_price ?? 0, 2) }}</td>
                             <td>{{ number_format($item->total_selling_price ?? 0, 2) }}</td>
