@@ -39,7 +39,13 @@ class OrderController extends Controller
         $query->whereBetween('created_at', [$date_from, $date_to]);
 
         // Sort and get results
-        $order = $query->orderBy('created_at', 'DESC')->get();
+        $order = $query
+            ->with('profit_items')
+            ->withSum('profit_items', 'total_earning')
+            ->orderBy('created_at', 'DESC')
+            ->get();
+
+        $total_profit = $order->sum('profit_items_sum_total_earning');
 
         // Format for input fields
         $date_from_input = $date_from->format('Y-m-d\TH:i');
@@ -47,6 +53,7 @@ class OrderController extends Controller
 
         return view('order.index')
             ->with('order', $order)
+            ->with('total_profit', $total_profit)
             ->with('date_from', $date_from_input)
             ->with('date_to', $date_to_input);
 
