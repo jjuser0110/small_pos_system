@@ -103,15 +103,15 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
     transition: all 0.3s;
 }
 .home-btn {
-    width: 100%; 
-    padding: 12px; 
+    width: 100%;
+    padding: 12px;
     background: linear-gradient(135deg, #fd9800ff 0%, #fdf900ff 100%);
-    color: black; 
-    border: none; 
-    border-radius: 8px; 
-    font-size: 15px; 
-    font-weight: bold; 
-    cursor: pointer; 
+    color: black;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
     margin-top: 10px;
     transition: all 0.3s;
 }
@@ -127,7 +127,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
         height: auto;
         overflow-y: auto;
     }
-    
+
     .container {
         grid-template-columns: 1fr;
         height: auto;
@@ -135,32 +135,118 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
         gap: 15px;
         padding: 10px;
     }
-    
+
     .left-panel {
         max-height: none;
         order: 1;
     }
-    
+
     .right-panel {
         max-height: none;
         order: 2;
         min-height: 400px;
     }
-    
+
     .cart-items {
         max-height: 300px;
     }
-    
+
     .products {
         grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
         gap: 8px;
     }
-    
+
     .categories {
         grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
         gap: 5px;
     }
 }
+
+.custom-modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s;
+}
+
+.custom-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 12px;
+    width: 320px;
+    max-width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s;
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.custom-modal-header h5 {
+    margin: 0;
+    color: #667eea;
+    font-size: 16px;
+}
+
+.custom-modal-close {
+    font-size: 22px;
+    cursor: pointer;
+    color: #999;
+    transition: 0.3s;
+}
+
+.custom-modal-close:hover {
+    color: #e74c3c;
+}
+
+.custom-modal-body {
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+.custom-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-btn {
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.cancel-btn {
+    background: #ccc;
+    color: #333;
+}
+
+.cancel-btn:hover { background: #bbb; }
+
+.confirm-btn {
+    background: #667eea;
+    color: white;
+}
+
+.confirm-btn:hover { background: #5568d3; }
+
+@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+@keyframes slideIn { from {transform: translateY(-50px);} to {transform: translateY(0);} }
 </style>
 </head>
 <body>
@@ -204,7 +290,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
                 <span>Total:</span>
                 <span id="total">$0.00</span>
             </div>
-    
+
             <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to empty shopping cart?')){window.location.href='{{ route('empty_cart') }}'}">Empty Cart</a>
             <button class="checkout-btn" onclick="checkout()">Checkout</button>
             <button class="home-btn" onclick="window.location.href='/home'">Home</button>
@@ -212,7 +298,47 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
     </div>
 </div>
 
+<!-- Convert From Box Modal -->
+<div id="convertBoxModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5>Convert Box to Bottles</h5>
+            <span class="custom-modal-close" id="closeConvertModal">&times;</span>
+        </div>
+        <div class="custom-modal-body">
+            <p id="convertBoxMessage"></p>
+            <p><strong>1 Box = <span id="boxToBottleQty"></span> Bottles</strong></p>
+            <p>Do you want to break 1 box into bottles?</p>
+        </div>
+        <div class="custom-modal-footer">
+            <button class="modal-btn cancel-btn" id="cancelConvertBtn">Cancel</button>
+            <button class="modal-btn confirm-btn" id="confirmConvertBtn">Convert</button>
+        </div>
+    </div>
+</div>
+
 <script>
+// Show modal
+const convertModal = document.getElementById('convertBoxModal');
+const closeConvertModal = document.getElementById('closeConvertModal');
+const cancelConvertBtn = document.getElementById('cancelConvertBtn');
+
+function openConvertModal() {
+    convertModal.style.display = 'block';
+}
+
+function closeConvertBoxModal() {
+    convertModal.style.display = 'none';
+}
+
+closeConvertModal.onclick = closeConvertBoxModal;
+cancelConvertBtn.onclick = closeConvertBoxModal;
+
+// Close modal when clicking outside the modal content
+window.onclick = function(event) {
+    if (event.target === convertModal) closeConvertBoxModal();
+}
+
 const products = {
     @foreach($category as $cat)
     "{{ Str::slug($cat->category_name, '_') }}": [
@@ -223,16 +349,27 @@ const products = {
             barcode: "{{ $p->barcode??null }}",
             uom: "{{ $p->uom_dt->uom_unit??null }}",
             price: {{ number_format($p->selling_price, 2, '.', '') }},
-            stock: {{ $p->stock_quantity }}
+            stock: {{ $p->stock_quantity }},
+            connected_product_id: {{ $p->connected_product_id ?? 0 }},
+            connected_product_quantity: {{ $p->connected_product_quantity ?? 0 }},
         }@if(!$loop->last), @endif
         @endforeach
     ]@if(!$loop->last), @endif
     @endforeach
 };
+const allProducts = Object.values(products).flat();
 
 let cart = [];
 let selectedCategory = "{{ Str::slug($category->first()->category_name, '_') }}";
 let isLoading = false;
+
+function findProductById(id) {
+    for (let cat in products) {
+        const result = products[cat].find(p => p.id == id);
+        if (result) return result;
+    }
+    return null;
+}
 
 // Load cart from server
 function loadCartFromServer() {
@@ -322,6 +459,70 @@ function displayProducts(category){
 
 // Add to cart
 function addToCart(product){
+    // =============== BOX CHECK ==================
+    // If this is a bottle and out of stock
+    if (product.stock <= 0) {
+
+        // Find box connected to this bottle
+        const box = allProducts.find(p => p.connected_product_id == product.id);
+
+        if (!box) {
+            alert("Bottle is out of stock and no box available.");
+            return;
+        }
+
+        const bottle = product;
+
+        currentBoxId = box.id;
+
+        // Fill modal text
+        document.getElementById('convertBoxMessage').innerText =
+            `${product.name} is out of stock.\nYou can convert a box into bottles.`;
+
+        document.getElementById('boxToBottleQty').innerText =
+            box.connected_product_quantity;
+
+        // Show modal
+        openConvertModal();
+
+        // Handle conversion click
+        document.getElementById('confirmConvertBtn').onclick = function () {
+            if(!currentBoxId) return;
+
+            fetch('/cart/convert-box', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    box_id: currentBoxId,   // Set this when opening modal
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                closeConvertBoxModal();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                alert(data.message);
+
+                // Update frontend stocks
+                box.stock = data.new_box_stock;
+                bottle.stock = data.new_bottle_stock;
+
+                updateProductStockUI(box);
+                updateProductStockUI(bottle);
+
+                addToCart(bottle);
+            });
+        };
+    }
+    // =============================================
+
     const existing = cart.find(i=>i.id==product.id);
     const currentQty = existing? existing.quantity :0;
     if(currentQty+1>product.stock){ alert(`Cannot add more. Only ${product.stock} in stock.`); return; }
@@ -348,12 +549,91 @@ function addToCart(product){
     });
 }
 
+function updateProductStockUI(product) {
+    const container = document.getElementById('products');
+    const cards = container.querySelectorAll('.product-card');
+    cards.forEach(card => {
+        const nameElem = card.querySelector('.product-name');
+        if (nameElem && nameElem.innerText === product.name) {
+            // Update stock display
+            if (product.stock === 0) {
+                card.style.opacity = 0.5;
+                card.style.pointerEvents = 'none';
+                if (!card.querySelector('.out-of-stock')) {
+                    const out = document.createElement('div');
+                    out.className = 'out-of-stock';
+                    out.innerText = 'Out of Stock';
+                    card.appendChild(out);
+                }
+            } else {
+                card.style.opacity = 1;
+                card.style.pointerEvents = 'auto';
+                const out = card.querySelector('.out-of-stock');
+                if (out) out.remove();
+            }
+        }
+    });
+}
+
 // Update quantity buttons
 function updateQuantity(id, change){
     const item=cart.find(i=>i.id==id);
     if(!item) return;
     const newQty=item.quantity+change;
-    if(newQty>item.stock){ alert(`Cannot increase beyond stock (${item.stock})`); return; }
+
+    // If increasing beyond stock
+    if(newQty > item.stock) {
+        // Check if item is a bottle connected to a box
+        const box = allProducts.find(p => p.connected_product_id == item.id && p.stock > 0);
+
+        if(box) {
+            // Fill modal text
+            document.getElementById('convertBoxMessage').innerText =
+                `${item.name} only has ${item.stock} in stock.\nYou can convert a box into bottles.`;
+
+            document.getElementById('boxToBottleQty').innerText = box.connected_product_quantity;
+
+            // Show modal
+            openConvertModal();
+
+            // Handle conversion click
+            document.getElementById('confirmConvertBtn').onclick = function() {
+                if(!box.id) return;
+
+                fetch('/cart/convert-box', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ box_id: box.id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    closeConvertBoxModal();
+
+                    if(data.error) { alert(data.error); return; }
+                    alert(data.message);
+
+                    // Update stocks
+                    box.stock = data.new_box_stock;
+                    item.stock = data.new_bottle_stock;
+
+                    updateProductStockUI(box);
+                    updateProductStockUI(item);
+
+                    // Try increasing quantity again
+                    updateQuantity(id, change);
+                });
+            };
+
+        } else {
+            alert(`Cannot increase beyond stock (${item.stock})`);
+        }
+
+        return; // exit the function for now
+    }
+
     if(newQty<=0){ removeFromCart(id); return; }
     item.quantity=newQty; updateCart();
     fetch('/cart/update',{ method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({id:id,quantity:newQty}) })

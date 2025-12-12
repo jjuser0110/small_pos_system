@@ -51,4 +51,14 @@ class Product extends Model
     {
         return $this->hasMany('App\Models\StockLog');
     }
+
+    public function connected_product()
+    {
+        return $this->belongsTo(Product::class, 'connected_product_id');
+    }
+
+    public function used_in_boxes()
+    {
+        return $this->hasMany(Product::class, 'connected_product_id');
+    }
 }

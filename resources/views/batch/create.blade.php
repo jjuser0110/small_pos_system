@@ -14,13 +14,13 @@
     }
 
     #mytable th {
-        font-weight: 600; 
+        font-weight: 600;
         text-align: center;
     }
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('batch.index')}}">Batch /</a> 
+        <a class="text-muted fw-light" href="{{route('batch.index')}}">Batch /</a>
          @if (isset($batch)) Edit @else Create @endif
     </h4>
     <div class="row">
@@ -57,7 +57,7 @@
                     <input
                     type="date"
                     class="form-control"
-                    name="batch_date" 
+                    name="batch_date"
                     value="{{ $batch->batch_date ?? date('Y-m-d') }}"
                     required
                     @if(isset($batch)) disabled @endif/>
@@ -89,12 +89,12 @@
                             <h5 class="card-title mb-0">Batch Items</h5>
                         </div>
                         <div class="dt-action-buttons text-end pt-3 pt-md-0">
-                            <div class="dt-buttons"> 
+                            <div class="dt-buttons">
                                 @if($batch->status == 'Open')
                                 <a class="dt-button create-new btn btn-primary" type="button" style="color:white" data-bs-toggle="modal"
                                 data-bs-target="#activityModal">
                                     Add New Record
-                                </a> 
+                                </a>
                                 @endif
                             </div>
                         </div>
@@ -138,10 +138,10 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="4" style="text-align:right">Total:</th>
+                                        <th colspan="3" style="text-align:right">Total:</th>
                                         <th>{{ $batch->batch_items->sum('quantity') ?? 0 }}</th>
                                         <th></th>
-                                        <th>{{ $batch->batch_items->sum('total_cost') ?? 0 }}</th>
+                                        <th>{{ number_format($batch->batch_items->sum('total_cost') ?? 0, 2) }}</th>
                                         <th></th>
                                     </tr>
                                 </tfoot>
@@ -217,9 +217,9 @@
     $(function(){
         var table = $('#mytable').DataTable({
             dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-            paging: false,       
-            info: false,          
-            ordering: false,      
+            paging: false,
+            info: false,
+            ordering: false,
             searching: true,
         });
     });

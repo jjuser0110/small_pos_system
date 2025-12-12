@@ -22,7 +22,7 @@ class CartController extends Controller
         $cart = Cart::with('product')
             ->where('user_id', auth()->id())
             ->get();
-            
+
         foreach($cart as $ca){
             $ca->product_name = $ca->product->product_name;
             $ca->stock = $ca->product->stock_quantity;
@@ -84,6 +84,106 @@ class CartController extends Controller
             ->delete();
 
         return response()->json(['status' => 'ok']);
+    }
+
+    public function convertBox(Request $request)
+    {
+        $product = Product::findOrFail($request->box_id);
+
+        // BOX MUST HAVE STOCK
+        if ($product->stock_quantity <= 0) {
+            return response()->json(['error' => 'Stock not enough'], 422);
+        }
+
+        // Get FIRST BATCH ITEM for this box
+        $batch = BatchItem::where('product_id', $product->id)
+            ->where('balance', '>', 0)
+            ->orderBy('created_at', 'ASC')
+            ->first();
+
+        if (!$batch) {
+            return response()->json(['error' => 'No batch found for this product'], 422);
+        }
+
+        // IDENTIFY CONNECTED PRODUCT (bottle)
+        $connected_product = Product::find($product->connected_product_id);
+        if (!$connected_product) {
+            return response()->json(['error' => 'Connected product not found'], 422);
+        }
+
+        $bottle_qty = $product->connected_product_quantity;
+
+        /** -----------------------------------
+         *  1) STOCK LOG — OUT (BOX)
+         * ----------------------------------- */
+        $batch->stock_logs()->create([
+            'branch_id'     => $product->branch_id,
+            'company_id'    => $product->company_id,
+            'category_id'   => $product->category_id,
+            'product_id'    => $product->id,
+            'type'          => 'convert_out',
+            'description'   => $batch->batch->batch_no ?? '',
+            'before_stock'  => $product->stock_quantity,
+            'quantity'      => 1,
+            'after_stock'   => $product->stock_quantity - 1,
+        ]);
+
+        // Reduce BOX batch balance
+        $batch->update([
+            'balance'       => $batch->balance - 1,
+            'quantity'      => $batch->quantity - 1,
+            'total_cost'    => round($batch->cost_per_unit * ($batch->quantity - 1), 2),
+        ]);
+
+        // Reduce BOX stock
+        $product->update([
+            'stock_quantity' => $product->stock_quantity - 1
+        ]);
+
+        /** -----------------------------------
+         *  2) CREATE NEW BATCH FOR BOTTLES
+         * ----------------------------------- */
+        $total_cost     = $batch->cost_per_unit;
+        $cost_per_unit  = round($total_cost / $bottle_qty, 2);
+
+        $newBatch = BatchItem::create([
+            'batch_id'      => $batch->batch_id,
+            'branch_id'     => $batch->branch_id,
+            'company_id'    => $batch->company_id,
+            'category_id'   => $batch->category_id,
+            'product_id'    => $connected_product->id,
+            'quantity'      => $bottle_qty,
+            'balance'       => $bottle_qty,
+            'total_cost'    => $total_cost,
+            'cost_per_unit' => $cost_per_unit,
+        ]);
+
+        /** -----------------------------------
+         *  3) STOCK LOG — IN (BOTTLES)
+         * ----------------------------------- */
+        $newBatch->stock_logs()->create([
+            'branch_id'     => $connected_product->branch_id,
+            'company_id'    => $connected_product->company_id,
+            'category_id'   => $connected_product->category_id,
+            'product_id'    => $connected_product->id,
+            'type'          => 'convert_in',
+            'description'   => $batch->batch->batch_no ?? '',
+            'before_stock'  => $connected_product->stock_quantity,
+            'quantity'      => $bottle_qty,
+            'after_stock'   => $connected_product->stock_quantity + $bottle_qty,
+        ]);
+
+        // Increase bottle stock
+        $connected_product->update([
+            'stock_quantity' => $connected_product->stock_quantity + $bottle_qty
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "1 box converted into {$bottle_qty} bottles",
+            'new_bottle_stock' => $connected_product->stock_quantity,
+            'new_box_stock' => $product->stock_quantity,
+        ]);
     }
 
     public function place(Request $request)
@@ -256,7 +356,7 @@ class CartController extends Controller
                 'first_sale_time'    => Carbon::now(),
             ]);
         }
-        
+
         $checkShiftMethod = ShiftMethodClosing::where('shift_closing_id', $shift->id)->where('payment_method',$request->payment_method)->first();
         if(isset($checkShiftMethod)){
             $checkShiftMethod->update([

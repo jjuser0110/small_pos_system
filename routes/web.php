@@ -30,6 +30,7 @@ Route::get('empty_cart', [App\Http\Controllers\CartController::class, 'empty_car
 Route::post('/cart/add', [App\Http\Controllers\CartController::class, 'add']);
 Route::post('/cart/update', [App\Http\Controllers\CartController::class, 'update']);
 Route::post('/cart/remove', [App\Http\Controllers\CartController::class, 'remove']);
+Route::post('/cart/convert-box', [App\Http\Controllers\CartController::class, 'convertBox']);
 Route::post('/cart/placeorder', [App\Http\Controllers\CartController::class, 'place']);
 
 
