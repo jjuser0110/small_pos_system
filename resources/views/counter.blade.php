@@ -298,47 +298,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
     </div>
 </div>
 
-<!-- Convert From Box Modal -->
-<div id="convertBoxModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <h5>Convert Box to Bottles</h5>
-            <span class="custom-modal-close" id="closeConvertModal">&times;</span>
-        </div>
-        <div class="custom-modal-body">
-            <p id="convertBoxMessage"></p>
-            <p><strong>1 Box = <span id="boxToBottleQty"></span> Bottles</strong></p>
-            <p>Do you want to break 1 box into bottles?</p>
-        </div>
-        <div class="custom-modal-footer">
-            <button class="modal-btn cancel-btn" id="cancelConvertBtn">Cancel</button>
-            <button class="modal-btn confirm-btn" id="confirmConvertBtn">Convert</button>
-        </div>
-    </div>
-</div>
-
 <script>
-// Show modal
-const convertModal = document.getElementById('convertBoxModal');
-const closeConvertModal = document.getElementById('closeConvertModal');
-const cancelConvertBtn = document.getElementById('cancelConvertBtn');
-
-function openConvertModal() {
-    convertModal.style.display = 'block';
-}
-
-function closeConvertBoxModal() {
-    convertModal.style.display = 'none';
-}
-
-closeConvertModal.onclick = closeConvertBoxModal;
-cancelConvertBtn.onclick = closeConvertBoxModal;
-
-// Close modal when clicking outside the modal content
-window.onclick = function(event) {
-    if (event.target === convertModal) closeConvertBoxModal();
-}
-
 const products = {
     @foreach($category as $cat)
     "{{ Str::slug($cat->category_name, '_') }}": [
@@ -459,73 +419,46 @@ function displayProducts(category){
 
 // Add to cart
 function addToCart(product){
-    // =============== BOX CHECK ==================
-    // If this is a bottle and out of stock
-    if (product.stock <= 0) {
+    const existing = cart.find(i=>i.id==product.id);
+    const currentQty = existing? existing.quantity :0;
 
-        // Find box connected to this bottle
-        const box = allProducts.find(p => p.connected_product_id == product.id);
+    // If adding 1 exceeds current stock
+    if (currentQty + 1 > product.stock) {
 
-        if (!box) {
-            alert("Bottle is out of stock and no box available.");
-            return;
-        }
+        // Find a box that can be converted
+        const box = allProducts.find(p => p.connected_product_id == product.id && p.stock > 0);
 
-        const bottle = product;
-
-        currentBoxId = box.id;
-
-        // Fill modal text
-        document.getElementById('convertBoxMessage').innerText =
-            `${product.name} is out of stock.\nYou can convert a box into bottles.`;
-
-        document.getElementById('boxToBottleQty').innerText =
-            box.connected_product_quantity;
-
-        // Show modal
-        openConvertModal();
-
-        // Handle conversion click
-        document.getElementById('confirmConvertBtn').onclick = function () {
-            if(!currentBoxId) return;
-
+        if (box) {
+            // Disable adding temporarily
             fetch('/cart/convert-box', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({
-                    box_id: currentBoxId,   // Set this when opening modal
-                })
+                body: JSON.stringify({ box_id: box.id })
             })
             .then(res => res.json())
             .then(data => {
-                closeConvertBoxModal();
+                if (data.error) { alert(data.error); return; }
 
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                alert(data.message);
-
-                // Update frontend stocks
+                // Update stocks after conversion
                 box.stock = data.new_box_stock;
-                bottle.stock = data.new_bottle_stock;
-
+                product.stock = data.new_bottle_stock;
                 updateProductStockUI(box);
-                updateProductStockUI(bottle);
+                updateProductStockUI(product);
 
-                addToCart(bottle);
-            });
-        };
+                // Retry adding
+                addToCart(product);
+            })
+            .catch(err => console.error(err));
+
+            return; // Wait for conversion
+        } else {
+            alert(`Cannot add more. Only ${product.stock} in stock.`);
+            return;
+        }
     }
-    // =============================================
-
-    const existing = cart.find(i=>i.id==product.id);
-    const currentQty = existing? existing.quantity :0;
-    if(currentQty+1>product.stock){ alert(`Cannot add more. Only ${product.stock} in stock.`); return; }
 
     if(existing) existing.quantity++;
     else cart.push({id:product.id,name:product.name,price:product.price,quantity:1,stock:product.stock});
@@ -583,55 +516,35 @@ function updateQuantity(id, change){
 
     // If increasing beyond stock
     if(newQty > item.stock) {
-        // Check if item is a bottle connected to a box
+        // Try auto-convert
         const box = allProducts.find(p => p.connected_product_id == item.id && p.stock > 0);
+        if(box){
+            fetch('/cart/convert-box', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ box_id: box.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.error){ alert(data.error); return; }
 
-        if(box) {
-            // Fill modal text
-            document.getElementById('convertBoxMessage').innerText =
-                `${item.name} only has ${item.stock} in stock.\nYou can convert a box into bottles.`;
+                box.stock = data.new_box_stock;
+                item.stock = data.new_bottle_stock;
 
-            document.getElementById('boxToBottleQty').innerText = box.connected_product_quantity;
+                updateProductStockUI(box);
+                updateProductStockUI(item);
 
-            // Show modal
-            openConvertModal();
-
-            // Handle conversion click
-            document.getElementById('confirmConvertBtn').onclick = function() {
-                if(!box.id) return;
-
-                fetch('/cart/convert-box', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ box_id: box.id })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    closeConvertBoxModal();
-
-                    if(data.error) { alert(data.error); return; }
-                    alert(data.message);
-
-                    // Update stocks
-                    box.stock = data.new_box_stock;
-                    item.stock = data.new_bottle_stock;
-
-                    updateProductStockUI(box);
-                    updateProductStockUI(item);
-
-                    // Try increasing quantity again
-                    updateQuantity(id, change);
-                });
-            };
-
+                // Retry quantity increase
+                updateQuantity(id, change);
+            });
+            return;
         } else {
             alert(`Cannot increase beyond stock (${item.stock})`);
+            return;
         }
-
-        return; // exit the function for now
     }
 
     if(newQty<=0){ removeFromCart(id); return; }
