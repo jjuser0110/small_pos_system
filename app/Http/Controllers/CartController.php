@@ -223,13 +223,16 @@ class CartController extends Controller
             sprintf('%02d', $rn->day) .
             sprintf('%0'.$rn->no_of_digit_behind.'d', $rn->running_no);
 
-        return Order::create([
+        $order = Order::create([
             'branch_id' => $user->branch_id,
             'company_id' => $user->company_id,
             'user_id' => $user->id,
             'order_no' => $order_no,
             'order_date' => $now,
         ]);
+        $rn->increment('running_no');
+
+        return $order;
     }
 
     private function processItem($order, $cart)
