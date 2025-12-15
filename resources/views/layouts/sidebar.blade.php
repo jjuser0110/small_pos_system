@@ -73,15 +73,19 @@ $currentRoute = request()->route()->getName();
             </a>
         </li>
         @endif
-        @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2)
-        <li class="menu-header small text-uppercase">
-            <span class="menu-header-text" data-i18n="Master Setting">Master Setting</span>
-        </li>
+
+        @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
         <li class="menu-item {{ Str::contains($currentRoute, 'company_manager.index') ? 'active' : ''}}">
             <a href="{{ route('company_manager.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Company Manager</div>
             </a>
+        </li>
+        @endif
+
+        @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2)
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text" data-i18n="Master Setting">Master Setting</span>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'branch_manager.index') ? 'active' : ''}}">
             <a href="{{ route('branch_manager.index') }}" class="menu-link">
