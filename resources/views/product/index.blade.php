@@ -12,12 +12,12 @@
                     <h5 class="card-title mb-0">Product Listing</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
-                    <div class="dt-buttons"> 
+                    <div class="dt-buttons">
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('product.create')}}" onclick="showLoading()">
-                            <span><i class="bx bx-plus me-sm-1"></i> 
+                            <span><i class="bx bx-plus me-sm-1"></i>
                                 <span class="d-none d-sm-inline-block">Add New Record</span>
                             </span>
-                        </a> 
+                        </a>
                     </div>
                 </div>
             </div>
@@ -25,16 +25,16 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>No</th>
+                            <th>#</th>
                             <th>Product Name</th>
                             <th>Category</th>
                             <th>Barcode</th>
-                            <th>Selling Price</th>
+                            <th>S.P.</th>
                             <th>Uom</th>
                             <th>Stock Bal.</th>
                             <th>Company</th>
                             <th>Branch</th>
-                            <th>Arrange</th>
+                            {{-- <th>Arrange</th> --}}
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -51,7 +51,7 @@
                             <td>{{$row->stock_quantity??""}}</td>
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->branch->branch_code??""}}</td>
-                            <td>{{$row->arrangement??""}}</td>
+                            {{-- <td>{{$row->arrangement??""}}</td> --}}
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>
                                 @if($row->connected_product_quantity > 0)
