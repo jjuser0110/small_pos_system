@@ -1,5 +1,11 @@
 @extends('layouts.app')
 @section('content')
+    <style>
+        #mytable th,
+        #mytable td {
+            padding: 10px;
+        }
+    </style>
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">

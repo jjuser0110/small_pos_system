@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('company_manager.index')}}">Company Manager /</a> 
+        <a class="text-muted fw-light" href="{{route('company_manager.index')}}">Company Manager /</a>
          @if (isset($company_manager)) Edit @else Create @endif
     </h4>
     <div class="row">
@@ -20,11 +20,11 @@
                     class="form-control"
                     placeholder="Jack"
                     name="name"
-                    value="{{$company_manager->name??''}}" 
+                    value="{{$company_manager->name??''}}"
                     required/>
                 </div>
                 <div class="col-md-6 mb-4">
-                    <label for="select2Basic" class="form-label">Branch</label>
+                    <label for="select2Basic" class="form-label">Company</label>
                     <select id="select2Basic" name="company_id" class="select2 form-select" data-allow-clear="true">
                         @foreach($company as $com)
                             <option value="{{ $com->id }}" @if(isset($company_manager) && $company_manager->company_id == $com->id) selected @endif>
@@ -39,7 +39,7 @@
                     type="text"
                     class="form-control"
                     placeholder="Jack1994"
-                    name="username" 
+                    name="username"
                     value="{{$company_manager->username??''}}"
                     @if(isset($company_manager)) readonly @endif
                     required/>
@@ -49,7 +49,7 @@
                     <input
                     type="text"
                     class="form-control"
-                    name="password" 
+                    name="password"
                     @if(!isset($company_manager)) required @endif/>
                 </div>
                 @if(isset($company_manager))

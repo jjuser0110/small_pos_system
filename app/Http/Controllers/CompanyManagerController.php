@@ -16,14 +16,25 @@ class CompanyManagerController extends Controller
 {
     public function index(Request $request)
     {
-        $company_manager = User::where('role_id',4)->get();
+        $login_user = Auth::user();
+        if ($login_user->role_id == 3) {
+            $company_manager = User::where('branch_id',$login_user->branch_id)->where('role_id',4)->get();
+        } else {
+            $company_manager = User::where('role_id',4)->get();
+        }
 
         return view('company_manager.index')->with('company_manager',$company_manager);
     }
 
     public function create()
     {
-        $company = Company::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $company = Company::where('branch_id',$login_user->branch_id)->get();
+        }else{
+            $company = Company::all();
+        }
+
         return view('company_manager.create')->with('company',$company);
     }
 
@@ -45,7 +56,13 @@ class CompanyManagerController extends Controller
 
     public function edit(User $company_manager)
     {
-        $company = Company::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $company = Company::where('branch_id',$login_user->branch_id)->get();
+        }else{
+            $company = Company::all();
+        }
+
         return view('company_manager.create')->with('company',$company)->with('company_manager',$company_manager);
     }
 
