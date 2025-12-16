@@ -28,7 +28,7 @@
                             <div class="d-flex align-items-center mb-2 pb-1">
                             <h4 class="ms-1 mb-0">Total Order</h4>
                             </div>
-                            <p class="mb-1" style="margin:10px;font-size:18px">{{$order->count()??0}}</p>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{$order->where('status', 'Active')->count()??0}}</p>
                             </p>
                         </div>
                         </div>
@@ -39,7 +39,7 @@
                             <div class="d-flex align-items-center mb-2 pb-1">
                             <h4 class="ms-1 mb-0">Total Amount</h4>
                             </div>
-                            <p class="mb-1" style="margin:10px;font-size:18px">{{number_format($order->sum('final_total')??0,2)}}</p>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{number_format($order->where('status', 'Active')->sum('final_total')??0,2)}}</p>
                             </p>
                         </div>
                         </div>
@@ -71,24 +71,37 @@
                             <th>Payment Method</th>
                             <th>Received Amount</th>
                             <th>Change</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($order as $index => $row)
-                        <tr>
+                        <tr style="{{ $row->status <> 'Active' ? 'background: lightgrey;' : '' }}">
                             <td>{{$index+1??""}}</td>
                             <td>{{$row->order_no??""}}</td>
                             <td>{{$row->created_at??""}}</td>
                             <td>{{$row->user->username??""}}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
-                            <td>{{$row->final_total??""}}</td>
+                            <td>{{number_format($row->final_total, 2)??""}}</td>
                             <td>{{$row->payment_method??""}}</td>
                             <td>{{$row->amount_received??""}}</td>
                             <td>{{$row->change??""}}</td>
+                            <td>{{$row->status??""}}</td>
                             <td>
                                 <a href="{{ route('order.view',$row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a>
+
+                                @if (auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
+                                    @if($row->status !== 'Voided')
+                                        <a href="javascript:void(0)"
+                                        class="text-danger"
+                                        onclick="openVoidModal('{{ route('order.void', $row->id) }}')">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </a>
+                                    @endif
+                                @endif
+
                                 <!-- <a href="{{ route('order.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('order.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a> -->
                             </td>
@@ -99,14 +112,47 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="voidModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" id="voidForm">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">Void Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="mb-2">Please provide a reason for voiding this order:</p>
+
+                        <textarea name="voided_reason"
+                                class="form-control"
+                                rows="4"
+                                required
+                                placeholder="E.g. Wrong item, payment mistake, duplicate order"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger">
+                            Confirm Void
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- / Content -->
+@endsection
 
-
-    @endsection
-    @section('page-js')
-    @endsection
-    @section('scripts')
-      <script>
+@section('page-js')
+@endsection
+@section('scripts')
+<script>
     $(function(){
       var table = $('#mytable').DataTable({
         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
@@ -115,5 +161,13 @@
         lengthMenu: [5, 10, 25, 50, 75, 100],
       });
     });
-  </script>
-    @endsection
+
+    function openVoidModal(action) {
+        const form = document.getElementById('voidForm');
+        form.action = action;
+
+        const modal = new bootstrap.Modal(document.getElementById('voidModal'));
+        modal.show();
+    }
+</script>
+@endsection

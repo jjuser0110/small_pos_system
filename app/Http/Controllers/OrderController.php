@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Http\Request;
+use App\Models\BatchItem;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\ShiftClosing;
+use App\Models\ShiftMethodClosing;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use DB;
 use Carbon\Carbon;
 
 class OrderController extends Controller
@@ -45,7 +50,7 @@ class OrderController extends Controller
             ->orderBy('created_at', 'DESC')
             ->get();
 
-        $total_profit = $order->sum('profit_items_sum_total_earning');
+        $total_profit = $order->where('status', 'Active')->sum('profit_items_sum_total_earning');
 
         // Format for input fields
         $date_from_input = $date_from->format('Y-m-d\TH:i');
@@ -64,4 +69,77 @@ class OrderController extends Controller
         return view('order.view')->with('order',$order);
     }
 
+    public function void(Request $request, Order $order)
+    {
+        if (!(auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)) {
+            return back()->withErrors('Access denied');
+        }
+
+        $request->validate([
+            'voided_reason' => 'required|string',
+        ]);
+
+        if ($order->status === 'Voided') {
+            return back()->with('error', 'Order already voided.');
+        } elseif ($order->status === 'Refunded') {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($order, $request) {
+
+            foreach ($order->profit_items as $profit_item) {
+
+                $product = Product::lockForUpdate()->find($profit_item->product_id);
+                $before = $product->stock_quantity;
+                $after = $before + $profit_item->quantity;
+                // Restore product stock
+                $product->update([
+                    'stock_quantity' => $after
+                ]);
+
+                // Restore batch balance
+                BatchItem::where('id', $profit_item->batch_item_id)
+                    ->increment('balance', $profit_item->quantity);
+
+                // Stock log (reverse)
+                $profit_item->stock_logs()->create([
+                    'branch_id'     => $profit_item->branch_id,
+                    'company_id'    => $profit_item->company_id,
+                    'category_id'   => $profit_item->category_id,
+                    'product_id'    => $profit_item->product_id,
+                    'type'          => 'stock_in',
+                    'description'   => 'VOID ORDER ' . $order->order_no,
+                    'before_stock'  => $before,
+                    'quantity'      => $profit_item->quantity,
+                    'after_stock'   => $after,
+                ]);
+
+                $profit_item->delete();
+            }
+
+            // Reverse shift closing
+            $shift = ShiftClosing::where('user_id', $order->user_id)
+                ->whereNull('closing_time')
+                ->first();
+
+            if ($shift) {
+                $shift->decrement('total_order_count', $order->total_product);
+                $shift->decrement('total_order_amount', $order->total_price);
+            }
+
+            ShiftMethodClosing::where('shift_closing_id', $shift->id ?? null)
+                ->where('payment_method', $order->payment_method)
+                ->decrement('amount', $order->final_total);
+
+            // Mark order as voided
+            $order->update([
+                'status'            => 'Voided',
+                'voided_at'         => Carbon::now(),
+                'voided_by'         => auth()->id(),
+                'voided_reason'     => $request->voided_reason,
+            ]);
+        });
+
+        return back()->with('success', 'Order voided successfully.');
+    }
 }

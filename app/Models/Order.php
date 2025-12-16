@@ -24,14 +24,18 @@ class Order extends Model
         'payment_method',
         'amount_received',
         'change',
+        'status',
+        'voided_by',
+        'voided_at',
+        'voided_reason',
     ];
-    
-    
+
+
     public function branch()
     {
         return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
     }
-    
+
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class, 'company_id');
@@ -50,5 +54,10 @@ class Order extends Model
     public function profit_items()
     {
         return $this->hasMany(\App\Models\OrderItemProfit::class, 'order_id');
+    }
+
+    public function voidedBy()
+    {
+        return $this->hasMany(User::class, 'voided_by');
     }
 }
