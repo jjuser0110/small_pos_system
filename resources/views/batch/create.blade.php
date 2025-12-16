@@ -34,7 +34,7 @@
                     <label for="select2Basic" class="form-label">Company</label>
                     <select id="select2Basic" name="company_id" class="select2 form-select" data-allow-clear="true" @if(isset($batch)) disabled @endif>
                         @foreach($company as $com)
-                            <option value="{{ $com->id }}" @if(isset($category) && $category->company_id == $com->id) selected @endif>
+                            <option value="{{ $com->id }}" @if(isset($batch) && $batch->company_id == $com->id) selected @endif>
                                 {{ $com->company_name ?? '' }}
                             </option>
                         @endforeach
