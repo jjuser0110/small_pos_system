@@ -45,29 +45,29 @@ class OrderItemProfit extends Model
 
     public function batch_item()
     {
-        return $this->belongsTo(\App\Models\BatchrItem::class, 'batch_item_id');
+        return $this->belongsTo(\App\Models\BatchItem::class, 'batch_item_id');
     }
 
     public function product()
     {
         return $this->belongsTo(\App\Models\Product::class, 'product_id');
     }
-    
+
     public function category()
     {
         return $this->belongsTo(\App\Models\Category::class, 'category_id');
     }
-    
+
     public function branch()
     {
         return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
     }
-    
+
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class, 'company_id');
     }
-    
+
     public function stock_logs()
     {
         return $this->morphMany('App\Models\StockLog', 'content');

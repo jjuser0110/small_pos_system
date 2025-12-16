@@ -12,5 +12,6 @@ Route::prefix('/batch')->as('batch.')->middleware(['auth'])->group(function() {
     Route::get('/complete/{batch}', 'BatchController@complete')->name('complete');
     Route::get('/destroy/{batch}', 'BatchController@destroy')->name('destroy');
     Route::post('/addBatchItem/{batch}', 'BatchController@addBatchItem')->name('addBatchItem');
+    Route::post('/updateBatchItem/{batch_item}', 'BatchController@updateBatchItem')->name('updateBatchItem');
     Route::get('/destroyItem/{batch_item}', 'BatchController@destroyItem')->name('destroyItem');
 });

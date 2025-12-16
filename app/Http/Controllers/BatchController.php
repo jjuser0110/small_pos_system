@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use DB;
 
 class BatchController extends Controller
 {
@@ -154,7 +155,7 @@ class BatchController extends Controller
 
         return redirect()->route('batch.index')->withSuccess('Data deleted');
     }
-    
+
     public function addBatchItem(Request $request, Batch $batch)
     {
         $product = Product::find($request->product_id);
@@ -171,4 +172,100 @@ class BatchController extends Controller
         return redirect()->back()->withSuccess('Data deleted');
     }
 
+    public function updateBatchItem(Request $request, BatchItem $batchItem)
+    {
+        $request->validate([
+            'quantity'      => 'required',
+            'cost_per_unit' => 'required',
+            'total_cost'    => 'required',
+        ]);
+
+        $total_cost = round($request->quantity * $request->cost_per_unit, 2);
+        if ($total_cost <> $request->total_cost) {
+            return back()->withErrors('Incorrect value. Please try again.');
+        }
+
+        return DB::transaction(function () use ($request, $batchItem) {
+
+            $product = $batchItem->product;
+            if (empty($product)) {
+                return back()->withErrors('Product not found.');
+            }
+
+            $oldQty = $batchItem->quantity;
+            $newQty = $request->quantity;
+            $adjustment = $newQty - $oldQty;
+
+            if ($adjustment < 0 && abs($adjustment) > $batchItem->balance) {
+                return back()->withErrors('Unable to reduce quantity more than available balance.');
+            }
+
+            if ($request->cost_per_unit <> $batchItem->cost_per_unit) {
+                foreach ($batchItem->profit_items as $profit_item) {
+                    $profit_item->update([
+                        'cost_price'        => $request->cost_per_unit,
+                        'earning'           => round($profit_item->selling_price - $request->cost_per_unit, 2),
+                        'total_cost_price'  => round($request->cost_per_unit * $profit_item->quantity, 2),
+                        'total_earning'     => round(($profit_item->selling_price - $request->cost_per_unit) * $profit_item->quantity, 2),
+                    ]);
+                }
+            }
+
+            if ($adjustment === 0) {
+
+                $batchItem->update([
+                    'quantity'       => $request->quantity,
+                    'cost_per_unit'  => $request->cost_per_unit,
+                    'total_cost'     => $request->total_cost,
+                ]);
+
+                $this->updateBatchTotals($batchItem->batch);
+
+                return back()->withSuccess('Data updated');
+            }
+
+            $type = $adjustment > 0 ? 'adjust_in' : 'adjust_out';
+            $stockChange = abs($adjustment);
+
+            $newStock = $type === 'adjust_in'
+                ? $product->stock_quantity + $stockChange
+                : $product->stock_quantity - $stockChange;
+
+            $batchItem->stock_logs()->create([
+                'branch_id'     => $product->branch_id,
+                'company_id'    => $product->company_id,
+                'category_id'   => $product->category_id,
+                'product_id'    => $product->id,
+                'type'          => $type,
+                'description'   => $batchItem->batch->batch_no ?? '',
+                'before_stock'  => $product->stock_quantity,
+                'quantity'      => $stockChange,
+                'after_stock'   => $newStock,
+            ]);
+
+            $batchItem->product->update([
+                'stock_quantity' => $newStock,
+            ]);
+
+            $batchItem->update([
+                'quantity'       => $request->quantity,
+                'cost_per_unit'  => $request->cost_per_unit,
+                'total_cost'     => $request->total_cost,
+                'balance'        => $newStock,
+            ]);
+
+            $this->updateBatchTotals($batchItem->batch);
+
+            return back()->withSuccess('Batch item updated successfully');
+        });
+    }
+
+    private function updateBatchTotals($batch)
+    {
+        $batch->update([
+            'total_product' => $batch->batch_items()->count(),
+            'total_item'    => $batch->batch_items()->sum('quantity'),
+            'total_cost'    => $batch->batch_items()->sum('total_cost'),
+        ]);
+    }
 }

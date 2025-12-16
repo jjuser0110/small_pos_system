@@ -47,9 +47,14 @@ class BatchItem extends Model
     {
         return $this->belongsTo('App\Models\Product');
     }
-    
+
     public function stock_logs()
     {
         return $this->morphMany('App\Models\StockLog', 'content');
+    }
+
+    public function profit_items()
+    {
+        return $this->hasMany('App\Models\OrderItemProfit');
     }
 }

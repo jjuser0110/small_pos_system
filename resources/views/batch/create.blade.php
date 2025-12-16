@@ -131,6 +131,10 @@
                                         <td>
                                             @if($batch->status == 'Open')
                                             <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('batch.destroyItem',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
+                                            @else
+                                                <a type="button" data-bs-toggle="modal" data-bs-target="#editModal{{ $row->id }}" data-id="{{ $index + 1 }}">
+                                                    <i class="fa fa-pencil"></i>
+                                                </a>
                                             @endif
                                         </td>
                                     </tr>
@@ -186,15 +190,15 @@
                     </div>
                     <div class="col-12">
                         <label class="col-form-label">Quantity</label>
-                        <input class="form-control" type="number" step="0.01" min="0" name="quantity" id="quantity" onkeyup="countCost()" required>
+                        <input class="form-control" type="number" step="0.01" min="0" name="quantity" id="quantity" onkeyup="countCost(this)" required>
                     </div>
                     <div class="col-12">
                         <label class="col-form-label">Single Cost</label>
-                        <input class="form-control" type="number" step="0.01" min="0" name="cost_per_unit" id="cost_per_unit" onkeyup="countCost()" required>
+                        <input class="form-control" type="number" step="0.01" min="0" name="cost_per_unit" id="cost_per_unit" onkeyup="countCost(this)" required>
                     </div>
                     <div class="col-12">
                         <label class="col-form-label">Total Cost</label>
-                        <input class="form-control" type="number" step="0.01" min="0" name="total_cost" id="total_cost" onkeyup="countCost()" required>
+                        <input class="form-control" type="number" step="0.01" min="0" name="total_cost" id="total_cost" onkeyup="countCost(this)" required>
                     </div>
                 </div>
             </div>
@@ -208,6 +212,66 @@
         </div>
     </div>
 </div>
+@endif
+
+@if(isset($batch->batch_items))
+    @foreach ($batch->batch_items as $batch_item)
+        <div class="modal fade" id="editModal{{ $batch_item->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form enctype="multipart/form-data" method="post" action="{{ route('batch.updateBatchItem',$batch_item) }}">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title"  id="modalTitle">Edit Batch Item</h5>
+                            <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <label class="col-form-label">Product</label>
+                                    <p><strong>{{ $batch_item->product->product_name ?? '' }}</strong></p>
+                                </div>
+                                <div class="col-12">
+                                    <label class="col-form-label">Barcode</label>
+                                    <p><strong>{{ $batch_item->product->barcode ?? '' }}</strong></p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="col-form-label">Original Quantity</label>
+                                    <p><strong>{{ $batch_item->quantity ?? '' }}</strong></p>
+                                </div>
+                                <div class="col-6">
+                                    <label class="col-form-label">Balance</label>
+                                    <p><strong>{{ $batch_item->balance ?? '' }}</strong></p>
+                                </div>
+                                <div class="col-12">
+                                    <label class="col-form-label">Quantity</label>
+                                    <input class="form-control" type="number" step="0.01" min="0" name="quantity" value="{{ $batch_item->quantity }}" onkeyup="countCost(this)" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="col-form-label">Single Cost</label>
+                                    <input class="form-control" type="number" step="0.01" min="0" name="cost_per_unit" value="{{ $batch_item->cost_per_unit }}" onkeyup="countCost(this)" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="col-form-label">Total Cost</label>
+                                    <input class="form-control" type="number" step="0.01" min="0" name="total_cost" value="{{ $batch_item->total_cost }}" onkeyup="countCost(this)" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                                Close
+                            </button>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
 @endif
 <!-- / Content -->
 @endsection
@@ -224,19 +288,21 @@
         });
     });
 
-    function countCost(){
-        var quantity = parseFloat(document.getElementById("quantity").value) || 0;
-        var cost_per_unit = parseFloat(document.getElementById("cost_per_unit").value) || 0;
-        var total_cost = parseFloat(document.getElementById("total_cost").value) || 0;
+    function countCost(el){
+        let modal = el.closest('.modal');
 
-        if(event.target.id == "quantity" || event.target.id == "cost_per_unit"){
-            total_cost = quantity * cost_per_unit;
-            document.getElementById("total_cost").value = total_cost.toFixed(2);
-        }else if(event.target.id == "total_cost"){
-            if(quantity != 0){
-                cost_per_unit = total_cost / quantity;
-                document.getElementById("cost_per_unit").value = cost_per_unit.toFixed(2);
-            }
+        let quantity = parseFloat(modal.querySelector('[name="quantity"]').value) || 0;
+        let costPerUnit = parseFloat(modal.querySelector('[name="cost_per_unit"]').value) || 0;
+        let totalCost = parseFloat(modal.querySelector('[name="total_cost"]').value) || 0;
+
+        if (el.name === "quantity" || el.name === "cost_per_unit") {
+            totalCost = quantity * costPerUnit;
+            modal.querySelector('[name="total_cost"]').value = totalCost.toFixed(2);
+        }
+
+        if (el.name === "total_cost" && quantity > 0) {
+            costPerUnit = totalCost / quantity;
+            modal.querySelector('[name="cost_per_unit"]').value = costPerUnit.toFixed(2);
         }
     }
 
