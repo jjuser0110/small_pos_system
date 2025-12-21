@@ -101,6 +101,9 @@ class ProductController extends Controller
         // dd($request->all());
         if($product->stock_quantity > 0){
             $batch = BatchItem::where('product_id', $product->id)
+                ->whereHas('batch', function ($query) {
+                    $query->where('status', 'Completed');
+                })
                 ->where('balance', '>', 0)
                 ->orderBy('created_at', 'ASC')
                 ->first();
@@ -157,7 +160,7 @@ class ProductController extends Controller
         }else{
             return redirect()->route('product.index')->withError('Stock Not Enough');
         }
-        
+
         return redirect()->route('product.index')->withSuccess('Item converted');
     }
 

@@ -97,6 +97,9 @@ class CartController extends Controller
 
         // Get FIRST BATCH ITEM for this box
         $batch = BatchItem::where('product_id', $product->id)
+            ->whereHas('batch', function ($query) {
+                $query->where('status', 'Completed');
+            })
             ->where('balance', '>', 0)
             ->orderBy('created_at', 'ASC')
             ->first();

@@ -114,6 +114,7 @@ class BatchController extends Controller
 
     public function destroy(Batch $batch)
     {
+        $batch->batch_items()->delete();
         $batch->delete();
 
         return redirect()->route('batch.index')->withSuccess('Data deleted');
