@@ -12,12 +12,12 @@
                     <h5 class="card-title mb-0">Stock Batch Listing</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
-                    <div class="dt-buttons"> 
+                    <div class="dt-buttons">
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('batch.create')}}" onclick="showLoading()">
-                            <span><i class="bx bx-plus me-sm-1"></i> 
+                            <span><i class="bx bx-plus me-sm-1"></i>
                                 <span class="d-none d-sm-inline-block">Add New Record</span>
                             </span>
-                        </a> 
+                        </a>
                     </div>
                 </div>
             </div>
@@ -26,6 +26,8 @@
                     <thead>
                         <tr>
                             <th>No</th>
+                            <th>Branch</th>
+                            <th>Company</th>
                             <th>Batch No</th>
                             <th>Batch Date</th>
                             <th>Total Product</th>
@@ -39,6 +41,8 @@
                         @foreach($batch as $index => $row)
                         <tr>
                             <td>{{$index+1??""}}</td>
+                            <td>{{$row->branch->branch_name??""}}</td>
+                            <td>{{$row->company->company_name??""}}</td>
                             <td>{{$row->batch_no??""}}</td>
                             <td>{{$row->batch_date??""}}</td>
                             <td>{{$row->total_product??""}}</td>

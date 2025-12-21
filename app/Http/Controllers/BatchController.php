@@ -95,14 +95,13 @@ class BatchController extends Controller
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $company = Company::where('branch_id',$login_user->branch_id)->get();
-            $product = Product::where('branch_id',$login_user->branch_id)->get();
         }else if($login_user->role_id == 4){
             $company = Company::where('id',$login_user->company_id)->get();
-            $product = Product::where('company_id',$login_user->company_id)->get();
         }else{
             $company = Company::all();
-            $product = Product::all();
         }
+
+        $product = Product::where('branch_id', $batch->branch_id)->where('company_id', $batch->company_id)->get();
 
         return view('batch.create')->with('batch',$batch)->with('company',$company)->with('product',$product);
     }
