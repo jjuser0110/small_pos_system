@@ -30,4 +30,9 @@ class ShiftClosing extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
+
+    public function details()
+    {
+        return $this->hasMany(ShiftClosingDetail::class);
+    }
 }

@@ -12,12 +12,12 @@
                     <h5 class="card-title mb-0">Category Listing</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
-                    <div class="dt-buttons"> 
+                    <div class="dt-buttons">
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('category.create')}}" onclick="showLoading()">
-                            <span><i class="bx bx-plus me-sm-1"></i> 
+                            <span><i class="bx bx-plus me-sm-1"></i>
                                 <span class="d-none d-sm-inline-block">Add New Record</span>
                             </span>
-                        </a> 
+                        </a>
                     </div>
                 </div>
             </div>
@@ -30,6 +30,7 @@
                             <th>Branch</th>
                             <th>Company</th>
                             <th>Arrangement</th>
+                            <th>Special</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -41,6 +42,7 @@
                             <td>{{$row->branch->branch_code??""}}</td>
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->arrangement??""}}</td>
+                            <td>{{ $row->special ? 'Yes' : 'No' }}</td>
                             <td>
                                 <a href="{{ route('category.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('category.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>

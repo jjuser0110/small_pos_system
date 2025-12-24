@@ -43,6 +43,11 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        if (empty($request->special)) {
+            $request->merge([
+                'special' => 0,
+            ]);
+        }
         $company = Company::find($request->company_id);
         $request->merge(['branch_id'=>$company->branch_id,'company_id'=>$company->id]);
         $category = Category::create($request->all());
@@ -65,6 +70,11 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
+        if (empty($request->special)) {
+            $request->merge([
+                'special' => 0,
+            ]);
+        }
         $category->update($request->all());
         return redirect()->route('category.index')->withSuccess('Data updated');
     }

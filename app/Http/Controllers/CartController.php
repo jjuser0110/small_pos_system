@@ -11,9 +11,11 @@ use App\Models\OrderItem;
 use App\Models\OrderItemProfit;
 use App\Models\BatchItem;
 use App\Models\ShiftClosing;
+use App\Models\ShiftClosingDetail;
 use App\Models\ShiftMethodClosing;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use DB;
 
 class CartController extends Controller
 {
@@ -191,21 +193,34 @@ class CartController extends Controller
 
     public function place(Request $request)
     {
-        // dd($request->all());
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
+            $order = null;
 
-        $order = $this->createOrder($user, $request);
+            DB::transaction(function () use ($user, $request, &$order) {
+                $order = $this->createOrder($user, $request);
 
-        $carts = Cart::where('user_id', $user->id)->get();
+                $carts = Cart::where('user_id', $user->id)->get();
 
-        foreach ($carts as $cart) {
-            $this->processItem($order, $cart);
-            $cart->delete();
+                foreach ($carts as $cart) {
+                    $this->processItem($order, $cart);
+                    $cart->delete();
+                }
+
+                $this->finalizeOrder($order, $request);
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'order_id' => $order->id
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        $this->finalizeOrder($order, $request);
-
-        return response()->json(['status' => 'success','order_id'=>$order->id]);
     }
 
     private function createOrder($user, $request)
@@ -255,7 +270,9 @@ class CartController extends Controller
         ]);
 
         // FIFO deduction logic (clean function)
-        $this->deductStockFIFO($product, $item, $cart->quantity);
+        if (!$product->category->special) {
+            $this->deductStockFIFO($product, $item, $cart->quantity);
+        }
     }
 
     private function deductStockFIFO($product, $orderItem, $qty_needed)
@@ -355,12 +372,38 @@ class CartController extends Controller
         } else {
             $shift = ShiftClosing::create([
                 'user_id'            => $user->id,
-                'branch_id'            => $user->branch_id,
-                'company_id'            => $user->company_id,
+                'branch_id'          => $user->branch_id,
+                'company_id'         => $user->company_id,
                 'total_order_count'  => $totalProduct,
                 'total_order_amount' => $totalPrice,
                 'first_sale_time'    => Carbon::now(),
             ]);
+        }
+
+        foreach ($order->items as $item) {
+            $checkShiftClosingDetail = ShiftClosingDetail::where('shift_closing_id', $shift->id)
+                ->where(function ($query) use ($item) {
+                    if ($item->category->special === 1) {
+                        $query->where('product_id', $item->product_id);
+                    } else {
+                        $query->whereNull('product_id');
+                    }
+                })
+                ->where('category_id', $item->category_id)
+                ->first();
+
+            if (isset($checkShiftClosingDetail)) {
+                $checkShiftClosingDetail->update([
+                    'amount' => round($checkShiftClosingDetail->amount + $item->total_price, 2),
+                ]);
+            } else {
+                ShiftClosingDetail::create([
+                    'shift_closing_id' => $shift->id,
+                    'category_id'      => $item->category_id,
+                    'product_id'       => $item->category->special === 1 ? $item->product_id : null,
+                    'amount'           => $item->total_price,
+                ]);
+            }
         }
 
         $checkShiftMethod = ShiftMethodClosing::where('shift_closing_id', $shift->id)->where('payment_method',$request->payment_method)->first();
@@ -382,5 +425,36 @@ class CartController extends Controller
     {
         Cart::where('user_id', auth()->id())->delete();
         return redirect()->back();
+    }
+
+    public function addSpecial(Request $request)
+    {
+        $product = Product::find($request->id);
+        if (!$product) {
+            return response()->json(['status' => 'error', 'message' => 'Product not found'], 404);
+        }
+
+        $item = Cart::where('user_id', auth()->id())
+            ->where('product_id', $product->id)
+            ->where('single_price', $request->amount)
+            ->first();
+
+        if ($item) {
+            $newQty = $item->quantity + 1;
+            $item->update([
+                'quantity' => $newQty,
+                'total_price' => $newQty * $item->single_price,
+            ]);
+        } else {
+            Cart::create([
+                'user_id' => auth()->id(),
+                'product_id' => $product->id,
+                'quantity' => 1,
+                'single_price' => $request->amount,
+                'total_price' => $request->amount,
+            ]);
+        }
+
+        return response()->json(['status' => 'ok']);
     }
 }

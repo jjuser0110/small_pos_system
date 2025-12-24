@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('category.index')}}">Category /</a> 
+        <a class="text-muted fw-light" href="{{route('category.index')}}">Category /</a>
          @if (isset($category)) Edit @else Create @endif
     </h4>
     <div class="row">
@@ -30,7 +30,7 @@
                     class="form-control"
                     placeholder="Snack"
                     name="category_name"
-                    value="{{$category->category_name??''}}" 
+                    value="{{$category->category_name??''}}"
                     required/>
                 </div>
                 <div class="col-md-6">
@@ -39,8 +39,16 @@
                     type="text"
                     class="form-control"
                     placeholder="1"
-                    name="arrangement" 
+                    name="arrangement"
                     value="{{$category->arrangement??''}}"/>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="special" name="special" value="1" {{ old('special', $category->special ?? 0) == 1 ? 'checked' : '' }}>
+                        <label class="form-check-label" for="special">
+                            Special
+                        </label>
+                    </div>
                 </div>
                 <hr>
                 <div class="col-12">

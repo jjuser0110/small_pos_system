@@ -16,6 +16,7 @@ class Category extends Model
         'company_id',
         'category_name',
         'arrangement',
+        'special',
     ];
 
     public function branch()

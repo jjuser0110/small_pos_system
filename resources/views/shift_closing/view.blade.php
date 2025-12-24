@@ -44,6 +44,40 @@
     </div>
     <!-- / Content -->
 
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Shift Closing Details</span></h4>
+
+        <!-- DataTable with Buttons -->
+        <div class="card">
+            <div class="card-datatable text-nowrap">
+                <table class="dt-column-search table table-bordered" id="mytable2">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Category / Product</th>
+                            <th>Amount (RM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($shift_closing->details as $index => $detail)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ isset($detail->category) && $detail->category->special == 1 ? ($detail->product->product_name ?? '') : ($detail->category->category_name ?? '') }}</td>
+                            <td>{{ number_format($detail->amount ?? 0, 2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end">Total:</th>
+                            <th>{{ number_format($shift_closing->items->sum('amount'), 2) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
 
     @endsection
     @section('page-js')
@@ -52,6 +86,13 @@
     <script>
         $(function(){
             var table = $('#mytable').DataTable({
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+                pageLength: 10,
+                displayLength: 5,
+                lengthMenu: [5, 10, 25, 50, 75, 100],
+            });
+
+            var table = $('#mytable2').DataTable({
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
                 pageLength: 10,
                 displayLength: 5,

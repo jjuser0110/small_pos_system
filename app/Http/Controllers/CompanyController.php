@@ -23,7 +23,13 @@ class CompanyController extends Controller
 
     public function create()
     {
-        $branch = Branch::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $branch = Branch::where('branch_id',$login_user->branch_id)->get();
+        }else{
+            $branch = Branch::all();
+        }
+
         return view('company.create')->with('branch',$branch);
     }
 
@@ -36,7 +42,13 @@ class CompanyController extends Controller
 
     public function edit(Company $company)
     {
-        $branch = Branch::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $branch = Branch::where('branch_id',$login_user->branch_id)->get();
+        }else{
+            $branch = Branch::all();
+        }
+
         return view('company.create')->with('company',$company)->with('branch',$branch);
     }
 

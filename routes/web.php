@@ -28,6 +28,7 @@ Route::get('/receipt/{order_id}', [App\Http\Controllers\HomeController::class, '
 Route::get('/cart/load', [App\Http\Controllers\CartController::class, 'load']);
 Route::get('empty_cart', [App\Http\Controllers\CartController::class, 'empty_cart'])->name('empty_cart');
 Route::post('/cart/add', [App\Http\Controllers\CartController::class, 'add']);
+Route::post('/cart/add-special', [App\Http\Controllers\CartController::class, 'addSpecial']);
 Route::post('/cart/update', [App\Http\Controllers\CartController::class, 'update']);
 Route::post('/cart/remove', [App\Http\Controllers\CartController::class, 'remove']);
 Route::post('/cart/convert-box', [App\Http\Controllers\CartController::class, 'convertBox']);

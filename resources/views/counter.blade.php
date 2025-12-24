@@ -245,6 +245,24 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
 
 .confirm-btn:hover { background: #5568d3; }
 
+.amount-input {
+    width: 100%;
+    padding: 15px;
+    border: 3px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.amount-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 @keyframes slideIn { from {transform: translateY(-50px);} to {transform: translateY(0);} }
 </style>
@@ -258,7 +276,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
         </div>
         <div class="categories" id="categories">
             @foreach($category as $index=> $cat)
-            <button class="category-btn @if($index==0) active @endif" data-category="{{ Str::slug($cat->category_name, '_') }}">
+            <button class="category-btn @if($index==0) active @endif" data-category="{{ Str::slug($cat->category_name, '_') }}" data-special="{{ $cat->special }}">
                 {{$cat->category_name??''}}
             </button>
             @endforeach
@@ -298,6 +316,25 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
     </div>
 </div>
 
+<div id="amountModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h5 id="modalTitle">Enter Amount</h5>
+            <span class="custom-modal-close" onclick="closeModal()">&times;</span>
+        </div>
+
+        <div class="custom-modal-body">
+            <label>Amount (RM)</label>
+            <input type="number" id="modalAmount" class="amount-input" placeholder="0.00" step="0.01" autofocus>
+        </div>
+
+        <div class="custom-modal-footer">
+            <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn confirm-btn" onclick="confirmAmount()">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const products = {
     @foreach($category as $cat)
@@ -312,6 +349,7 @@ const products = {
             stock: {{ $p->stock_quantity }},
             connected_product_id: {{ $p->connected_product_id ?? 0 }},
             connected_product_quantity: {{ $p->connected_product_quantity ?? 0 }},
+            special: {{ $cat->special }},
         }@if(!$loop->last), @endif
         @endforeach
     ]@if(!$loop->last), @endif
@@ -403,17 +441,85 @@ function processBarcode(barcode) {
 
 // Display products
 function displayProducts(category){
+    console.log(products[category]);
     const container = document.getElementById('products');
     container.innerHTML='';
     products[category].forEach(p=>{
         const card=document.createElement('div');
         card.className='product-card';
-        if(p.stock===0){ card.style.opacity=0.5; card.style.pointerEvents='none'; }
-        else card.onclick=()=>addToCart(p);
-        card.innerHTML=`<div class="product-name">${p.name}</div>
+        if (p.special) {
+            card.onclick=()=>openModal(p);
+            card.innerHTML=`<div class="product-name">${p.name}</div>`;
+        } else {
+            if(p.stock===0){ card.style.opacity=0.5; card.style.pointerEvents='none'; }
+            else card.onclick=()=>addToCart(p);
+            card.innerHTML=`<div class="product-name">${p.name}</div>
                         <div class="product-price">RM ${p.price.toFixed(2)}/${p.uom}</div>
                         ${p.stock===0?'<div class="out-of-stock">Out of Stock</div>':''}`;
+        }
         container.appendChild(card);
+    });
+}
+
+function openModal(product) {
+     modalProduct = product;
+
+    document.getElementById('modalTitle').innerText =
+        `Enter Amount for ${product.name}`;
+
+    document.getElementById('modalAmount').value = '';
+    document.getElementById('amountModal').style.display = 'block';
+
+    setTimeout(() => {
+        document.getElementById('modalAmount').focus();
+    }, 100);
+}
+
+function closeModal() {
+    document.getElementById('amountModal').style.display = 'none';
+    modalProduct = null;
+}
+
+function confirmAmount() {
+    const amountInput = document.getElementById('modalAmount');
+    const amount = parseFloat(amountInput.value);
+    console.log(amount);
+    if (!amount || amount == 0) {
+        alert('Please enter a valid amount');
+        amountInput.focus();
+        return;
+    }
+
+    // Add to cart as custom-price item
+    addSpecialToCart(modalProduct, amount);
+
+    closeModal();
+}
+
+function addSpecialToCart(product, amount) {
+    cart.push({
+        id: product.id + '_special_' + Date.now(),
+        name: product.name,
+        price: amount,
+        quantity: 1,
+        stock: 9999
+    });
+
+    updateCart();
+
+    fetch('/cart/add-special', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            id: product.id,
+            amount: amount
+        })
+    }).catch(err => {
+        console.error(err);
+        alert('Failed to add special item');
     });
 }
 

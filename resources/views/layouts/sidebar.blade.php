@@ -75,6 +75,12 @@ $currentRoute = request()->route()->getName();
         @endif
 
         @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
+        <li class="menu-item {{ Str::contains($currentRoute, 'company.index') ? 'active' : ''}}">
+            <a href="{{ route('company.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Company</div>
+            </a>
+        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'company_manager.index') ? 'active' : ''}}">
             <a href="{{ route('company_manager.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
@@ -91,12 +97,6 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('branch_manager.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Branch Manager</div>
-            </a>
-        </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'company.index') ? 'active' : ''}}">
-            <a href="{{ route('company.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Company</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'branch.index') ? 'active' : ''}}">
