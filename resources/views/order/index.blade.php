@@ -23,41 +23,38 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-3 col-lg-3 mb-3">
-                        <div class="card card-border-shadow-primary h-100">
+                        <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showOrdersTable()">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2 pb-1">
                             <h4 class="ms-1 mb-0">Total Order</h4>
                             </div>
-                            <p class="mb-1" style="margin:10px;font-size:18px">{{$order->where('status', 'Active')->count()??0}}</p>
-                            </p>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{ $activeOrderCount }}</p>
                         </div>
                         </div>
                     </div>
                     <div class="col-sm-3 col-lg-3 mb-3">
-                        <div class="card card-border-shadow-primary h-100">
+                        <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showAmountTable()">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2 pb-1">
                             <h4 class="ms-1 mb-0">Total Amount</h4>
                             </div>
-                            <p class="mb-1" style="margin:10px;font-size:18px">{{number_format($order->where('status', 'Active')->sum('final_total')??0,2)}}</p>
-                            </p>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($activeOrderTotal, 2) }}</p>
                         </div>
                         </div>
                     </div>
                     <div class="col-sm-3 col-lg-3 mb-3">
-                        <div class="card card-border-shadow-primary h-100">
+                        <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showProfitTable()">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2 pb-1">
                                 <h4 class="ms-1 mb-0">Total Profit</h4>
                                 </div>
                                 <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($total_profit ?? 0, 2) }}</p>
-                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card-datatable text-nowrap">
+            <div id="ordersTableWrapper" class="card-datatable text-nowrap">
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
@@ -84,7 +81,7 @@
                             <td>{{$row->user->username??""}}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
-                            <td>{{number_format($row->final_total, 2)??""}}</td>
+                            <td data-order="{{ $row->final_total }}">{{number_format($row->final_total, 2)??""}}</td>
                             <td>{{$row->payment_method??""}}</td>
                             <td>{{$row->amount_received??""}}</td>
                             <td>{{$row->change??""}}</td>
@@ -108,6 +105,58 @@
                         </tr>
                         @endforeach
                     </tbody>
+                </table>
+            </div>
+            <div id="amountTableWrapper" class="card-datatable text-nowrap d-none">
+                <table class="dt-column-search table table-bordered" id="mytable2">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Category</th>
+                            <th>Total Amount (RM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($categoryTotals as $index => $item)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $item->category->category_name ?? '' }}</td>
+                            <td>{{ number_format($item->total_amount ?? 0, 2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end">Total:</th>
+                            <th>{{ number_format($categoryTotals->sum('total_amount') ?? 0, 2) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div id="profitTableWrapper" class="card-datatable text-nowrap d-none">
+                <table class="dt-column-search table table-bordered" id="mytable3">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Category</th>
+                            <th>Total Profit (RM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($categoryProfits as $index => $profit_item)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $profit_item->category->category_name ?? '' }}</td>
+                            <td>{{ number_format($profit_item->total_amount ?? 0, 2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2" class="text-end">Total:</th>
+                            <th>{{ number_format($categoryProfits->sum('total_amount') ?? 0, 2) }}</th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -160,6 +209,18 @@
         displayLength: 5,
         lengthMenu: [5, 10, 25, 50, 75, 100],
       });
+      var table = $('#mytable2').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+        pageLength: 10,
+        displayLength: 5,
+        lengthMenu: [5, 10, 25, 50, 75, 100],
+      });
+      var table = $('#mytable3').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+        pageLength: 10,
+        displayLength: 5,
+        lengthMenu: [5, 10, 25, 50, 75, 100],
+      });
     });
 
     function openVoidModal(action) {
@@ -169,5 +230,37 @@
         const modal = new bootstrap.Modal(document.getElementById('voidModal'));
         modal.show();
     }
+</script>
+<script>
+function showOrdersTable() {
+    document.getElementById('ordersTableWrapper').classList.remove('d-none');
+    document.getElementById('amountTableWrapper').classList.add('d-none');
+    document.getElementById('profitTableWrapper').classList.add('d-none');
+
+    // redraw DataTable if needed
+    if ($.fn.DataTable.isDataTable('#mytable')) {
+        $('#mytable').DataTable().columns.adjust().draw(false);
+    }
+}
+
+function showAmountTable() {
+    document.getElementById('ordersTableWrapper').classList.add('d-none');
+    document.getElementById('amountTableWrapper').classList.remove('d-none');
+    document.getElementById('profitTableWrapper').classList.add('d-none');
+
+    if ($.fn.DataTable.isDataTable('#mytable2')) {
+        $('#mytable2').DataTable().columns.adjust().draw(false);
+    }
+}
+
+function showProfitTable() {
+    document.getElementById('ordersTableWrapper').classList.add('d-none');
+    document.getElementById('amountTableWrapper').classList.add('d-none');
+    document.getElementById('profitTableWrapper').classList.remove('d-none');
+
+    if ($.fn.DataTable.isDataTable('#mytable3')) {
+        $('#mytable3').DataTable().columns.adjust().draw(false);
+    }
+}
 </script>
 @endsection
