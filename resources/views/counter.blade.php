@@ -786,37 +786,6 @@ function updateQuantity(id, change, depth = 0){
             return;
         }
     }
-    if(newQty > item.stock) {
-        // Try auto-convert
-        const box = allProducts.find(p => p.connected_product_id == item.id && p.stock > 0);
-        if(box){
-            fetch('/cart/convert-box', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ box_id: box.id })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.error){ alert(data.error); return; }
-
-                box.stock = data.new_box_stock;
-                item.stock = data.new_bottle_stock;
-
-                updateProductStockUI(box);
-                updateProductStockUI(item);
-
-                // Retry quantity increase
-                updateQuantity(id, change);
-            });
-            return;
-        } else {
-            alert(`Cannot increase beyond stock (${item.stock})`);
-            return;
-        }
-    }
 
     if(newQty<=0){ removeFromCart(id); return; }
     item.quantity=newQty; updateCart();
