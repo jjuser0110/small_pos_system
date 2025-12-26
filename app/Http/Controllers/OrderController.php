@@ -7,6 +7,8 @@ use Spatie\Browsershot\Browsershot;
 use Illuminate\Http\Request;
 use App\Models\BatchItem;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\OrderItemProfit;
 use App\Models\Product;
 use App\Models\ShiftClosing;
 use App\Models\ShiftMethodClosing;
@@ -56,11 +58,50 @@ class OrderController extends Controller
         $date_from_input = $date_from->format('Y-m-d\TH:i');
         $date_to_input   = $date_to->format('Y-m-d\TH:i');
 
-        return view('order.index')
-            ->with('order', $order)
-            ->with('total_profit', $total_profit)
-            ->with('date_from', $date_from_input)
-            ->with('date_to', $date_to_input);
+        $activeOrders = $order->where('status', 'Active');
+
+        $categoryTotals = OrderItem::query()
+            ->when($login_user->role_id == 3, function ($q) use ($login_user) {
+                $q->where('branch_id', $login_user->branch_id);
+            })
+            ->when($login_user->role_id == 4, function ($q) use ($login_user) {
+                $q->where('company_id', $login_user->company_id);
+            })
+            ->select('category_id', DB::raw('SUM(total_price) as total_amount'))
+            ->whereHas('order', function ($q) use ($date_from, $date_to) {
+                $q->where('status', 'Active')
+                ->whereBetween('created_at', [$date_from, $date_to]);
+            })
+            ->with('category:id,category_name')
+            ->groupBy('category_id')
+            ->get();
+
+        $categoryProfits = OrderItemProfit::query()
+            ->when($login_user->role_id == 3, function ($q) use ($login_user) {
+                $q->where('branch_id', $login_user->branch_id);
+            })
+            ->when($login_user->role_id == 4, function ($q) use ($login_user) {
+                $q->where('company_id', $login_user->company_id);
+            })
+            ->select('category_id', DB::raw('SUM(total_earning) as total_amount'))
+            ->whereHas('order', function ($q) use ($date_from, $date_to) {
+                $q->where('status', 'Active')
+                ->whereBetween('created_at', [$date_from, $date_to]);
+            })
+            ->with('category:id,category_name')
+            ->groupBy('category_id')
+            ->get();
+
+        return view('order.index', [
+            'order' => $order,
+            'activeOrderCount' => $activeOrders->count(),
+            'activeOrderTotal' => $activeOrders->sum('final_total'),
+            'categoryTotals' => $categoryTotals,
+            'categoryProfits' => $categoryProfits,
+            'total_profit' => $total_profit,
+            'date_from' => $date_from_input,
+            'date_to' => $date_to_input,
+        ]);
 
     }
 
