@@ -191,6 +191,150 @@ class CartController extends Controller
         ]);
     }
 
+    public function convertBottleToBox(Request $request)
+    {
+        $box = Product::findOrFail($request->box_id);
+
+        // Identify bottle
+        $bottle = Product::find($box->connected_product_id);
+        if (!$bottle) {
+            return response()->json(['error' => 'Connected bottle not found'], 422);
+        }
+
+        $requiredQty = $box->connected_product_quantity;
+
+        // BOTTLE MUST HAVE ENOUGH STOCK
+        if ($bottle->stock_quantity < $requiredQty) {
+            return response()->json(['error' => 'Not enough bottles to rebuild box'], 422);
+        }
+
+        /** -----------------------------------
+         *  1) GET FIFO BOTTLE BATCH
+         * ----------------------------------- */
+        $batch = BatchItem::where('product_id', $bottle->id)
+            ->whereHas('batch', function ($query) {
+                $query->where('status', 'Completed');
+            })
+            ->where('balance', '>=', $requiredQty)
+            ->orderBy('created_at', 'ASC')
+            ->first();
+
+        if (!$batch) {
+            return response()->json(['error' => 'No sufficient bottle batch found'], 422);
+        }
+
+        /** -----------------------------------
+         *  2) STOCK LOG — OUT (BOTTLES)
+         * ----------------------------------- */
+        $batch->stock_logs()->create([
+            'branch_id'     => $bottle->branch_id,
+            'company_id'    => $bottle->company_id,
+            'category_id'   => $bottle->category_id,
+            'product_id'    => $bottle->id,
+            'type'          => 'convert_out',
+            'description'   => $batch->batch->batch_no ?? '',
+            'before_stock'  => $bottle->stock_quantity,
+            'quantity'      => $requiredQty,
+            'after_stock'   => $bottle->stock_quantity - $requiredQty,
+        ]);
+
+        // Reduce bottle batch
+        $batch->update([
+            'balance'       => $batch->balance - $requiredQty,
+            'quantity'      => $batch->quantity - $requiredQty,
+            'total_cost'    => round($batch->cost_per_unit * ($batch->quantity - $requiredQty), 2),
+        ]);
+
+        // Reduce bottle stock
+        $bottle->update([
+            'stock_quantity' => $bottle->stock_quantity - $requiredQty
+        ]);
+
+        /** -----------------------------------
+         *  3) CREATE / UPDATE BOX BATCH
+         * ----------------------------------- */
+        $total_cost = round($batch->cost_per_unit * $requiredQty, 2);
+
+        $boxBatch = BatchItem::where('product_id', $box->id)
+            ->whereHas('batch', function ($query) {
+                $query->where('status', 'Completed');
+            })
+            ->orderBy('created_at', 'DESC')
+            ->first();
+
+        if ($boxBatch) {
+            // Increase existing box batch
+            $boxBatch->update([
+                'quantity'      => $boxBatch->quantity + 1,
+                'balance'       => $boxBatch->balance + 1,
+                'total_cost'    => round($boxBatch->total_cost + $total_cost, 2),
+                'cost_per_unit' => round(($boxBatch->total_cost + $total_cost) / ($boxBatch->quantity + 1), 2),
+            ]);
+        } else {
+            // Create new box batch
+            $boxBatch = BatchItem::create([
+                'batch_id'      => $batch->batch_id,
+                'branch_id'     => $batch->branch_id,
+                'company_id'    => $batch->company_id,
+                'category_id'   => $batch->category_id,
+                'product_id'    => $box->id,
+                'quantity'      => 1,
+                'balance'       => 1,
+                'total_cost'    => $total_cost,
+                'cost_per_unit' => $total_cost,
+            ]);
+        }
+
+        /** -----------------------------------
+         *  4) STOCK LOG — IN (BOX)
+         * ----------------------------------- */
+        $boxBatch->stock_logs()->create([
+            'branch_id'     => $box->branch_id,
+            'company_id'    => $box->company_id,
+            'category_id'   => $box->category_id,
+            'product_id'    => $box->id,
+            'type'          => 'convert_in',
+            'description'   => $batch->batch->batch_no ?? '',
+            'before_stock'  => $box->stock_quantity,
+            'quantity'      => 1,
+            'after_stock'   => $box->stock_quantity + 1,
+        ]);
+
+        // Increase box stock
+        $box->update([
+            'stock_quantity' => $box->stock_quantity + 1
+        ]);
+
+        return response()->json([
+            'success'           => true,
+            'message'           => "Converted {$requiredQty} bottles into 1 box",
+            'new_bottle_stock'  => $bottle->stock_quantity,
+            'new_box_stock'     => $box->stock_quantity,
+        ]);
+    }
+
+    public function validateCart(Request $request)
+    {
+        $user = auth()->user();
+        $carts = Cart::where('user_id', $user->id)->get();
+
+        if ($carts->isEmpty()) {
+            return response()->json(['error' => 'Cart is empty'], 422);
+        }
+
+        foreach ($carts as $cart) {
+            $product = Product::find($cart->product_id);
+
+            if (!$product || $cart->quantity > $product->stock_quantity) {
+                return response()->json([
+                    'error' => "{$cart->product->product_name} stock not sufficient"
+                ], 422);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
     public function place(Request $request)
     {
         try {

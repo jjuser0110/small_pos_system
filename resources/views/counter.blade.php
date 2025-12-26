@@ -524,48 +524,114 @@ function addSpecialToCart(product, amount) {
 }
 
 // Add to cart
-function addToCart(product){
+function addToCart(product, depth = 0){
+    if (depth > 5) {
+        alert('Unable to auto-convert stock.');
+        return;
+    }
+
     const existing = cart.find(i=>i.id==product.id);
     const currentQty = existing? existing.quantity :0;
 
     // If adding 1 exceeds current stock
     if (currentQty + 1 > product.stock) {
 
-        // Find a box that can be converted
-        const box = allProducts.find(p => p.connected_product_id == product.id && p.stock > 0);
+        /* ============================================
+           CASE 1: PRODUCT IS BOTTLE
+           → find parent (box / bundle) → bottles
+        ============================================ */
+        if (!product.connected_product_id) {
+             const parents = allProducts
+                .filter(p =>
+                    p.connected_product_id == product.id &&
+                    p.stock > 0 &&
+                    p.connected_product_quantity > 0
+                )
+                .sort((a, b) =>
+                    b.connected_product_quantity - a.connected_product_quantity
+                );
 
-        if (box) {
-            // Disable adding temporarily
+            const parent = parents[0];
+
+            if (!parent) {
+                alert(`Cannot add more. Only ${product.stock} in stock.`);
+                return;
+            }
+
             fetch('/cart/convert-box', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({ box_id: box.id })
+                body: JSON.stringify({ box_id: parent.id })
             })
             .then(res => res.json())
             .then(data => {
-                if (data.error) { alert(data.error); return; }
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
 
-                // Update stocks after conversion
-                box.stock = data.new_box_stock;
+                parent.stock = data.new_box_stock;
                 product.stock = data.new_bottle_stock;
-                updateProductStockUI(box);
+
+                updateProductStockUI(parent);
                 updateProductStockUI(product);
 
-                // Retry adding
-                addToCart(product);
-            })
-            .catch(err => console.error(err));
+                addToCart(product, depth + 1);
+            });
 
-            return; // Wait for conversion
-        } else {
-            alert(`Cannot add more. Only ${product.stock} in stock.`);
+            return;
+        }
+        /* ============================================
+           CASE 2: PRODUCT IS BOX / BUNDLE
+           → reduce bottles → rebuild box
+        ============================================ */
+        else {
+            const bottle = allProducts.find(
+                p => p.id == product.connected_product_id
+            );
+
+            if (!bottle) {
+                alert('Linked bottle not found.');
+                return;
+            }
+
+            fetch('/cart/convert-bottle-to-box', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    bottle_id: bottle.id,
+                    box_id: product.id
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                bottle.stock = data.new_bottle_stock;
+                product.stock = data.new_box_stock;
+
+                updateProductStockUI(bottle);
+                updateProductStockUI(product);
+
+                addToCart(product, depth + 1);
+            });
+
             return;
         }
     }
 
+    /* ============================================
+       NORMAL ADD TO CART
+    ============================================ */
     if(existing) existing.quantity++;
     else cart.push({id:product.id,name:product.name,price:product.price,quantity:1,stock:product.stock});
 
@@ -615,12 +681,111 @@ function updateProductStockUI(product) {
 }
 
 // Update quantity buttons
-function updateQuantity(id, change){
+function updateQuantity(id, change, depth = 0){
+    if (depth > 5) {
+        alert('Unable to auto-convert stock.');
+        return;
+    }
+
     const item=cart.find(i=>i.id==id);
     if(!item) return;
+
+    const product = allProducts.find(p => p.id == id);
+    if (!product) return;
+
     const newQty=item.quantity+change;
 
     // If increasing beyond stock
+    if (change > 0 && newQty > product.stock) {
+
+        /* ---------- CASE 1: PRODUCT IS BOTTLE ---------- */
+        if (!product.connected_product_id) {
+
+            const parents = allProducts
+                .filter(p =>
+                    p.connected_product_id == product.id &&
+                    p.stock > 0 &&
+                    p.connected_product_quantity > 0
+                )
+                .sort((a, b) =>
+                    b.connected_product_quantity - a.connected_product_quantity
+                );
+
+            const parent = parents[0];
+
+            if (!parent) {
+                alert(`Cannot add more. Only ${product.stock} in stock.`);
+                return;
+            }
+
+            fetch('/cart/convert-box', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ box_id: parent.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                parent.stock = data.new_box_stock;
+                product.stock = data.new_bottle_stock;
+
+                updateProductStockUI(parent);
+                updateProductStockUI(product);
+
+                updateQuantity(id, change, depth + 1);
+            });
+
+            return;
+        }
+
+        /* ---------- CASE 2: PRODUCT IS BOX / BUNDLE ---------- */
+        else {
+            const bottle = allProducts.find(
+                p => p.id == product.connected_product_id
+            );
+
+            if (!bottle) {
+                alert('Linked bottle not found.');
+                return;
+            }
+
+            fetch('/cart/convert-bottle-to-box', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    bottle_id: bottle.id,
+                    box_id: product.id
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                bottle.stock = data.new_bottle_stock;
+                product.stock = data.new_box_stock;
+
+                updateProductStockUI(bottle);
+                updateProductStockUI(product);
+
+                updateQuantity(id, change, depth + 1);
+            });
+
+            return;
+        }
+    }
     if(newQty > item.stock) {
         // Try auto-convert
         const box = allProducts.find(p => p.connected_product_id == item.id && p.stock > 0);
@@ -722,7 +887,32 @@ function updateCart(){
 }
 
 // Checkout
-function checkout(){ if(cart.length===0){ alert('Cart empty'); return; } window.location.href='/checkout'; }
+function checkout() {
+    if(cart.length===0) {
+        alert('Cart empty');
+        return;
+    }
+
+    // fetch('/checkout/validate', {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //         'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    //     }
+    // })
+    // .then(res => res.json())
+    // .then(data => {
+    //     if (data.error) {
+    //         alert(data.error);
+    //         return;
+    //     }
+
+    //     window.location.href = '/checkout';
+    // })
+    // .catch(() => alert('Validation failed'));
+
+    window.location.href = '/checkout';
+}
 
 // Categories click
 document.querySelectorAll('.category-btn').forEach(btn=>{
