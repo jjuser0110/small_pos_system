@@ -17,6 +17,7 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
+                            <th>Date</th>
                             <th>Type</th>
                             <th>Description</th>
                             <th>Before</th>
@@ -27,6 +28,7 @@
                     <tbody>
                         @foreach($product->stock_logs as $index => $row)
                         <tr>
+                            <td>{{ $row->created_at }}</td>
                             <td>{{ ucfirst(str_replace('_', ' ', $row->type ?? '')) }}</td>
                             <td>{{$row->description??""}}</td>
                             <td>{{$row->before_stock??""}}</td>
