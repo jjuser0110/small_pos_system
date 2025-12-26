@@ -231,6 +231,10 @@ class BatchController extends Controller
                 ? $product->stock_quantity + $stockChange
                 : $product->stock_quantity - $stockChange;
 
+            $balance = $type === 'adjust_in'
+                ? $batchItem->balance + $stockChange
+                : $batchItem->balance - $stockChange;
+
             $batchItem->stock_logs()->create([
                 'branch_id'     => $product->branch_id,
                 'company_id'    => $product->company_id,
@@ -251,7 +255,7 @@ class BatchController extends Controller
                 'quantity'       => $request->quantity,
                 'cost_per_unit'  => $request->cost_per_unit,
                 'total_cost'     => $request->total_cost,
-                'balance'        => $newStock,
+                'balance'        => $balance,
             ]);
 
             $this->updateBatchTotals($batchItem->batch);
