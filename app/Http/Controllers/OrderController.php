@@ -67,7 +67,11 @@ class OrderController extends Controller
             ->when($login_user->role_id == 4, function ($q) use ($login_user) {
                 $q->where('company_id', $login_user->company_id);
             })
-            ->select('category_id', DB::raw('SUM(total_price) as total_amount'))
+            ->select(
+                'category_id',
+                DB::raw('SUM(total_price) as total_amount'),
+                DB::raw('COUNT(*) as order_item_count')
+            )
             ->whereHas('order', function ($q) use ($date_from, $date_to) {
                 $q->where('status', 'Active')
                 ->whereBetween('created_at', [$date_from, $date_to]);

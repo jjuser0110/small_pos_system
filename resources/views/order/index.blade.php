@@ -129,6 +129,7 @@
                         <tr>
                             <th>No.</th>
                             <th>Category</th>
+                            <th>Number of Transactions</th>
                             <th>Total Amount (RM)</th>
                         </tr>
                     </thead>
@@ -137,6 +138,7 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $item->category->category_name ?? '' }}</td>
+                            <td>{{ $item->order_item_count }}</td>
                             <td>{{ number_format($item->total_amount ?? 0, 2) }}</td>
                         </tr>
                         @endforeach
