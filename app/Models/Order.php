@@ -22,6 +22,7 @@ class Order extends Model
         'tax_amount',
         'final_total',
         'payment_method',
+        'discount',
         'amount_received',
         'change',
         'status',

@@ -12,4 +12,5 @@ Route::prefix('/order')->as('order.')->middleware(['auth'])->group(function() {
     Route::post('/update/{order}', 'OrderController@update')->name('update');
     Route::get('/destroy/{order}', 'OrderController@destroy')->name('destroy');
     Route::post('/void/{order}', 'OrderController@void')->name('void');
+    Route::post('/discount/{order}', 'OrderController@discount')->name('discount');
 });

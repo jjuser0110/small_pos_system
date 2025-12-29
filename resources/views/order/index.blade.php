@@ -69,6 +69,9 @@
                             <th>Received Amount</th>
                             <th>Change</th>
                             <th>Status</th>
+                            @if (in_array(Auth::user()->role_id, [1, 2, 3]))
+                               <th>Discount</th>
+                            @endif
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -86,6 +89,19 @@
                             <td>{{$row->amount_received??""}}</td>
                             <td>{{$row->change??""}}</td>
                             <td>{{$row->status??""}}</td>
+
+                            @if (in_array(Auth::user()->role_id, [1, 2, 3]))
+                                <td>
+                                    <form method="POST" action="{{ route('order.discount', $row->id) }}" class="d-flex align-items-center gap-2">
+                                        @csrf
+                                        <input type="number" class="form-control" name="discount" value="{{ $row->discount ?? '' }}" min="0" step="0.01" style="min-width: 65px;" required>
+                                        <button type="submit" class="btn btn-xs btn-primary px-2 py-1">
+                                            <i class="bx bx-save"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            @endif
+
                             <td>
                                 <a href="{{ route('order.view',$row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a>
 

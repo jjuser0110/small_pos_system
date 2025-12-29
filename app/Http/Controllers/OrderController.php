@@ -183,4 +183,14 @@ class OrderController extends Controller
 
         return back()->with('success', 'Order voided successfully.');
     }
+
+    public function discount(Request $request, Order $order)
+    {
+        $order->update([
+            'discount' => $request->discount,
+            'amount_received' => $order->final_total + $order->change - $request->discount,
+        ]);
+
+        return back()->with('success', 'Discount added.');
+    }
 }
