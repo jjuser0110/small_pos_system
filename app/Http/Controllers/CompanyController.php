@@ -16,7 +16,12 @@ class CompanyController extends Controller
 {
     public function index(Request $request)
     {
-        $company = Company::all();
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            $company = Company::where('branch_id',$login_user->branch_id)->get();
+        }else{
+            $company = Company::all();
+        }
 
         return view('company.index')->with('company',$company);
     }
