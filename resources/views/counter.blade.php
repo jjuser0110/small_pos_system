@@ -441,21 +441,40 @@ function processBarcode(barcode) {
 
 // Display products
 function displayProducts(category){
-    console.log(products[category]);
     const container = document.getElementById('products');
     container.innerHTML='';
+
+    if (!products[category] || products[category].length === 0) return;
+
     products[category].forEach(p=>{
         const card=document.createElement('div');
         card.className='product-card';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'product-name';
+        nameDiv.innerText = p.name;
+        card.appendChild(nameDiv);
+
         if (p.special) {
             card.onclick=()=>openModal(p);
-            card.innerHTML=`<div class="product-name">${p.name}</div>`;
         } else {
-            if(p.stock===0){ card.style.opacity=0.5; card.style.pointerEvents='none'; }
-            else card.onclick=()=>addToCart(p);
-            card.innerHTML=`<div class="product-name">${p.name}</div>
-                        <div class="product-price">RM ${p.price.toFixed(2)}/${p.uom}</div>
-                        ${p.stock===0?'<div class="out-of-stock">Out of Stock</div>':''}`;
+            const priceDiv = document.createElement('div');
+            priceDiv.className = 'product-price';
+            priceDiv.innerText = `RM ${p.price.toFixed(2)}/${p.uom}`;
+            card.appendChild(priceDiv);
+
+            const stockDiv = document.createElement('div');
+            if (p.stock === 0) {
+                card.style.opacity = 0.5;
+                card.style.pointerEvents = 'none';
+                stockDiv.className = 'out-of-stock';
+                stockDiv.innerText = 'Out of Stock';
+            } else {
+                card.onclick = () => addToCart(p);
+                stockDiv.className = 'product-stock';
+                stockDiv.innerText = `Stock: ${p.stock}`;
+            }
+            card.appendChild(stockDiv);
         }
         container.appendChild(card);
     });
@@ -659,23 +678,42 @@ function updateProductStockUI(product) {
     const cards = container.querySelectorAll('.product-card');
     cards.forEach(card => {
         const nameElem = card.querySelector('.product-name');
-        if (nameElem && nameElem.innerText === product.name) {
-            // Update stock display
-            if (product.stock === 0) {
-                card.style.opacity = 0.5;
-                card.style.pointerEvents = 'none';
-                if (!card.querySelector('.out-of-stock')) {
-                    const out = document.createElement('div');
-                    out.className = 'out-of-stock';
-                    out.innerText = 'Out of Stock';
-                    card.appendChild(out);
-                }
-            } else {
-                card.style.opacity = 1;
-                card.style.pointerEvents = 'auto';
-                const out = card.querySelector('.out-of-stock');
-                if (out) out.remove();
+        if (!nameElem || nameElem.innerText !== product.name) return;
+
+        let stockElem = card.querySelector('.product-stock');
+        let outElem = card.querySelector('.out-of-stock');
+
+        if (product.stock === 0) {
+            // Out of stock
+            card.style.opacity = 0.5;
+            card.style.pointerEvents = 'none';
+
+            // Add out-of-stock label if not present
+            if (!outElem) {
+                outElem = document.createElement('div');
+                outElem.className = 'out-of-stock';
+                outElem.innerText = 'Out of Stock';
+                card.appendChild(outElem);
             }
+
+            // Remove stock display if it exists
+            if (stockElem) stockElem.remove();
+
+        } else {
+            // In stock
+            card.style.opacity = 1;
+            card.style.pointerEvents = 'auto';
+
+            // Remove out-of-stock label if present
+            if (outElem) outElem.remove();
+
+            // Update or create stock display
+            if (!stockElem) {
+                stockElem = document.createElement('div');
+                stockElem.className = 'product-stock';
+                card.appendChild(stockElem);
+            }
+            stockElem.innerText = `Stock: ${product.stock}`;
         }
     });
 }
