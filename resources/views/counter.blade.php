@@ -342,7 +342,7 @@ const products = {
         @foreach($products->where('category_id', $cat->id) as $p)
         {
             id: "{{ $p->id }}",
-            name: "{{ $p->product_name }}",
+            name: "{!! $p->product_name !!}",
             barcode: "{{ $p->barcode??null }}",
             uom: "{{ $p->uom_dt->uom_unit??null }}",
             price: {{ number_format($p->selling_price, 2, '.', '') }},
