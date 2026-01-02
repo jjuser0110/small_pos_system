@@ -5,7 +5,6 @@ namespace App\Imports;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Uom;
-use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -15,7 +14,6 @@ class ProductImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
 {
     protected $branch_id;
     protected $company_id;
-    protected bool $skip = false;
 
     public function __construct($branch_id, $company_id)
     {

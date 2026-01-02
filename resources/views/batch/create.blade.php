@@ -91,6 +91,18 @@
                         <div class="dt-action-buttons text-end pt-3 pt-md-0">
                             <div class="dt-buttons">
                                 @if($batch->status == 'Open')
+                                <a class="dt-button create-new btn btn-secondary" type="button" href="{{ route('batch.downloadTemplate', $batch) }}">
+                                    <span><i class="bx bx-download me-sm-1"></i>
+                                        <span class="d-none d-sm-inline-block">Download Template</span>
+                                    </span>
+                                </a>
+
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadBatchItemModal">
+                                    <span><i class="bx bx-upload me-sm-1"></i>
+                                        <span class="d-none d-sm-inline-block">Import</span>
+                                    </span>
+                                </button>
+
                                 <a class="dt-button create-new btn btn-primary" type="button" style="color:white" data-bs-toggle="modal"
                                 data-bs-target="#activityModal">
                                     Add New Record
@@ -156,6 +168,40 @@
                 @endif
             </div>
             </div>
+        </div>
+    </div>
+</div>
+
+ <div class="modal fade" id="uploadBatchItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Batch Item Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form action="{{ route('batch.import', $batch) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Excel File</label>
+                        <input type="file" name="file" class="form-control" accept=".xlsx,.csv" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Upload
+                    </button>
+                </div>
+
+            </form>
+
         </div>
     </div>
 </div>

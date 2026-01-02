@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StockTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Imports\StockImport;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Http\Request;
 use App\Models\Batch;
@@ -14,6 +16,7 @@ use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use DB;
 
@@ -271,5 +274,21 @@ class BatchController extends Controller
             'total_item'    => $batch->batch_items()->sum('quantity'),
             'total_cost'    => $batch->batch_items()->sum('total_cost'),
         ]);
+    }
+
+    public function downloadTemplate(Batch $batch)
+    {
+        return Excel::download(new StockTemplateExport($batch), 'stock_template.xlsx');
+    }
+
+    public function import(Request $request, Batch $batch)
+    {
+        $request->validate([
+            'file'       => 'required|mimes:xlsx,csv',
+        ]);
+
+        Excel::import(new StockImport($batch), $request->file('file'));
+
+        return back()->with('success', 'Batch items imported successfully');
     }
 }

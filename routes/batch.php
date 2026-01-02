@@ -14,4 +14,6 @@ Route::prefix('/batch')->as('batch.')->middleware(['auth'])->group(function() {
     Route::post('/addBatchItem/{batch}', 'BatchController@addBatchItem')->name('addBatchItem');
     Route::post('/updateBatchItem/{batch_item}', 'BatchController@updateBatchItem')->name('updateBatchItem');
     Route::get('/destroyItem/{batch_item}', 'BatchController@destroyItem')->name('destroyItem');
+    Route::get('/download-template/{batch}', 'BatchController@downloadTemplate')->name('downloadTemplate');
+    Route::post('/import/{batch}', 'BatchController@import')->name('import');
 });
