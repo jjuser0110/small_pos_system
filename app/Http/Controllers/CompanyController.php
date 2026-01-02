@@ -30,7 +30,7 @@ class CompanyController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $branch = Branch::where('branch_id',$login_user->branch_id)->get();
+            $branch = Branch::where('id',$login_user->branch_id)->get();
         }else{
             $branch = Branch::all();
         }
@@ -49,7 +49,7 @@ class CompanyController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $branch = Branch::where('branch_id',$login_user->branch_id)->get();
+            $branch = Branch::where('id',$login_user->branch_id)->get();
         }else{
             $branch = Branch::all();
         }

@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Imports\ProductImport;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Uom;
 use App\Models\Product;
 use App\Models\BatchItem;
+use App\Models\Branch;
+use App\Models\Company;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -21,13 +26,16 @@ class ProductController extends Controller
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $product = Product::where('branch_id',$login_user->branch_id)->get();
+            $companies = Company::where('branch_id', $login_user->branch_id)->get();
         }else if($login_user->role_id == 4){
             $product = Product::where('company_id',$login_user->company_id)->get();
+            $companies = Company::where('id', $login_user->company_id)->get();
         }else{
             $product = Product::all();
+            $companies = Company::all();
         }
 
-        return view('product.index')->with('product',$product);
+        return view('product.index', compact('product', 'companies'));
     }
 
     public function create()
@@ -164,4 +172,25 @@ class ProductController extends Controller
         return redirect()->route('product.index')->withSuccess('Item converted');
     }
 
+    public function downloadTemplate()
+    {
+        return Excel::download(new ProductTemplateExport, 'product_template.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file'       => 'required|mimes:xlsx,csv',
+            'company_id' => 'required',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+        if (!$company) {
+            return back()->withErrors('Company not found');
+        }
+
+        Excel::import(new ProductImport($company->branch_id, $company->id), $request->file('file'));
+
+        return back()->with('success', 'Products imported successfully');
+    }
 }

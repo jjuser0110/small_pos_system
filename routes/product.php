@@ -16,4 +16,6 @@ Route::prefix('/product')->as('product.')->middleware(['auth'])->group(function(
     Route::get('/editBundle/{product_bundle}', 'ProductController@editBundle')->name('editBundle');
     Route::post('/updateBundle/{product_bundle}', 'ProductController@updateBundle')->name('updateBundle');
     Route::get('/convert/{product}', 'ProductController@convert')->name('convert');
+    Route::get('/download-template', 'ProductController@downloadTemplate')->name('downloadTemplate');
+    Route::post('/import', 'ProductController@import')->name('import');
 });
