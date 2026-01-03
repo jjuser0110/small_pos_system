@@ -171,7 +171,7 @@
         </div>
     </div>
 </div>
-
+@if(isset($batch))
  <div class="modal fade" id="uploadBatchItemModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -205,6 +205,7 @@
         </div>
     </div>
 </div>
+@endif
 
 @if(isset($batch))
 <div class="modal fade" id="activityModal" tabindex="-1" aria-hidden="true">
