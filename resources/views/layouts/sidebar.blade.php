@@ -32,6 +32,13 @@ $currentRoute = request()->route()->getName();
                 <div>Go to Counter</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
+            <a href="{{ route('shift_closing.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Shift Closing</div>
+            </a>
+        </li>
+
         @if(auth()->user()->role_id != 5 )
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text" data-i18n="Company Setting">Company Setting</span>
@@ -40,12 +47,6 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('order.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Order</div>
-            </a>
-        </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
-            <a href="{{ route('shift_closing.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Shift Closing</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">
@@ -70,6 +71,12 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('company_staff.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Company Staff</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'report.index') ? 'active' : ''}}">
+            <a href="{{ route('report.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Report</div>
             </a>
         </li>
         @endif
