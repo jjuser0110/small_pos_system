@@ -11,13 +11,45 @@
                 <div class="head-label" style="margin-bottom:10px">
                     <h5 class="card-title mb-0">Order Listing</h5>
                 </div>
-                <div class="col-md-6 col-12 mb-4">
+                <div class="col-md-12 col-12 mb-4">
                     <form method="GET">
-                        <div class="input-group input-daterange" >
-                            <input type="datetime-local" class="form-control" name="date_from" value="{{$date_from??''}}"/>
-                            <span class="input-group-text">to</span>
-                            <input type="datetime-local" class="form-control" name="date_to" value="{{$date_to??''}}"/>
-                            <button class="btn btn-primary" type="submit" >Filter</button>
+                        <div class="row g-2 align-items-end">
+
+                            <div class="col-md-6">
+                                <label>Date</label>
+                                <div class="input-group input-daterange" >
+                                    <input type="datetime-local" class="form-control" name="date_from" value="{{$date_from??''}}"/>
+                                <span class="input-group-text">to</span>
+                                <input type="datetime-local" class="form-control" name="date_to" value="{{$date_to??''}}"/>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Branches</label>
+                                <select name="branch_id[]" class="form-select select2" multiple>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ collect(request('branch_id'))->contains($branch->id) ? 'selected' : '' }}>
+                                            {{ $branch->branch_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Companies</label>
+                                <select name="company_id[]" class="form-select select2" multiple>
+                                    @foreach ($companies as $company)
+                                        <option value="{{ $company->id }}" {{ collect(request('company_id'))->contains($company->id) ? 'selected' : '' }}>
+                                            {{ $company->company_code }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-12 text-end mt-2">
+                                <button class="btn btn-primary">Filter</button>
+                            </div>
+
                         </div>
                     </form>
                 </div>
@@ -128,6 +160,8 @@
                     <thead>
                         <tr>
                             <th>No.</th>
+                            <th>Branch</th>
+                            <th>Company</th>
                             <th>Category</th>
                             <th>Number of Transactions</th>
                             <th>Total Amount (RM)</th>
@@ -137,6 +171,8 @@
                         @foreach($categoryTotals as $index => $item)
                         <tr>
                             <td>{{ $index + 1 }}</td>
+                            <td>{{ $item->branch->branch_name ?? '' }}</td>
+                            <td>{{ $item->company->company_name ?? '' }}</td>
                             <td>{{ $item->category->category_name ?? '' }}</td>
                             <td>{{ $item->order_item_count }}</td>
                             <td>{{ number_format($item->total_amount ?? 0, 2) }}</td>
@@ -145,7 +181,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="2" class="text-end">Total:</th>
+                            <th colspan="5" class="text-end">Total:</th>
                             <th>{{ number_format($categoryTotals->sum('total_amount') ?? 0, 2) }}</th>
                         </tr>
                     </tfoot>
@@ -156,6 +192,8 @@
                     <thead>
                         <tr>
                             <th>No.</th>
+                            <th>Branch</th>
+                            <th>Company</th>
                             <th>Category</th>
                             <th>Total Profit (RM)</th>
                         </tr>
@@ -164,6 +202,8 @@
                         @foreach($categoryProfits as $index => $profit_item)
                         <tr>
                             <td>{{ $index + 1 }}</td>
+                            <td>{{ $profit_item->branch->branch_name ?? '' }}</td>
+                            <td>{{ $profit_item->company->company_name ?? '' }}</td>
                             <td>{{ $profit_item->category->category_name ?? '' }}</td>
                             <td>{{ number_format($profit_item->total_amount ?? 0, 2) }}</td>
                         </tr>
@@ -171,7 +211,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="2" class="text-end">Total:</th>
+                            <th colspan="4" class="text-end">Total:</th>
                             <th>{{ number_format($categoryProfits->sum('total_amount') ?? 0, 2) }}</th>
                         </tr>
                     </tfoot>
@@ -217,8 +257,20 @@
 @endsection
 
 @section('page-js')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection
+
 @section('scripts')
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            placeholder: "Select",
+            allowClear: true,
+            width: '100%',
+        });
+    });
+</script>
 <script>
     $(function(){
       var table = $('#mytable').DataTable({

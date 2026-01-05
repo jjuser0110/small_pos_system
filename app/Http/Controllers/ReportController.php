@@ -55,6 +55,12 @@ class ReportController extends Controller
             ->when($login_user->role_id == 4, function ($q) use ($login_user) {
                 $q->where('company_id', $login_user->company_id);
             })
+            ->when($request->filled('branch_id'), function ($q) use ($request) {
+                $q->whereIn('branch_id', $request->branch_id);
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereIn('company_id', $request->company_id);
+            })
             ->whereHas('order', function ($q) use ($date_from, $date_to) {
                 $q->where('status', 'Active')
                 ->whereBetween('created_at', [$date_from, $date_to]);

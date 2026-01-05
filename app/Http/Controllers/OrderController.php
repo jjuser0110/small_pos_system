@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Http\Request;
 use App\Models\BatchItem;
+use App\Models\Branch;
+use App\Models\Company;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemProfit;
@@ -31,6 +33,9 @@ class OrderController extends Controller
             ? Carbon::parse($request->date_to)
             : Carbon::now()->endOfDay();
 
+        $branches = Branch::all();
+        $companies = Company::all();
+
         $login_user = Auth::user();
 
         $query = Order::query();
@@ -47,6 +52,12 @@ class OrderController extends Controller
 
         // Sort and get results
         $order = $query
+            ->when($request->filled('branch_id'), function ($q) use ($request) {
+                $q->whereIn('branch_id', $request->branch_id);
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereIn('company_id', $request->company_id);
+            })
             ->with('profit_items')
             ->withSum('profit_items', 'total_earning')
             ->orderBy('created_at', 'DESC')
@@ -67,17 +78,29 @@ class OrderController extends Controller
             ->when($login_user->role_id == 4, function ($q) use ($login_user) {
                 $q->where('company_id', $login_user->company_id);
             })
-            ->select(
-                'category_id',
-                DB::raw('SUM(total_price) as total_amount'),
-                DB::raw('COUNT(*) as order_item_count')
-            )
+            ->when($request->filled('branch_id'), function ($q) use ($request) {
+                $q->whereIn('branch_id', $request->branch_id);
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereIn('company_id', $request->company_id);
+            })
             ->whereHas('order', function ($q) use ($date_from, $date_to) {
                 $q->where('status', 'Active')
                 ->whereBetween('created_at', [$date_from, $date_to]);
             })
-            ->with('category:id,category_name')
-            ->groupBy('category_id')
+            ->select(
+                'category_id',
+                'branch_id',
+                'company_id',
+                DB::raw('SUM(total_price) as total_amount'),
+                DB::raw('COUNT(*) as order_item_count')
+            )
+            ->with([
+                'category:id,category_name',
+                'branch:id,branch_name',
+                'company:id,company_name',
+            ])
+            ->groupBy('category_id', 'branch_id', 'company_id')
             ->get();
 
         $categoryProfits = OrderItemProfit::query()
@@ -87,13 +110,28 @@ class OrderController extends Controller
             ->when($login_user->role_id == 4, function ($q) use ($login_user) {
                 $q->where('company_id', $login_user->company_id);
             })
-            ->select('category_id', DB::raw('SUM(total_earning) as total_amount'))
+            ->when($request->filled('branch_id'), function ($q) use ($request) {
+                $q->whereIn('branch_id', $request->branch_id);
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereIn('company_id', $request->company_id);
+            })
             ->whereHas('order', function ($q) use ($date_from, $date_to) {
                 $q->where('status', 'Active')
                 ->whereBetween('created_at', [$date_from, $date_to]);
             })
-            ->with('category:id,category_name')
-            ->groupBy('category_id')
+            ->select(
+                'category_id',
+                'branch_id',
+                'company_id',
+                DB::raw('SUM(total_earning) as total_amount')
+            )
+            ->with([
+                'category:id,category_name',
+                'branch:id,branch_name',
+                'company:id,company_name',
+            ])
+            ->groupBy('category_id', 'branch_id', 'company_id')
             ->get();
 
         return view('order.index', [
@@ -105,6 +143,8 @@ class OrderController extends Controller
             'total_profit' => $total_profit,
             'date_from' => $date_from_input,
             'date_to' => $date_to_input,
+            'branches' => $branches,
+            'companies' => $companies,
         ]);
 
     }
