@@ -17,6 +17,7 @@ class Category extends Model
         'category_name',
         'arrangement',
         'special',
+        'has_stock',
     ];
 
     public function branch()

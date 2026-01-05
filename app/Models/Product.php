@@ -20,6 +20,7 @@ class Product extends Model
         'barcode',
         'selling_price',
         'uom',
+        'initial',
         'stock_quantity',
         'is_active',
         'arrangement',
@@ -45,6 +46,11 @@ class Product extends Model
     public function uom_dt()
     {
         return $this->belongsTo('App\Models\Uom','uom');
+    }
+
+    public function stockLogs()
+    {
+        return $this->morphMany('App\Models\StockLog', 'content');
     }
 
     public function stock_logs()

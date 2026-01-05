@@ -276,7 +276,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
         </div>
         <div class="categories" id="categories">
             @foreach($category as $index=> $cat)
-            <button class="category-btn @if($index==0) active @endif" data-category="{{ Str::slug($cat->category_name, '_') }}" data-special="{{ $cat->special }}">
+            <button class="category-btn @if($index==0) active @endif" data-category="{{ Str::slug($cat->category_name, '_') }}" data-special="{{ $cat->special }}" data-has_stock="{{ $cat->has_stock }}">
                 {{$cat->category_name??''}}
             </button>
             @endforeach
@@ -350,6 +350,7 @@ const products = {
             connected_product_id: {{ $p->connected_product_id ?? 0 }},
             connected_product_quantity: {{ $p->connected_product_quantity ?? 0 }},
             special: {{ $cat->special }},
+            has_stock: {{ $cat->has_stock }},
         }@if(!$loop->last), @endif
         @endforeach
     ]@if(!$loop->last), @endif
@@ -456,6 +457,20 @@ function displayProducts(category){
         card.appendChild(nameDiv);
 
         if (p.special) {
+            if (p.has_stock) {
+                const stockDiv = document.createElement('div');
+                if (p.stock === 0) {
+                    card.style.opacity = 0.5;
+                    card.style.pointerEvents = 'none';
+                    stockDiv.className = 'out-of-stock';
+                    stockDiv.innerText = 'Out of Stock';
+                } else {
+                    card.onclick = () => addToCart(p);
+                    stockDiv.className = 'product-stock';
+                    stockDiv.innerText = `Stock: ${p.stock}`;
+                }
+                card.appendChild(stockDiv);
+            }
             card.onclick=()=>openModal(p);
         } else {
             const priceDiv = document.createElement('div');
@@ -463,18 +478,20 @@ function displayProducts(category){
             priceDiv.innerText = `RM ${p.price.toFixed(2)}/${p.uom}`;
             card.appendChild(priceDiv);
 
-            const stockDiv = document.createElement('div');
-            if (p.stock === 0) {
-                card.style.opacity = 0.5;
-                card.style.pointerEvents = 'none';
-                stockDiv.className = 'out-of-stock';
-                stockDiv.innerText = 'Out of Stock';
-            } else {
-                card.onclick = () => addToCart(p);
-                stockDiv.className = 'product-stock';
-                stockDiv.innerText = `Stock: ${p.stock}`;
+            if (p.has_stock) {
+                const stockDiv = document.createElement('div');
+                if (p.stock === 0) {
+                    card.style.opacity = 0.5;
+                    card.style.pointerEvents = 'none';
+                    stockDiv.className = 'out-of-stock';
+                    stockDiv.innerText = 'Out of Stock';
+                } else {
+                    card.onclick = () => addToCart(p);
+                    stockDiv.className = 'product-stock';
+                    stockDiv.innerText = `Stock: ${p.stock}`;
+                }
+                card.appendChild(stockDiv);
             }
-            card.appendChild(stockDiv);
         }
         container.appendChild(card);
     });
@@ -516,13 +533,32 @@ function confirmAmount() {
 }
 
 function addSpecialToCart(product, amount) {
-    cart.push({
-        id: product.id + '_special_' + Date.now(),
-        name: product.name,
-        price: amount,
-        quantity: 1,
-        stock: 9999
-    });
+    const productId = String(product.id);
+    let existingItem = cart.find(item => String(item.id) === productId);
+    console.log(existingItem);
+    if (existingItem) {
+        // Update quantity in cart
+        existingItem.quantity += amount;
+
+        // Update DOM quantity
+        let cartItem = document.querySelector(
+            `.cart-item[data-item-id="${productId}"]`
+        );
+
+        if (cartItem) {
+            cartItem.querySelector('.quantity-input').value =
+                existingItem.quantity;
+        }
+
+    } else {
+        cart.push({
+            id: productId,
+            name: product.name,
+            price: product.price,
+            quantity: amount,
+            stock: product.stock,
+        });
+    }
 
     updateCart();
 

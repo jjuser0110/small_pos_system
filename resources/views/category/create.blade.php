@@ -44,9 +44,17 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" id="special" name="special" value="1" {{ old('special', $category->special ?? 0) == 1 ? 'checked' : '' }}>
+                        <input class="form-check-input" type="checkbox" id="has_stock" name="special" value="1" {{ old('special', $category->special ?? 0) == 1 ? 'checked' : '' }}>
                         <label class="form-check-label" for="special">
                             Special
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="has_stock" name="has_stock" value="1" {{ old('has_stock', $category->has_stock ?? 0) == 1 ? 'checked' : '' }}>
+                        <label class="form-check-label" for="has_stock">
+                            Has Stock
                         </label>
                     </div>
                 </div>

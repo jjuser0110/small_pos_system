@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('product.index')}}">Product /</a> 
+        <a class="text-muted fw-light" href="{{route('product.index')}}">Product /</a>
          @if (isset($product)) Edit @else Create @endif
     </h4>
     <div class="row">
@@ -13,7 +13,7 @@
                 <div class="card-body">
                     <form class="row g-3" enctype="multipart/form-data" @if (isset($product)) method="post" action="{{ route('product.update',$product) }}" @else method="post" action="{{ route('product.store') }}" @endif onsubmit="showLoading()">
                     @csrf
-                    
+
                     <div class="col-md-7 mb-4">
                         <label for="select2Basic" class="form-label">Category</label>
                         <select id="select2Basic" name="category_id" class="select2 form-select" data-allow-clear="true">
@@ -31,7 +31,7 @@
                         class="form-control"
                         placeholder="Snack"
                         name="product_name"
-                        value="{{$product->product_name??''}}" 
+                        value="{{$product->product_name??''}}"
                         required/>
                     </div>
                     <!-- <div class="col-md-6">
@@ -40,7 +40,7 @@
                         type="text"
                         class="form-control"
                         placeholder="AAA111"
-                        name="product_code" 
+                        name="product_code"
                         value="{{$product->product_code??''}}"/>
                     </div> -->
                     <div class="col-md-6">
@@ -49,7 +49,7 @@
                         type="text"
                         class="form-control"
                         placeholder="1231239328272"
-                        name="barcode" 
+                        name="barcode"
                         id="barcode"
                         value="{{$product->barcode??''}}"/>
                     </div>
@@ -59,7 +59,7 @@
                         type="text"
                         class="form-control"
                         placeholder="1"
-                        name="arrangement" 
+                        name="arrangement"
                         value="{{$product->arrangement??''}}"/>
                     </div>
                     <div class="col-md-6 mb-4">
@@ -73,6 +73,15 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label" for="initial">Initial Quantity</label>
+                        <input
+                        type="number"
+                        class="form-control"
+                        min="0"
+                        name="initial"
+                        value="{{$product->initial??0}}"/>
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label" for="selling_price">Selling Price (RM)</label>
                         <input
                         type="number"
@@ -80,7 +89,7 @@
                         min="0"
                         step="0.01"
                         placeholder="9.90"
-                        name="selling_price" 
+                        name="selling_price"
                         value="{{$product->selling_price??''}}"/>
                     </div>
                     @if(isset($product))

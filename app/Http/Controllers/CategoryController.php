@@ -48,6 +48,11 @@ class CategoryController extends Controller
                 'special' => 0,
             ]);
         }
+        if (empty($request->has_stock)) {
+            $request->merge([
+                'has_stock' => 0,
+            ]);
+        }
         $company = Company::find($request->company_id);
         $request->merge(['branch_id'=>$company->branch_id,'company_id'=>$company->id]);
         $category = Category::create($request->all());
@@ -73,6 +78,11 @@ class CategoryController extends Controller
         if (empty($request->special)) {
             $request->merge([
                 'special' => 0,
+            ]);
+        }
+        if (empty($request->has_stock)) {
+            $request->merge([
+                'has_stock' => 0,
             ]);
         }
         $category->update($request->all());

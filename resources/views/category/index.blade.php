@@ -31,6 +31,7 @@
                             <th>Company</th>
                             <th>Arrangement</th>
                             <th>Special</th>
+                            <th>Has Stock</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -43,6 +44,7 @@
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->arrangement??""}}</td>
                             <td>{{ $row->special ? 'Yes' : 'No' }}</td>
+                            <td>{{ $row->has_stock ? 'Yes' : 'No' }}</td>
                             <td>
                                 <a href="{{ route('category.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('category.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>

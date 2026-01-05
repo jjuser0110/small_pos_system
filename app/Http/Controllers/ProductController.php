@@ -60,8 +60,27 @@ class ProductController extends Controller
     {
         $login_user = Auth::user();
         $category = Category::find($request->category_id);
-        $request->merge(['branch_id'=>$category->branch_id,'company_id'=>$category->company_id]);
+        $request->merge([
+            'branch_id'         => $category->branch_id,
+            'company_id'        => $category->company_id,
+            'initial'           => $request->initial ?? 0,
+            'stock_quantity'    => $request->initial ?? 0,
+        ]);
         $product = Product::create($request->all());
+
+        if ($product->initial <> 0) {
+            $product->stockLogs()->create([
+                'branch_id'     => $product->branch_id,
+                'company_id'    => $product->company_id,
+                'category_id'   => $product->category_id,
+                'product_id'    => $product->id,
+                'type'          => 'stock_in',
+                'description'   => 'Initial',
+                'before_stock'  => 0,
+                'quantity'      => $product->initial,
+                'after_stock'   => $product->initial,
+            ]);
+        }
 
         return redirect()->route('product.index')->withSuccess('Data saved');
     }
@@ -85,7 +104,34 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        $adjustment = $request->initial - $product->initial;
+        if ($adjustment <> 0) {
+            $type = $adjustment > 0 ? 'adjust_in' : 'adjust_out';
+            $stockChange = abs($adjustment);
+
+            $newStock = $type === 'adjust_in'
+                    ? $product->stock_quantity + $stockChange
+                    : $product->stock_quantity - $stockChange;
+
+            $product->stockLogs()->create([
+                'branch_id'     => $product->branch_id,
+                'company_id'    => $product->company_id,
+                'category_id'   => $product->category_id,
+                'product_id'    => $product->id,
+                'type'          => $type,
+                'description'   => 'Adjust Initial',
+                'before_stock'  => $product->stock_quantity,
+                'quantity'      => $stockChange,
+                'after_stock'   => $newStock,
+            ]);
+
+            $request->merge([
+                'stock_quantity' => $newStock,
+            ]);
+        }
+
         $product->update($request->all());
+
         return redirect()->route('product.index')->withSuccess('Data updated');
     }
 

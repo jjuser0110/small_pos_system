@@ -414,51 +414,77 @@ class CartController extends Controller
         ]);
 
         // FIFO deduction logic (clean function)
-        if (!$product->category->special) {
+        if ($product->category->has_stock) {
             $this->deductStockFIFO($product, $item, $cart->quantity);
         }
     }
 
     private function deductStockFIFO($product, $orderItem, $qty_needed)
     {
-        while ($qty_needed > 0) {
+        DB::transaction(function () use ($product, $orderItem, $qty_needed) {
 
-            $batch = BatchItem::where('product_id', $product->id)
-                ->where('balance', '>', 0)
-                ->orderBy('created_at', 'ASC')
-                ->first();
+            $totalDeducted = 0;
 
-            if (!$batch) break;
+            while ($qty_needed <> 0) {
 
-            $take = min($qty_needed, $batch->balance);
+                $batchItem = BatchItem::where('product_id', $product->id)
+                    ->where('balance', '>', 0)
+                    ->orderBy('created_at', 'ASC')
+                    ->lockForUpdate()
+                    ->first();
 
-            // Create order profit entry
-            $order_item_profit = $this->createProfitEntry($orderItem, $batch, $take);
+                if (!$batchItem) {
 
-            // Update batch
-            $batch->update(['balance' => $batch->balance - $take]);
+                    $take = $qty_needed;
 
-            // Update stock
-            $before = $product->stock_quantity;
-            $after = $before - $take;
-            $product->update(['stock_quantity' => $after]);
+                    $before = $product->stock_quantity - $totalDeducted;
+                    $after  = $before - $take;
 
-            // Stock log
-            $order_item_profit->stock_logs()->create([
-                'branch_id' => $orderItem->branch_id,
-                'company_id' => $orderItem->company_id,
-                'category_id' => $orderItem->category_id,
-                'product_id' => $product->id,
-                'type' => 'stock_out',
-                'description' => $batch->batch->batch_no ?? '',
-                'before_stock' => $before,
-                'quantity' => $take,
-                'after_stock' => $after,
-            ]);
+                    // Stock log WITHOUT batch
+                    $product->stockLogs()->create([
+                        'branch_id'     => $orderItem->branch_id,
+                        'company_id'    => $orderItem->company_id,
+                        'category_id'   => $orderItem->category_id,
+                        'product_id'    => $product->id,
+                        'type'          => 'stock_out',
+                        'description'   => 'NO_BATCH',
+                        'before_stock'  => $before,
+                        'quantity'      => $take,
+                        'after_stock'   => $after,
+                    ]);
 
-            // reduce remaining needed quantity
-            $qty_needed -= $take;
-        }
+                    $totalDeducted += $take;
+                    break;
+                }
+
+                $take = min($qty_needed, $batchItem->balance);
+
+                // Create order profit entry
+                $order_item_profit = $this->createProfitEntry($orderItem, $batchItem, $take);
+
+                // Update batch
+                $batchItem->decrement('balance', $take);
+
+                $totalDeducted += $take;
+                $qty_needed -= $take;
+
+                // Stock log
+                $order_item_profit->stock_logs()->create([
+                    'branch_id'     => $orderItem->branch_id,
+                    'company_id'    => $orderItem->company_id,
+                    'category_id'   => $orderItem->category_id,
+                    'product_id'    => $product->id,
+                    'type'          => 'stock_out',
+                    'description'   => $batchItem->batch->batch_no ?? '',
+                    'before_stock'  => $product->stock_quantity - $totalDeducted + $take,
+                    'quantity'      => $take,
+                    'after_stock'   => $product->stock_quantity - $totalDeducted,
+                ]);
+            }
+
+            $product->decrement('stock_quantity', $totalDeducted);
+        });
+
     }
 
     private function createProfitEntry($orderItem, $batch, $qty)
@@ -580,11 +606,10 @@ class CartController extends Controller
 
         $item = Cart::where('user_id', auth()->id())
             ->where('product_id', $product->id)
-            ->where('single_price', $request->amount)
             ->first();
 
         if ($item) {
-            $newQty = $item->quantity + 1;
+            $newQty = $item->quantity + $request->amount;
             $item->update([
                 'quantity' => $newQty,
                 'total_price' => $newQty * $item->single_price,
@@ -593,9 +618,9 @@ class CartController extends Controller
             Cart::create([
                 'user_id' => auth()->id(),
                 'product_id' => $product->id,
-                'quantity' => 1,
-                'single_price' => $request->amount,
-                'total_price' => $request->amount,
+                'quantity' => $request->amount,
+                'single_price' => $product->selling_price,
+                'total_price' => $request->amount * $product->selling_price,
             ]);
         }
 
