@@ -79,17 +79,20 @@ class HomeController extends Controller
             $category = Category::where('branch_id',$login_user->branch_id)->get();
             $products = Product::where('branch_id',$login_user->branch_id)
                 ->orderByRaw('barcode IS NOT NULL')
+                ->orderByRaw('arrangement IS NULL')
                 ->orderBy('arrangement')
                 ->get();
         }else if($login_user->role_id == 4 || $login_user->role_id == 5){
             $category = Category::where('company_id',$login_user->company_id)->get();
             $products = Product::where('company_id',$login_user->company_id)
                 ->orderByRaw('barcode IS NOT NULL')
+                ->orderByRaw('arrangement IS NULL')
                 ->orderBy('arrangement')
                 ->get();
         }else{
             $category = Category::all();
             $products = Product::orderByRaw('barcode IS NOT NULL')
+                ->orderByRaw('arrangement IS NULL')
                 ->orderBy('arrangement')
                 ->get();
         }
