@@ -77,13 +77,21 @@ class HomeController extends Controller
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $category = Category::where('branch_id',$login_user->branch_id)->get();
-            $products = Product::where('branch_id',$login_user->branch_id)->get();
+            $products = Product::where('branch_id',$login_user->branch_id)
+                ->orderByRaw('barcode IS NOT NULL')
+                ->orderBy('arrangement')
+                ->get();
         }else if($login_user->role_id == 4 || $login_user->role_id == 5){
             $category = Category::where('company_id',$login_user->company_id)->get();
-            $products = Product::where('company_id',$login_user->company_id)->get();
+            $products = Product::where('company_id',$login_user->company_id)
+                ->orderByRaw('barcode IS NOT NULL')
+                ->orderBy('arrangement')
+                ->get();
         }else{
             $category = Category::all();
-            $products = Product::all();
+            $products = Product::orderByRaw('barcode IS NOT NULL')
+                ->orderBy('arrangement')
+                ->get();
         }
 
         return view('counter')->with('category',$category)->with('products',$products);
