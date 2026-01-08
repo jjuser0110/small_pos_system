@@ -33,10 +33,18 @@ class OrderController extends Controller
             ? Carbon::parse($request->date_to)
             : Carbon::now()->endOfDay();
 
-        $branches = Branch::all();
-        $companies = Company::all();
-
         $login_user = Auth::user();
+
+        if ($login_user->role_id == 3) {
+            $branches = Branch::where('id', $login_user->branch_id)->get();
+            $companies = Company::where('branch_id', $login_user->branch_id)->get();
+        } elseif ($login_user->role_id == 4) {
+            $branches = Branch::where('id', $login_user->branch_id)->get();
+            $companies = Company::where('id', $login_user->company_id)->get();
+        } else {
+            $branches = Branch::all();
+            $companies = Company::all();
+        }
 
         $query = Order::query();
 
