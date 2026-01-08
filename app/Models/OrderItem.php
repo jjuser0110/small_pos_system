@@ -30,19 +30,24 @@ class OrderItem extends Model
     {
         return $this->belongsTo(\App\Models\Product::class, 'product_id');
     }
-    
+
     public function category()
     {
         return $this->belongsTo(\App\Models\Category::class, 'category_id');
     }
-    
+
     public function branch()
     {
         return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
     }
-    
+
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
+
+    public function profit_items()
+    {
+        return $this->hasMany(OrderItemProfit::class);
     }
 }

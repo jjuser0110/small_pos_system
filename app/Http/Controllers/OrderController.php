@@ -170,36 +170,70 @@ class OrderController extends Controller
             abort(403);
         }
 
+        $order->load(['items.profit_items']);
+
         DB::transaction(function () use ($order, $request) {
 
-            foreach ($order->profit_items as $profit_item) {
+            foreach ($order->items as $item) {
+                if ($item->profit_items->isEmpty()) {
+                    $product = Product::lockForUpdate()->find($item->product_id);
+                    if (!$product) {
+                        continue;
+                    }
+                    $before = $product->stock_quantity;
+                    $after  = $before + $item->quantity;
 
-                $product = Product::lockForUpdate()->find($profit_item->product_id);
-                $before = $product->stock_quantity;
-                $after = $before + $profit_item->quantity;
-                // Restore product stock
-                $product->update([
-                    'stock_quantity' => $after
-                ]);
+                    $product->update([
+                        'stock_quantity' => $after
+                    ]);
 
-                // Restore batch balance
-                BatchItem::where('id', $profit_item->batch_item_id)
-                    ->increment('balance', $profit_item->quantity);
+                    // Stock log
+                    $product->stockLogs()->create([
+                        'branch_id'     => $item->branch_id,
+                        'company_id'    => $item->company_id,
+                        'category_id'   => $item->category_id,
+                        'product_id'    => $item->product_id,
+                        'type'          => 'stock_in',
+                        'description'   => 'VOID ORDER ' . $order->order_no,
+                        'before_stock'  => $before,
+                        'quantity'      => $item->quantity,
+                        'after_stock'   => $after,
+                    ]);
 
-                // Stock log (reverse)
-                $profit_item->stock_logs()->create([
-                    'branch_id'     => $profit_item->branch_id,
-                    'company_id'    => $profit_item->company_id,
-                    'category_id'   => $profit_item->category_id,
-                    'product_id'    => $profit_item->product_id,
-                    'type'          => 'stock_in',
-                    'description'   => 'VOID ORDER ' . $order->order_no,
-                    'before_stock'  => $before,
-                    'quantity'      => $profit_item->quantity,
-                    'after_stock'   => $after,
-                ]);
+                    continue;
+                }
 
-                $profit_item->delete();
+                foreach ($item->profit_items as $profit_item) {
+                    $product = Product::lockForUpdate()->find($profit_item->product_id);
+                    if (!$product) {
+                        continue;
+                    }
+                    $before = $product->stock_quantity;
+                    $after = $before + $profit_item->quantity;
+                    // Restore product stock
+                    $product->update([
+                        'stock_quantity' => $after
+                    ]);
+
+                    // Restore batch balance
+                    BatchItem::where('id', $profit_item->batch_item_id)
+                        ->increment('balance', $profit_item->quantity);
+
+                    // Stock log (reverse)
+                    $profit_item->stock_logs()->create([
+                        'branch_id'     => $profit_item->branch_id,
+                        'company_id'    => $profit_item->company_id,
+                        'category_id'   => $profit_item->category_id,
+                        'product_id'    => $profit_item->product_id,
+                        'type'          => 'stock_in',
+                        'description'   => 'VOID ORDER ' . $order->order_no,
+                        'before_stock'  => $before,
+                        'quantity'      => $profit_item->quantity,
+                        'after_stock'   => $after,
+                    ]);
+
+                    $profit_item->delete();
+                }
             }
 
             // Reverse shift closing
@@ -210,11 +244,11 @@ class OrderController extends Controller
             if ($shift) {
                 $shift->decrement('total_order_count', $order->total_product);
                 $shift->decrement('total_order_amount', $order->total_price);
-            }
 
-            ShiftMethodClosing::where('shift_closing_id', $shift->id ?? null)
-                ->where('payment_method', $order->payment_method)
-                ->decrement('amount', $order->final_total);
+                ShiftMethodClosing::where('shift_closing_id', $shift->id)
+                    ->where('payment_method', $order->payment_method)
+                    ->decrement('amount', $order->final_total);
+            }
 
             // Mark order as voided
             $order->update([
