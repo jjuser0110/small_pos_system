@@ -6,7 +6,7 @@
     <title>Checkout - POS System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -431,7 +431,7 @@
                 <div class="amount-section">
                     <div class="amount-label">Amount Received</div>
                     <input type="number" id="amountReceived" class="amount-input" placeholder="0.00" step="0.01" oninput="calculateChange()">
-                    
+
                     <div class="quick-amount-btns">
                         <button class="quick-amount-btn" onclick="setQuickAmount(10)">RM 10</button>
                         <button class="quick-amount-btn" onclick="setQuickAmount(20)">RM 20</button>
@@ -455,7 +455,8 @@
                             🖨️ Print Receipt
                         </button> -->
                         <button class="btn btn-complete" id="completeBtn" onclick="completeOrder()" disabled>
-                            ✓ Complete
+                            <span class="btn-text">✓ Complete</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                         </button>
                     </div>
                 </div>
@@ -524,13 +525,13 @@
 
         function selectPayment(method) {
             selectedPaymentMethod = method;
-            
+
             // Update active state
             document.querySelectorAll('.payment-method').forEach(el => {
                 el.classList.remove('active');
             });
             document.querySelector(`[data-method="${method}"]`).classList.add('active');
-            
+
             calculateChange();
         }
 
@@ -583,6 +584,14 @@
                 return;
             }
 
+            const btn = document.getElementById('completeBtn');
+            const spinner = btn.querySelector('.spinner-border');
+            const btnText = btn.querySelector('.btn-text');
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            btnText.textContent = 'Processing...';
+
             const change = received - totalAmount;
 
             const orderData = {
@@ -605,17 +614,25 @@
             .then(data => {
                 if (data.status === 'success') {
                     alert(`Order completed successfully!\n\nTotal: RM ${totalAmount.toFixed(2)}\nReceived: RM ${received.toFixed(2)}\nChange: RM ${change.toFixed(2)}\n\nThank you!`);
-                    
+
                     // Clear cart and redirect
                     window.location.href = '/receipt/'+data.order_id;
                 } else {
                     alert('Failed to place order: ' + (data.message || 'Unknown error'));
+                    resetButton();
                 }
             })
             .catch(err => {
                 console.error('Error placing order:', err);
                 alert('Failed to place order. Please try again.');
+                resetButton();
             });
+        }
+
+        function resetButton() {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+            btnText.textContent = '✓ Complete';
         }
 
         // Initialize
