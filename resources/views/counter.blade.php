@@ -339,7 +339,7 @@ h1 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
 const products = {
     @foreach($category as $cat)
     "{{ Str::slug($cat->category_name, '_') }}": [
-        @foreach($products->where('category_id', $cat->id) as $p)
+        @foreach($products->where('category_id', $cat->id)->sortBy('product_name') as $p)
         {
             id: "{{ $p->id }}",
             name: "{!! $p->product_name !!}",
