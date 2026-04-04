@@ -900,7 +900,7 @@ function renderMenu() {
 
         const stockLabel = stockEnforced && product.stock_quantity !== null
             ? `<div class="item-stock${product.stock_quantity <= 5 ? ' low' : ''}">
-                 Stock: ${product.stock_quantity}${product.uom ? ' ' + product.uom : ''}
+                 Stock: ${product.stock_quantity}
                </div>`
             : '';
 
