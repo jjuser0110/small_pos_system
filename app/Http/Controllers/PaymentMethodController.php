@@ -27,7 +27,23 @@ class PaymentMethodController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request->all());
         $payment_method = PaymentMethod::create($request->all());
+        
+        if($request->hasFile('file_attachment')){
+            $file = $request->file('file_attachment');
+            $filename = time().'_'.$file->getClientOriginalName();
+            $filePath = $file->storeAs('payment_method_images', $filename, 'public');
+            $payment_method->image_url = '/storage/' . $filePath;
+            $payment_method->save();
+        }
+        $payment_method->payment_method_logs()->create([
+            'payment_method_id'=>$payment_method->id,
+            'type'=>"Start",
+            'prev_amount'=>0,
+            'amount'=>$payment_method->amount,
+            'total'=>$payment_method->amount,
+        ]);
 
         return redirect()->route('payment_method.index')->withSuccess('Data saved');
     }

@@ -21,8 +21,40 @@
                     placeholder="Cash"
                     name="payment_method_name"
                     value="{{$payment_method->payment_method_name??''}}" 
+                    required
+                    @if(isset($payment_method)) disabled @endif
+                    />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="file_attachment">Image</label>
+                    <input
+                    type="file"
+                    class="form-control"
+                    name="file_attachment"
+                    accept="image/*"/>
+                </div>
+                @if(!isset($payment_method))
+                <div class="col-md-6">
+                    <label class="form-label" for="amount">Amount</label>
+                    <input
+                    type="number"
+                    step="0.01"
+                    class="form-control"
+                    placeholder="0.00"
+                    name="amount"
+                    value="{{$payment_method->amount??''}}"
                     required/>
                 </div>
+                @endif
+                @if(isset($payment_method))
+                <div class="col-md-7">
+                    <label class="form-label" for="password">Is Active?</label>
+                    <select name="is_active" class="form-control">
+                        <option value="1" <?php echo isset($payment_method)&&$payment_method->is_active == 1?'selected':'' ?>>Active</option>
+                        <option value="0" <?php echo isset($payment_method)&&$payment_method->is_active == 0?'selected':'' ?>>Inactive</option>
+                    </select>
+                </div>
+                @endif
                 <hr>
                 <div class="col-12">
                     <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>
