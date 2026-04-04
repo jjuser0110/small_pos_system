@@ -304,7 +304,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <body>
 
 <header>
-  <div class="brand">Meja<span>POS</span></div>
+  <div class="brand"><a href="{{ route('home') }}">Meja<span>POS</span></a></div>
   <div class="legend">
     <div class="legend-item"><div class="dot available"></div>Available</div>
     <div class="legend-item"><div class="dot occupied"></div>Occupied</div>
