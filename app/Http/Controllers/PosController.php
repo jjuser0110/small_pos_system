@@ -258,6 +258,26 @@ class PosController extends Controller
                 'quantity'     => $cart->quantity,
                 'total_price'  => $cart->total_price,
             ]);
+
+            if (
+                $cart->product &&
+                $cart->product->category &&
+                $cart->product->category->has_stock == 1
+            ) {
+                $cart->product->decrement('stock_quantity', $cart->quantity);
+                $product = Product::find($cart->product_id);
+                $product->stockLogs()->create([
+                    'branch_id'     => $user->branch_id,
+                    'company_id'    => $user->company_id,
+                    'category_id'   => $product->category_id,
+                    'product_id'    => $product->id,
+                    'type'          => 'sales',
+                    'description'   => $orderNo ?? '',
+                    'before_stock'  => $product->stock_quantity,
+                    'quantity'      => 1,
+                    'after_stock'   => $product->stock_quantity - 1,
+                ]);
+            }
         }
 
         $paymentMethod = PaymentMethod::where('payment_method_name', $request->payment_method)->first();
