@@ -1287,28 +1287,28 @@ function pushState(state) {
     history.pushState(state, '');
 }
 
-// When a table or dabao is selected, push a state
-// Add pushState() calls inside selectTable and selectDabao
+// Always keep a base state so back never leaves the page
+history.replaceState({ page: 'home' }, '');
 
 window.addEventListener('popstate', function (e) {
-    // Payment confirm modal open — close it
+    // Always push a new state immediately to prevent leaving
+    history.pushState(e.state || { page: 'home' }, '');
+
+    // Confirm modal open — close it
     if (document.getElementById('confirmOverlay').classList.contains('open')) {
         closeConfirm();
-        pushState({ page: 'payment' });
         return;
     }
 
     // Payment modal open — close it
     if (document.getElementById('payOverlay').classList.contains('open')) {
         closePayment();
-        pushState({ page: 'order' });
         return;
     }
 
-    // Order panel open — deselect back to table list
+    // Order panel open — go back to table list
     if (currentMode !== null) {
         deselect();
-        pushState({ page: 'home' });
         return;
     }
 });
