@@ -32,7 +32,6 @@ class PosController extends Controller
     // PUT /api/tables/{id}/pay  — reset table total to 0
     public function payTable(Request $request, $id)
     {
-        dd($request->all());
         $table = Table::where('type', 0)->findOrFail($id);
 
         DB::transaction(function () use ($request, $table, $id) {
