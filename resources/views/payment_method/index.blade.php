@@ -29,6 +29,7 @@
                             <th>Payment Method Name</th>
                             <th>Image</th>
                             <th>Amount</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -43,6 +44,12 @@
                                 @endif
                             </td>
                             <td>{{$row->amount??""}}</td>
+                            <td>
+                                @if($row->is_active == 1)
+                                    <span class="badge bg-label-success me-1">Active</span>
+                                @else
+                                    <span class="badge bg-label-danger me-1">Inactive</span>
+                                @endif
                             <td>
                                 <a href="{{ route('payment_method.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('payment_method.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
