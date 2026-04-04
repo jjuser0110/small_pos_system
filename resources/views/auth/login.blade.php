@@ -182,6 +182,14 @@
 
     <!-- Page JS -->
     <script src="{{ asset('assets/js/pages-auth.js') }}"></script>
+    <script>
+    (function () {
+        history.pushState(null, '', window.location.href);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, '', window.location.href);
+        });
+    })();
+    </script>
   </body>
 </html>
 

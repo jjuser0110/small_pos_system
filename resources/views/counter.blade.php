@@ -1282,41 +1282,12 @@ function showToast(msg, cls) {
 // START
 // ════════════════════════════════════════════════
 
-// ── MOBILE BACK BUTTON ──
-function pushState(state) {
-    history.pushState(state, '');
-}
-
-// Always keep a base state so back never leaves the page
-history.replaceState({ page: 'home' }, '');
-
-window.addEventListener('popstate', function (e) {
-    // Always push a new state immediately to prevent leaving
-    history.pushState(e.state || { page: 'home' }, '');
-
-    // Confirm modal open — close it
-    if (document.getElementById('confirmOverlay').classList.contains('open')) {
-        closeConfirm();
-        return;
-    }
-
-    // Payment modal open — close it
-    if (document.getElementById('payOverlay').classList.contains('open')) {
-        closePayment();
-        return;
-    }
-
-    // Order panel open — go back to table list
-    if (currentMode !== null) {
-        deselect();
-        return;
-    }
-});
-
-history.pushState(null, '', window.location.href);
-window.addEventListener('popstate', function () {
+(function () {
     history.pushState(null, '', window.location.href);
-});
+    window.addEventListener('popstate', function () {
+        history.pushState(null, '', window.location.href);
+    });
+})();
 
 boot();
 </script>
