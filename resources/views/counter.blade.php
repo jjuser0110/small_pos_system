@@ -1030,11 +1030,11 @@ function selectPayMethod(pm) {
             qrBox.innerHTML = `
                 <img src="${pm.image_full_url}"
                      onerror="this.src=''; this.alt='No image';"
-                     style="width:120px;height:120px;object-fit:contain;border-radius:8px;display:block;">`;
+                     style="width:240px;object-fit:contain;border-radius:8px;display:block;">`;
         } else {
             // Fallback if no image — show payment method name
             qrBox.innerHTML = `
-                <div style="width:120px;height:120px;display:flex;align-items:center;justify-content:center;
+                <div style="width:240px;display:flex;align-items:center;justify-content:center;
                             font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;
                             color:#333;text-align:center;padding:8px;">
                     ${pm.payment_method_name}
