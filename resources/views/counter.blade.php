@@ -209,11 +209,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     /* Menu — takes all available space, scrolls internally */
     .menu-area{
-        flex:1;
-        min-height:45vh; 
+        height:50vh;
         overflow-y:auto;
         grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
         padding:10px;
+        flex-shrink:0;
     }
 
     /* Cart area — shrinks/grows based on content, never takes over */
@@ -229,9 +229,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     /* Cart items — scrolls when many items */
     .cart-items{
-        flex:1;
-        min-height:0;
-        max-height:35vh;
+        height:18vh;
         overflow-y:auto;
     }
 
