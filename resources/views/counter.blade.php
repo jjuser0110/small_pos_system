@@ -209,37 +209,37 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     /* Menu — takes all available space, scrolls internally */
     .menu-area{
-    flex:1;
-    min-height:0;
-    overflow-y:auto;
-    grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
-    padding:10px;
+        flex:1;
+        min-height:45vh; 
+        overflow-y:auto;
+        grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+        padding:10px;
     }
 
     /* Cart area — shrinks/grows based on content, never takes over */
     .cart-area{
-    width:100%;
-    border-left:none;
-    border-top:1px solid var(--border);
-    display:flex;
-    flex-direction:column;
-    flex-shrink:0;
-    max-height:55vh;  /* hard cap so menu always has room */
+        width:100%;
+        border-left:none;
+        border-top:1px solid var(--border);
+        display:flex;
+        flex-direction:column;
+        flex-shrink:0;
+        max-height:55vh;  /* hard cap so menu always has room */
     }
 
     /* Cart items — scrolls when many items */
     .cart-items{
-    flex:1;
-    min-height:0;
-    max-height:35vh;
-    overflow-y:auto;
+        flex:1;
+        min-height:0;
+        max-height:35vh;
+        overflow-y:auto;
     }
 
     /* Cart footer always visible */
     .cart-footer{
-    flex-shrink:0;
-    background:var(--surface);
-    border-top:1px solid var(--border);
+        flex-shrink:0;
+        background:var(--surface);
+        border-top:1px solid var(--border);
     }
 
   /* Checkout button — bigger tap target on mobile */
