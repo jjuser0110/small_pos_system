@@ -29,7 +29,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">
+        <!-- <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">
             <button class="btn btn-primary" style="float:right;" onclick="if(confirm('Are you sure you want to close your shift?')){showLoading();window.location.href='{{ route('shift_closing') }}'}">Closing</button>
         </div>
         <div class="col-sm-4 col-lg-4 mb-4">
@@ -64,11 +64,11 @@
                 </p>
             </div>
             </div>
-        </div>
+        </div> -->
         @if($shift_data)
         @foreach($shift_data->items as $item)
         
-        <div class="col-sm-4 col-lg-4 mb-4">
+        <!-- <div class="col-sm-4 col-lg-4 mb-4">
             <div class="card card-border-shadow-primary h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2 pb-1">
@@ -78,7 +78,7 @@
                 </p>
             </div>
             </div>
-        </div>
+        </div> -->
 
         @endforeach
         @endif

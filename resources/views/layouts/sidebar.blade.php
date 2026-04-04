@@ -32,12 +32,12 @@ $currentRoute = request()->route()->getName();
                 <div>Go to Counter</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
+        <!-- <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
             <a href="{{ route('shift_closing.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Shift Closing</div>
             </a>
-        </li>
+        </li> -->
 
         @if(auth()->user()->role_id != 5 )
         <li class="menu-header small text-uppercase">
@@ -67,16 +67,16 @@ $currentRoute = request()->route()->getName();
                 <div>Category</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
-            <a href="{{ route('company_staff.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Company Staff</div>
-            </a>
-        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'report.index') ? 'active' : ''}}">
             <a href="{{ route('report.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Report</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
+            <a href="{{ route('company_staff.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Company Staff</div>
             </a>
         </li>
         @endif
