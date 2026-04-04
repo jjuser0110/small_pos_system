@@ -20,6 +20,7 @@ class PaymentMethodLog extends Model
         'amount',
         'total',
         'created_by_id',
+        'remarks',
     ];
     
     public function content()

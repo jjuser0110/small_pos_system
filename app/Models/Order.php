@@ -29,6 +29,7 @@ class Order extends Model
         'voided_by',
         'voided_at',
         'voided_reason',
+        'table_id',
     ];
 
 

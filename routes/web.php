@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,3 +38,27 @@ Route::post('/cart/convert-bottle-to-box', [App\Http\Controllers\CartController:
 Route::post('/cart/placeorder', [App\Http\Controllers\CartController::class, 'place']);
 
 
+// routes/web.php
+Route::middleware(['auth'])->group(function () {
+    // Tables
+    Route::get('/pos/tables',           [PosController::class, 'getTables']);
+    Route::put('/pos/tables/{id}/pay',  [PosController::class, 'payTable']);
+
+    // Dabao
+    Route::get('/pos/dabao',            [PosController::class, 'getDabao']);
+    Route::post('/pos/dabao',           [PosController::class, 'createDabao']);
+    Route::put('/pos/dabao/{id}',       [PosController::class, 'updateDabao']);
+    Route::put('/pos/dabao/{id}/pay',   [PosController::class, 'payDabao']);
+
+    // Menu
+    Route::get('/pos/menu',             [PosController::class, 'getMenu']);
+
+    // Cart
+    Route::get('/pos/cart/{tableId}',   [PosController::class, 'getCart']);
+    Route::post('/pos/cart',            [PosController::class, 'addToCart']);
+    Route::put('/pos/cart/{cartId}',    [PosController::class, 'updateCart']);
+    Route::delete('/pos/cart/{cartId}', [PosController::class, 'removeFromCart']);
+
+    // Payment methods
+    Route::get('/pos/payment-methods',  [PosController::class, 'getPaymentMethods']);
+});
