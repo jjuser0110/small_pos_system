@@ -199,40 +199,48 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   /* Right panel — full height */
   .right-panel{min-height:100dvh;display:flex;flex-direction:column;}
 
-  /* Order body — stack menu on top, cart on bottom */
-  .order-body{flex-direction:column;flex:1;overflow:visible;}
+  /* Order body — flex column, fills remaining screen */
+    .order-body{
+    flex-direction:column;
+    flex:1;
+    overflow:hidden;
+    display:flex;
+    }
 
-  /* Menu grid — fixed height so it scrolls */
-  .menu-area{
-    height:35vh;
+    /* Menu — takes all available space, scrolls internally */
+    .menu-area{
+    flex:1;
+    min-height:0;
     overflow-y:auto;
     grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
     padding:10px;
-  }
+    }
 
-  /* Cart — sits below menu, always visible */
-  .cart-area{
+    /* Cart area — shrinks/grows based on content, never takes over */
+    .cart-area{
     width:100%;
     border-left:none;
     border-top:1px solid var(--border);
-    max-height:none;
-    overflow:visible;
-  }
+    display:flex;
+    flex-direction:column;
+    flex-shrink:0;
+    max-height:55vh;  /* hard cap so menu always has room */
+    }
 
-  /* Cart items — limited height so footer always shows */
-  .cart-items{
-    max-height:38vh;
+    /* Cart items — scrolls when many items */
+    .cart-items{
+    flex:1;
+    min-height:0;
+    max-height:35vh;
     overflow-y:auto;
-  }
+    }
 
-  /* Cart footer always visible */
-  .cart-footer{
-    position:sticky;
-    bottom:0;
+    /* Cart footer always visible */
+    .cart-footer{
+    flex-shrink:0;
     background:var(--surface);
-    z-index:10;
     border-top:1px solid var(--border);
-  }
+    }
 
   /* Checkout button — bigger tap target on mobile */
   .checkout-btn{
