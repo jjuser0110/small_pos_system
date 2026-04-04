@@ -1313,6 +1313,11 @@ window.addEventListener('popstate', function (e) {
     }
 });
 
+history.pushState(null, '', window.location.href);
+window.addEventListener('popstate', function () {
+    history.pushState(null, '', window.location.href);
+});
+
 boot();
 </script>
 </body>
