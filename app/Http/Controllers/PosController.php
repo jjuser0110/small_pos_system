@@ -305,7 +305,7 @@ class PosController extends Controller
             ->get()
             ->map(function ($pm) {
                 $pm->image_full_url = $pm->image_url
-                    ? asset('storage/' . $pm->image_url)
+                    ? asset($pm->image_url)
                     : null;
                 return $pm;
             });
