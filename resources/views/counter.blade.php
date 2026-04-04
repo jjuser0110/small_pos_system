@@ -689,6 +689,7 @@ async function selectTable(tableId) {
 
     // Load existing cart from DB for this table
     await loadCart(tableId);
+    pushState({ page: 'order' }); 
 }
 
 // ════════════════════════════════════════════════
@@ -716,6 +717,7 @@ async function selectDabao(slotId) {
 
     // Load existing cart from DB for this dabao slot
     await loadCart(slotId);
+    pushState({ page: 'order' });
 }
 
 function showActiveOrder() {
@@ -1072,6 +1074,7 @@ function openPayment() {
     document.getElementById('payConfirmBtn').disabled  = true;
 
     document.getElementById('payOverlay').classList.add('open');
+    pushState({ page: 'payment' });
 }
 
 // pm = full PaymentMethod object from DB
@@ -1278,6 +1281,38 @@ function showToast(msg, cls) {
 // ════════════════════════════════════════════════
 // START
 // ════════════════════════════════════════════════
+
+// ── MOBILE BACK BUTTON ──
+function pushState(state) {
+    history.pushState(state, '');
+}
+
+// When a table or dabao is selected, push a state
+// Add pushState() calls inside selectTable and selectDabao
+
+window.addEventListener('popstate', function (e) {
+    // Payment confirm modal open — close it
+    if (document.getElementById('confirmOverlay').classList.contains('open')) {
+        closeConfirm();
+        pushState({ page: 'payment' });
+        return;
+    }
+
+    // Payment modal open — close it
+    if (document.getElementById('payOverlay').classList.contains('open')) {
+        closePayment();
+        pushState({ page: 'order' });
+        return;
+    }
+
+    // Order panel open — deselect back to table list
+    if (currentMode !== null) {
+        deselect();
+        pushState({ page: 'home' });
+        return;
+    }
+});
+
 boot();
 </script>
 </body>
