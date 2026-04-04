@@ -204,7 +204,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
   /* Menu grid — fixed height so it scrolls */
   .menu-area{
-    height:45vh;
+    height:35vh;
     overflow-y:auto;
     grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
     padding:10px;
@@ -221,7 +221,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
   /* Cart items — limited height so footer always shows */
   .cart-items{
-    max-height:28vh;
+    max-height:38vh;
     overflow-y:auto;
   }
 
