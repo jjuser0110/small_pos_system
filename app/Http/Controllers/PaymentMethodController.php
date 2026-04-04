@@ -56,6 +56,13 @@ class PaymentMethodController extends Controller
     public function update(Request $request, PaymentMethod $payment_method)
     {
         $payment_method->update($request->all());
+        if($request->hasFile('file_attachment')){
+            $file = $request->file('file_attachment');
+            $filename = time().'_'.$file->getClientOriginalName();
+            $filePath = $file->storeAs('payment_method_images', $filename, 'public');
+            $payment_method->image_url = '/storage/' . $filePath;
+            $payment_method->save();
+        }
         return redirect()->route('payment_method.index')->withSuccess('Data updated');
     }
 
