@@ -40,6 +40,7 @@ Route::post('/cart/placeorder', [App\Http\Controllers\CartController::class, 'pl
 
 // routes/web.php
 Route::middleware(['auth'])->group(function () {
+    Route::get('/', [App\Http\Controllers\HomeController::class, 'counter']);
     // Tables
     Route::get('/pos/tables',           [PosController::class, 'getTables']);
     Route::put('/pos/tables/{id}/pay',  [PosController::class, 'payTable']);
