@@ -44,7 +44,7 @@
                             </td>
                             <td>{{$row->amount??""}}</td>
                             <td>
-                                <!-- <a href="{{ route('payment_method.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a> -->
+                                <a href="{{ route('payment_method.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('payment_method.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
                             </td>
                         </tr>
