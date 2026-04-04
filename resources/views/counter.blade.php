@@ -191,12 +191,90 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 @media(max-width:700px){
   html,body{overflow:auto;}
   .app-body{flex-direction:column;overflow:auto;}
+
+  /* Left panel — tables + dabao */
   .left-panel{width:100%;border-right:none;border-bottom:1px solid var(--border);overflow:visible;}
   .left-scroll{overflow:visible;padding-bottom:0;}
-  .right-panel{min-height:60vh;}
-  .cart-area{width:100%;border-left:none;border-top:1px solid var(--border);}
-  .order-body{flex-direction:column;}
+
+  /* Right panel — full height */
+  .right-panel{min-height:100dvh;display:flex;flex-direction:column;}
+
+  /* Order body — stack menu on top, cart on bottom */
+  .order-body{flex-direction:column;flex:1;overflow:visible;}
+
+  /* Menu grid — fixed height so it scrolls */
+  .menu-area{
+    height:45vh;
+    overflow-y:auto;
+    grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    padding:10px;
+  }
+
+  /* Cart — sits below menu, always visible */
+  .cart-area{
+    width:100%;
+    border-left:none;
+    border-top:1px solid var(--border);
+    max-height:none;
+    overflow:visible;
+  }
+
+  /* Cart items — limited height so footer always shows */
+  .cart-items{
+    max-height:28vh;
+    overflow-y:auto;
+  }
+
+  /* Cart footer always visible */
+  .cart-footer{
+    position:sticky;
+    bottom:0;
+    background:var(--surface);
+    z-index:10;
+    border-top:1px solid var(--border);
+  }
+
+  /* Checkout button — bigger tap target on mobile */
+  .checkout-btn{
+    padding:14px;
+    font-size:0.95rem;
+  }
+
+  /* Active order — fill available space */
+  #activeOrder{
+    height:auto !important;
+    min-height:100dvh;
+  }
+
+  /* Menu tabs — scrollable */
+  .menu-tabs{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Hide legend in header */
   .legend{display:none;}
+
+  /* Payment modal — full screen on mobile */
+  .pay-modal{
+    max-width:100%;
+    margin:0;
+    border-radius:20px 20px 0 0;
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    max-height:90vh;
+  }
+  .pay-overlay.open{
+    align-items:flex-end;
+  }
+
+  /* Confirm modal — same treatment */
+  .confirm-modal{
+    max-width:100%;
+    margin:0 12px;
+  }
 }
 .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .confirm-overlay.open{display:flex;}
