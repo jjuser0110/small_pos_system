@@ -27,6 +27,8 @@
                         <tr>
                             <th>No</th>
                             <th>Payment Method Name</th>
+                            <th>Image</th>
+                            <th>Amount</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -35,6 +37,12 @@
                         <tr>
                             <td>{{$index+1??""}}</td>
                             <td>{{$row->payment_method_name??""}}</td>
+                            <td>
+                                @if($row->image_url)
+                                    <img src="{{$row->image_url}}" alt="Image" width="50" height="50">
+                                @endif
+                            </td>
+                            <td>{{$row->amount??""}}</td>
                             <td>
                                 <!-- <a href="{{ route('payment_method.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a> -->
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('payment_method.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
