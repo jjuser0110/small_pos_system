@@ -329,17 +329,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     <!-- Non-cash (QR / others) detail -->
     <div class="pay-detail-section" id="qrSection">
-      <div class="qr-panel">
-        <div class="qr-box">
-          <svg id="qrSvg" width="120" height="120" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="qr-panel">
+        <div class="qr-box" style="min-width:152px;min-height:152px;display:flex;align-items:center;justify-content:center;">
+        <!-- image injected here dynamically -->
         </div>
         <div class="qr-hint">Scan to pay</div>
         <div class="qr-amount" id="qrAmount">RM 0.00</div>
-      </div>
-      <div class="pay-actions">
+    </div>
+    <div class="pay-actions">
         <button class="pay-cancel" onclick="closePayment()">Cancel</button>
         <button class="qr-done-btn" onclick="confirmPayment()">✓ Payment Received</button>
-      </div>
+    </div>
     </div>
 
   </div>
@@ -998,7 +998,6 @@ function selectPayMethod(pm) {
     document.querySelectorAll('.pay-method-btn').forEach(b => {
         b.classList.remove('selected-cash', 'selected-qr');
         if (parseInt(b.dataset.id) === pm.id) {
-            // Use selected-cash style for cash, selected-qr for everything else
             b.classList.add(pm.payment_method_name.toLowerCase() === 'cash' ? 'selected-cash' : 'selected-qr');
         }
     });
@@ -1009,7 +1008,6 @@ function selectPayMethod(pm) {
         document.getElementById('cashSection').classList.add('visible');
         document.getElementById('qrSection').classList.remove('visible');
 
-        // Quick amount buttons
         const quickEl = document.getElementById('quickAmounts');
         quickEl.innerHTML = '';
         const rounded = Math.ceil(payTotal / 5) * 5;
@@ -1020,11 +1018,28 @@ function selectPayMethod(pm) {
             btn.onclick     = () => { document.getElementById('payInput').value = amt.toFixed(2); calcChange(); };
             quickEl.appendChild(btn);
         });
+
     } else {
         document.getElementById('qrSection').classList.add('visible');
         document.getElementById('cashSection').classList.remove('visible');
         document.getElementById('qrAmount').textContent = `RM ${payTotal.toFixed(2)}`;
-        drawQR(payTotal);
+
+        // Replace QR box content with payment method image
+        const qrBox = document.querySelector('.qr-box');
+        if (pm.image_full_url) {
+            qrBox.innerHTML = `
+                <img src="${pm.image_full_url}"
+                     onerror="this.src=''; this.alt='No image';"
+                     style="width:120px;height:120px;object-fit:contain;border-radius:8px;display:block;">`;
+        } else {
+            // Fallback if no image — show payment method name
+            qrBox.innerHTML = `
+                <div style="width:120px;height:120px;display:flex;align-items:center;justify-content:center;
+                            font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;
+                            color:#333;text-align:center;padding:8px;">
+                    ${pm.payment_method_name}
+                </div>`;
+        }
     }
 }
 
