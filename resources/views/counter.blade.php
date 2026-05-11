@@ -1261,109 +1261,65 @@ function confirmPayment() {
 }
 
 function printOrder() {
+
     const items = Object.values(order);
-    if (!items.length) return;
+
+    if (!items.length) {
+        return;
+    }
 
     // Table / Dabao label
     const label = currentMode === 'table'
         ? currentTable.label
         : `Dabao D${currentDabao.id}`;
 
-    let html = `
-        <html>
-        <head>
-            <title>Kitchen Order</title>
+    // Current time
+    const now = new Date().toLocaleString('en-MY');
 
-            <style>
-                body{
-                    font-family: Arial, sans-serif;
-                    width: 80mm;
-                    padding: 10px;
-                    color:#000;
-                }
+    // ESC/POS formatted receipt
+    let receipt = `
+[C]<font size='big'><b>OUR KOPITIAM</b></font>
 
-                .title{
-                    text-align:center;
-                    font-size:38px;
-                    font-weight:bold;
-                    margin-bottom:10px;
-                }
+[C]<font size='big'><b>${label}</b></font>
 
-                .time{
-                    text-align:center;
-                    font-size:12px;
-                    margin-bottom:18px;
-                }
+[C]${now}
 
-                .line{
-                    border-top:2px dashed #000;
-                    margin:10px 0 15px;
-                }
+[C]================================
+`;
 
-                .item{
-                    font-size:24px;
-                    font-weight:bold;
-                    margin-bottom:12px;
-                    padding-bottom:8px;
-                    border-bottom:1px dashed #999;
-                    word-break:break-word;
-                }
-
-                @media print{
-                    body{
-                        margin:0;
-                    }
-                }
-            </style>
-        </head>
-
-        <body>
-
-            <div class="title">${label}</div>
-
-            <div class="time">
-                ${new Date().toLocaleString('en-MY')}
-            </div>
-
-            <div class="line"></div>
-    `;
-
-    // Print food names only
+    // Food items
     items.forEach(item => {
-        html += `
-            <div class="item">
-                ${item.qty} x ${item.name}
-            </div>
-        `;
+
+        receipt += `
+[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>
+`;
+
     });
 
-    html += `
-            <div class="line"></div>
+    receipt += `
+[C]================================
 
-            <script>
-                window.onload = function () {
+[C]Please Prepare Order
 
-                    window.print();
+\n\n\n
+`;
 
-                    window.onafterprint = function () {
-                        window.close();
-                    };
+    // Android APK print
+    if (window.AndroidPrinter) {
 
-                };
-            <\/script>
+        // USB printer
+        AndroidPrinter.printUSB(receipt);
 
-        </body>
-        </html>
-    `;
+        // If you want bluetooth instead:
+        // AndroidPrinter.printBluetooth(receipt);
 
-    const printWindow = window.open(
-        '',
-        '_blank',
-        'width=400,height=700'
-    );
+        showToast('🖨 Printing order...', '');
 
-    printWindow.document.write(html);
-    printWindow.document.close();
+    } else {
+
+        alert('Printer only works inside Android APK');
+
+    }
 }
 
 async function processPayment(payload) {
