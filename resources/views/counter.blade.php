@@ -299,6 +299,30 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .confirm-cancel:hover{border-color:var(--text);color:var(--text);}
 .confirm-ok{flex:2;padding:11px;border-radius:10px;border:none;background:var(--green);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
 .confirm-ok:hover{background:#5fdfaa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(62,207,142,0.35);}
+
+.print-btn{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--accent);
+  background:transparent;
+  color:var(--accent);
+  font-family:'DM Sans',sans-serif;
+  font-size:0.82rem;
+  font-weight:800;
+  cursor:pointer;
+  transition:all .2s;
+  margin-top:6px;
+  margin-bottom:4px;
+}
+.print-btn:hover{
+  background:rgba(245,166,35,0.12);
+}
+.print-btn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
 </style>
 </head>
 <body>
@@ -374,6 +398,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
               <span class="cart-total-label">Total</span>
               <span class="cart-total-val" id="cartTotal">RM 0.00</span>
             </div>
+            <button class="print-btn" onclick="printOrder()" id="printBtn" disabled>🖨 Print Order</button>
             <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" disabled>Checkout →</button>
             <button class="clear-btn" onclick="clearOrder()">Clear order</button>
           </div>
@@ -861,12 +886,14 @@ function renderCart() {
     const cartEl  = document.getElementById('cartItems');
     const totalEl = document.getElementById('cartTotal');
     const btn     = document.getElementById('checkoutBtn');
+    const printBtn = document.getElementById('printBtn');
     const items   = Object.values(order);
 
     if (!items.length) {
         cartEl.innerHTML    = '<div class="cart-empty">No items yet</div>';
         totalEl.textContent = 'RM 0.00';
         btn.disabled        = true;
+        printBtn.disabled   = true;
         return;
     }
 
@@ -890,6 +917,7 @@ function renderCart() {
 
     totalEl.textContent = `RM ${total.toFixed(2)}`;
     btn.disabled        = false;
+    printBtn.disabled   = false;
 }
 
 // ════════════════════════════════════════════════
@@ -1230,6 +1258,112 @@ function confirmPayment() {
 
     document.getElementById('confirmOkBtn').onclick = () => processPayment(payload);
     document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function printOrder() {
+    const items = Object.values(order);
+    if (!items.length) return;
+
+    // Table / Dabao label
+    const label = currentMode === 'table'
+        ? currentTable.label
+        : `Dabao D${currentDabao.id}`;
+
+    let html = `
+        <html>
+        <head>
+            <title>Kitchen Order</title>
+
+            <style>
+                body{
+                    font-family: Arial, sans-serif;
+                    width: 80mm;
+                    padding: 10px;
+                    color:#000;
+                }
+
+                .title{
+                    text-align:center;
+                    font-size:38px;
+                    font-weight:bold;
+                    margin-bottom:10px;
+                }
+
+                .time{
+                    text-align:center;
+                    font-size:12px;
+                    margin-bottom:18px;
+                }
+
+                .line{
+                    border-top:2px dashed #000;
+                    margin:10px 0 15px;
+                }
+
+                .item{
+                    font-size:24px;
+                    font-weight:bold;
+                    margin-bottom:12px;
+                    padding-bottom:8px;
+                    border-bottom:1px dashed #999;
+                    word-break:break-word;
+                }
+
+                @media print{
+                    body{
+                        margin:0;
+                    }
+                }
+            </style>
+        </head>
+
+        <body>
+
+            <div class="title">${label}</div>
+
+            <div class="time">
+                ${new Date().toLocaleString('en-MY')}
+            </div>
+
+            <div class="line"></div>
+    `;
+
+    // Print food names only
+    items.forEach(item => {
+        html += `
+            <div class="item">
+                ${item.qty} x ${item.name}
+            </div>
+        `;
+    });
+
+    html += `
+            <div class="line"></div>
+
+            <script>
+                window.onload = function () {
+
+                    window.print();
+
+                    window.onafterprint = function () {
+                        window.close();
+                    };
+
+                };
+            <\/script>
+
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open(
+        '',
+        '_blank',
+        'width=400,height=700'
+    );
+
+    printWindow.document.write(html);
+    printWindow.document.close();
 }
 
 async function processPayment(payload) {
