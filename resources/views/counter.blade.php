@@ -1133,7 +1133,7 @@ function openPayment() {
             it.addons.forEach(ao => {
                 const addonLine = document.createElement('div');
                 addonLine.className = 'pay-line-addon';
-                addonLine.innerHTML = `<span>↳ + ${ao.name}</span><span>RM ${parseFloat(ao.price).toFixed(2)}</span>`;
+                addonLine.innerHTML = `<span>↳ + ${ao.name}</span><span> (RM ${parseFloat(ao.price).toFixed(2)})</span>`;
                 linesEl.appendChild(addonLine);
             });
         }
