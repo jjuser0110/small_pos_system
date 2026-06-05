@@ -92,6 +92,18 @@
                         name="selling_price"
                         value="{{$product->selling_price??''}}"/>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Has Add-ons?</label>
+
+                        <select name="has_addon" class="form-control" id="has_addon">
+                            <option value="0">No</option>
+                            <option value="1"
+                                {{ isset($product) && $product->has_addon ? 'selected' : '' }}>
+                                Yes
+                            </option>
+                        </select>
+                    </div>
+
                     @if(isset($product))
                     <div class="col-md-7">
                         <label class="form-label" for="password">Is Active?</label>
@@ -116,6 +128,90 @@
                             <input class="form-control" type="number" step="0.01" min="0" name="connected_product_quantity" value="{{$product->connected_product_quantity??''}}">
                         </div>
                     <hr>
+                    <div class="col-12" id="addonSection">
+                        <hr>
+                        <h5>Add-ons</h5>
+
+                        <table class="table" id="addonTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price (RM)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                            @if(isset($product) && $product->addons->count())
+
+                                @foreach($product->addons as $addon)
+                                <tr>
+                                    <td>
+                                        <input type="hidden"
+                                            name="addon_id[]"
+                                            value="{{ $addon->id }}">
+
+                                        <input type="text"
+                                            name="addon_name[]"
+                                            class="form-control"
+                                            value="{{ $addon->addon_name }}">
+                                    </td>
+
+                                    <td>
+                                        <input type="number"
+                                            step="0.01"
+                                            name="addon_price[]"
+                                            class="form-control"
+                                            value="{{ $addon->addon_price }}">
+                                    </td>
+
+                                    <td>
+                                        <button type="button"
+                                            class="btn btn-danger remove-addon">
+                                            X
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+
+                            @else
+
+                            <tr>
+                                <td>
+                                    <input type="hidden" name="addon_id[]" value="">
+
+                                    <input type="text"
+                                        name="addon_name[]"
+                                        class="form-control">
+                                </td>
+
+                                <td>
+                                    <input type="number"
+                                        step="0.01"
+                                        name="addon_price[]"
+                                        class="form-control">
+                                </td>
+
+                                <td>
+                                    <button type="button"
+                                        class="btn btn-danger remove-addon">
+                                        X
+                                    </button>
+                                </td>
+                            </tr>
+
+                            @endif
+
+                            </tbody>
+                        </table>
+
+                        <button type="button"
+                                id="addAddon"
+                                class="btn btn-success">
+                            Add Add-on
+                        </button>
+                    </div>
                     <div class="col-12">
                         <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>
                     </div>
@@ -125,6 +221,7 @@
         </div>
     </div>
 </div>
+
 <!-- / Content -->
 @endsection
 
@@ -164,6 +261,53 @@
         // Human typing → reset scanner buffer
         buffer = "";
         last = now;
+    });
+
+    function toggleAddonSection() {
+        if ($('#has_addon').val() == '1') {
+            $('#addonSection').show();
+        } else {
+            $('#addonSection').hide();
+        }
+    }
+
+    $('#has_addon').change(toggleAddonSection);
+
+    toggleAddonSection();
+    $('#addAddon').click(function () {
+
+        $('#addonTable tbody').append(`
+        <tr>
+            <td>
+                <input type="hidden"
+                    name="addon_id[]"
+                    value="">
+
+                <input type="text"
+                    name="addon_name[]"
+                    class="form-control">
+            </td>
+
+            <td>
+                <input type="number"
+                    step="0.01"
+                    name="addon_price[]"
+                    class="form-control">
+            </td>
+
+            <td>
+                <button type="button"
+                    class="btn btn-danger remove-addon">
+                    X
+                </button>
+            </td>
+        </tr>
+        `);
+
+    });
+
+    $(document).on('click', '.remove-addon', function () {
+    $(this).closest('tr').remove();
     });
 </script>
 @endsection

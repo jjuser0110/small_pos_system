@@ -104,19 +104,24 @@ class PosController extends Controller
     // Returns all active categories with their active products
     public function getMenu()
     {
-        $categories = Category::with(['products' => function ($q) {
+        $categories = Category::with([
+            'products' => function ($q) {
                 $q->where('is_active', 1)
-                  ->orderBy('arrangement')  // if products have arrangement
+                  ->with(['addons' => function ($addon) {
+                      $addon->where('is_active', 1);
+                  }])
+                  ->orderBy('arrangement')
                   ->orderBy('product_name');
-            }])
-            ->orderBy('arrangement')
-            ->get();
-
+            }
+        ])
+        ->orderBy('arrangement')
+        ->get();
         $categories->each(function ($cat) {
             $cat->products->each(function ($product) use ($cat) {
                 $product->has_stock = $cat->has_stock;
             });
         });
+    
         return response()->json($categories);
     }
 
@@ -142,32 +147,44 @@ class PosController extends Controller
             'product_id' => 'required|integer',
             'quantity'   => 'required|integer|min:1',
         ]);
-
-        $product = Product::findOrFail($request->product_id);
-
-        // Check if item already in cart for this table
+    
+        $product     = Product::findOrFail($request->product_id);
+        $addons      = $request->input('addons', []);   // array from frontend
+        $unitPrice   = $request->input('unit_price')
+                        ?? $product->selling_price;
+    
+        // Normalise addons to a sorted JSON string for comparison
+        $addonsJson  = collect($addons)
+                        ->sortBy('id')
+                        ->values()
+                        ->toJson();
+    
+        // Match on table + product + EXACT addon combo
         $cartItem = Cart::where('table_id',   $request->table_id)
                         ->where('product_id', $request->product_id)
+                        ->where('addons',     $addonsJson)
                         ->first();
-
+    
         if ($cartItem) {
+            // Same product, same add-ons → increment
             $cartItem->quantity   += $request->quantity;
             $cartItem->total_price = $cartItem->quantity * $cartItem->single_price;
             $cartItem->save();
         } else {
+            // New row — different add-ons OR first time
             $cartItem = Cart::create([
                 'user_id'      => Auth::id() ?? 1,
                 'table_id'     => $request->table_id,
                 'product_id'   => $request->product_id,
                 'quantity'     => $request->quantity,
-                'single_price' => $product->selling_price,
-                'total_price'  => $request->quantity * $product->selling_price,
+                'single_price' => $unitPrice,
+                'total_price'  => $request->quantity * $unitPrice,
+                'addons'       => $addonsJson,
             ]);
         }
-
-        // Update table total
+    
         $this->syncTableTotal($request->table_id);
-
+    
         return response()->json($cartItem->load('product'));
     }
 

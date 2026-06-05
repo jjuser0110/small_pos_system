@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use App\Models\ProductAddon;
 class Product extends Model
 {
     use HasFactory;
@@ -26,6 +26,7 @@ class Product extends Model
         'arrangement',
         'connected_product_id',
         'connected_product_quantity',
+        'has_addon',
     ];
 
     public function branch()
@@ -66,5 +67,11 @@ class Product extends Model
     public function used_in_boxes()
     {
         return $this->hasMany(Product::class, 'connected_product_id');
+    }
+
+    public function addons()
+    {
+        return $this->hasMany(ProductAddon::class)
+                    ->where('is_active', 1);
     }
 }

@@ -106,6 +106,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .menu-item.dp:hover{border-color:var(--purple);}
 .menu-item.out-of-stock{opacity:.4;cursor:not-allowed;}
 .menu-item.out-of-stock:hover{transform:none;border-color:var(--border);}
+.menu-item.has-addon::after{content:'+ Add-ons';font-size:0.55rem;color:var(--accent);font-weight:700;letter-spacing:0.3px;opacity:.8;}
 .item-emoji{font-size:1.4rem;}
 .item-name{font-size:0.75rem;font-weight:600;color:var(--text);line-height:1.2;}
 .item-price{font-size:0.73rem;color:var(--accent);font-weight:700;}
@@ -126,6 +127,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .qty-btn:hover{background:var(--border);}
 .qty-num{font-weight:700;font-size:0.8rem;min-width:18px;text-align:center;}
 .cart-item-price{font-size:0.72rem;color:var(--accent);font-weight:700;}
+/* Add-on tags in cart */
+.cart-addon-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
+.cart-addon-tag{font-size:0.6rem;background:rgba(245,166,35,0.15);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:600;}
 .cart-footer{border-top:1px solid var(--border);padding:10px 14px;}
 .cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .cart-total-label{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;}
@@ -137,6 +141,41 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .checkout-btn.dp:hover{background:#c4b5fd;box-shadow:0 4px 16px rgba(167,139,250,0.35);}
 .clear-btn{width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;margin-top:6px;transition:all .2s;}
 .clear-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ─── ADDON MODAL ─── */
+.addon-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:350;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.addon-overlay.open{display:flex;}
+.addon-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;padding:24px;animation:popIn .22s ease;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+.addon-modal::-webkit-scrollbar{width:4px;}
+.addon-modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.addon-modal-title{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.addon-product-name{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;margin-bottom:2px;}
+.addon-product-price{font-size:0.78rem;color:var(--accent);font-weight:700;margin-bottom:16px;}
+.addon-section-label{font-size:0.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.addon-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+.addon-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
+.addon-item:hover{border-color:var(--accent);background:var(--card-hover);}
+.addon-item.selected{border-color:var(--accent);background:rgba(245,166,35,0.08);}
+.addon-checkbox{width:16px;height:16px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0.65rem;}
+.addon-item.selected .addon-checkbox{background:var(--accent);border-color:var(--accent);color:#000;}
+.addon-item-name{flex:1;font-size:0.8rem;font-weight:500;color:var(--text);}
+.addon-item-price{font-size:0.78rem;font-weight:700;color:var(--accent);}
+.addon-subtotal{background:var(--card);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.addon-subtotal-label{font-size:0.78rem;color:var(--muted);}
+.addon-subtotal-val{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--accent);}
+.addon-actions{display:flex;gap:10px;}
+.addon-cancel{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.addon-cancel:hover{border-color:var(--text);color:var(--text);}
+.addon-confirm{flex:2;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.addon-confirm:hover{background:#ffc04d;transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,0.3);}
+.addon-confirm.dp{background:var(--purple);color:#fff;}
+.addon-confirm.dp:hover{background:#c4b5fd;box-shadow:0 4px 16px rgba(167,139,250,0.3);}
+@media(max-width:700px){
+  .addon-modal{max-width:100%;margin:0;border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:88vh;}
+  .addon-overlay.open{align-items:flex-end;}
+}
+/* ─── END ADDON MODAL ─── */
+
 .pay-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .pay-overlay.open{display:flex;}
 .pay-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto;padding:28px;animation:popIn .25s ease;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
@@ -147,6 +186,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .pay-sub{font-size:0.75rem;color:var(--muted);margin-bottom:20px;}
 .pay-summary{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
 .pay-line{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);padding:3px 0;}
+.pay-line-addon{font-size:0.7rem;color:var(--muted);padding:1px 0 1px 12px;opacity:.8;}
 .pay-total-line{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid var(--border);}
 .pay-total-label{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;}
 .pay-total-val{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--accent);}
@@ -191,96 +231,21 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 @media(max-width:700px){
   html,body{overflow:auto;}
   .app-body{flex-direction:column;overflow:auto;}
-
-  /* Left panel — tables + dabao */
   .left-panel{width:100%;border-right:none;border-bottom:1px solid var(--border);overflow:visible;}
   .left-scroll{overflow:visible;padding-bottom:0;}
-
-  /* Right panel — full height */
   .right-panel{min-height:100dvh;display:flex;flex-direction:column;}
-
-  /* Order body — flex column, fills remaining screen */
-    .order-body{
-    flex-direction:column;
-    flex:1;
-    overflow:hidden;
-    display:flex;
-    }
-
-    /* Menu — takes all available space, scrolls internally */
-    .menu-area{
-        height:50vh;
-        overflow-y:auto;
-        grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
-        padding:10px;
-        flex-shrink:0;
-    }
-
-    /* Cart area — shrinks/grows based on content, never takes over */
-    .cart-area{
-        width:100%;
-        border-left:none;
-        border-top:1px solid var(--border);
-        display:flex;
-        flex-direction:column;
-        flex-shrink:0;
-        max-height:55vh;  /* hard cap so menu always has room */
-    }
-
-    /* Cart items — scrolls when many items */
-    .cart-items{
-        height:18vh;
-        overflow-y:auto;
-    }
-
-    /* Cart footer always visible */
-    .cart-footer{
-        flex-shrink:0;
-        background:var(--surface);
-        border-top:1px solid var(--border);
-    }
-
-  /* Checkout button — bigger tap target on mobile */
-  .checkout-btn{
-    padding:14px;
-    font-size:0.95rem;
-  }
-
-  /* Active order — fill available space */
-  #activeOrder{
-    height:auto !important;
-    min-height:100dvh;
-  }
-
-  /* Menu tabs — scrollable */
-  .menu-tabs{
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-  }
-
-  /* Hide legend in header */
+  .order-body{flex-direction:column;flex:1;overflow:hidden;display:flex;}
+  .menu-area{height:50vh;overflow-y:auto;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));padding:10px;flex-shrink:0;}
+  .cart-area{width:100%;border-left:none;border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;max-height:55vh;}
+  .cart-items{height:18vh;overflow-y:auto;}
+  .cart-footer{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);}
+  .checkout-btn{padding:14px;font-size:0.95rem;}
+  #activeOrder{height:auto !important;min-height:100dvh;}
+  .menu-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .legend{display:none;}
-
-  /* Payment modal — full screen on mobile */
-  .pay-modal{
-    max-width:100%;
-    margin:0;
-    border-radius:20px 20px 0 0;
-    position:fixed;
-    bottom:0;
-    left:0;
-    right:0;
-    max-height:90vh;
-  }
-  .pay-overlay.open{
-    align-items:flex-end;
-  }
-
-  /* Confirm modal — same treatment */
-  .confirm-modal{
-    max-width:100%;
-    margin:0 12px;
-  }
+  .pay-modal{max-width:100%;margin:0;border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:90vh;}
+  .pay-overlay.open{align-items:flex-end;}
+  .confirm-modal{max-width:100%;margin:0 12px;}
 }
 .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .confirm-overlay.open{display:flex;}
@@ -299,30 +264,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .confirm-cancel:hover{border-color:var(--text);color:var(--text);}
 .confirm-ok{flex:2;padding:11px;border-radius:10px;border:none;background:var(--green);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
 .confirm-ok:hover{background:#5fdfaa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(62,207,142,0.35);}
-
-.print-btn{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--accent);
-  background:transparent;
-  color:var(--accent);
-  font-family:'DM Sans',sans-serif;
-  font-size:0.82rem;
-  font-weight:800;
-  cursor:pointer;
-  transition:all .2s;
-  margin-top:6px;
-  margin-bottom:4px;
-}
-.print-btn:hover{
-  background:rgba(245,166,35,0.12);
-}
-.print-btn:disabled{
-  opacity:.35;
-  cursor:not-allowed;
-}
-
+.print-btn{width:100%;padding:10px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;margin-top:6px;margin-bottom:4px;}
+.print-btn:hover{background:rgba(245,166,35,0.12);}
+.print-btn:disabled{opacity:.35;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -408,6 +352,26 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   </div>
 </div>
 
+<!-- ════ ADDON MODAL ════ -->
+<div class="addon-overlay" id="addonOverlay" onclick="closeAddonOnBg(event)">
+  <div class="addon-modal">
+    <div class="addon-modal-title">Customise Order</div>
+    <div class="addon-product-name" id="addonProductName"></div>
+    <div class="addon-product-price" id="addonProductPrice"></div>
+    <div class="addon-section-label">Add-ons</div>
+    <div class="addon-list" id="addonList"></div>
+    <div class="addon-subtotal">
+      <span class="addon-subtotal-label">Item total</span>
+      <span class="addon-subtotal-val" id="addonSubtotal">RM 0.00</span>
+    </div>
+    <div class="addon-actions">
+      <button class="addon-cancel" onclick="closeAddonModal()">Cancel</button>
+      <button class="addon-confirm" id="addonConfirmBtn" onclick="confirmAddon()">Add to Order</button>
+    </div>
+  </div>
+</div>
+<!-- ════ END ADDON MODAL ════ -->
+
 <!-- PAYMENT MODAL -->
 <div class="pay-overlay" id="payOverlay" onclick="closePayOnBg(event)">
   <div class="pay-modal">
@@ -416,11 +380,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     <div class="pay-summary" id="paySummaryLines"></div>
 
-    <!-- Dynamic payment method buttons -->
     <div class="pay-method-label">Select Payment Method</div>
     <div class="pay-method-btns" id="payMethodBtns"></div>
 
-    <!-- Cash detail -->
     <div class="pay-detail-section" id="cashSection">
       <div class="pay-input-label">Amount Received (RM)</div>
       <input class="pay-input" id="payInput" type="number" inputmode="decimal"
@@ -436,23 +398,20 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
       </div>
     </div>
 
-    <!-- Non-cash (QR / others) detail -->
     <div class="pay-detail-section" id="qrSection">
-    <div class="qr-panel">
-        <div class="qr-box" style="min-width:152px;min-height:152px;display:flex;align-items:center;justify-content:center;">
-        <!-- image injected here dynamically -->
-        </div>
+      <div class="qr-panel">
+        <div class="qr-box" style="min-width:152px;min-height:152px;display:flex;align-items:center;justify-content:center;"></div>
         <div class="qr-hint">Scan to pay</div>
         <div class="qr-amount" id="qrAmount">RM 0.00</div>
-    </div>
-    <div class="pay-actions">
+      </div>
+      <div class="pay-actions">
         <button class="pay-cancel" onclick="closePayment()">Cancel</button>
         <button class="qr-done-btn" onclick="confirmPayment()">✓ Payment Received</button>
+      </div>
     </div>
-    </div>
-
   </div>
 </div>
+
 <!-- CONFIRM PAYMENT MODAL -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-modal">
@@ -466,6 +425,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -480,23 +440,27 @@ const API = '/pos';
 let tableRows    = [];
 let tables       = [];
 let dabaoSlots   = [];
-let categories   = [];      // [{id, category_name, products:[...]}]
-let allProducts  = [];      // flat list for search
-let paymentMethods    = [];   // loaded from DB
-let selectedMethodObj = null; // the full selected PaymentMethod object
+let categories   = [];
+let allProducts  = [];
+let paymentMethods    = [];
+let selectedMethodObj = null;
 
-let currentMode  = null;    // 'table' | 'dabao'
+let currentMode  = null;
 let currentTable = null;
 let currentDabao = null;
-let currentCatId = null;    // selected category tab id (null = all)
+let currentCatId = null;
 
-// order = { cartId: { cartId, productId, name, price, qty, total_price } }
+// order = { cartId: { cartId, productId, name, price, qty, total_price, addons: [{id,name,price}] } }
 let order = {};
 
 let searchQuery       = '';
 let payTotal          = 0;
 let selectedPayMethod = null;
 let dabaoNameTimer    = null;
+
+// ── Addon modal state ──
+let addonPendingProduct = null;  // product being customised
+let addonSelected       = {};    // { addonId: true }
 
 // ════════════════════════════════════════════════
 // CLOCK
@@ -532,7 +496,7 @@ function apiFetch(url, options = {}) {
 }
 
 // ════════════════════════════════════════════════
-// BOOT — load tables + menu on page load
+// BOOT
 // ════════════════════════════════════════════════
 async function boot() {
     await Promise.all([loadTables(), loadDabao(), loadMenu(), loadPaymentMethods()]);
@@ -553,7 +517,6 @@ async function loadTables() {
         status: parseFloat(t.total) > 0 ? 'occupied' : 'available',
         total:  parseFloat(t.total),
     }));
-    // ── Adjust chunk sizes to match your actual floor layout ──
     tableRows = chunkBy(tables, [3, 1, 2, 2, 2]);
     renderTables();
 }
@@ -615,7 +578,6 @@ function renderDabao() {
     }
     dabaoSlots.forEach(slot => {
         const isSelected = currentMode === 'dabao' && currentDabao?.id === slot.id;
-        // Compute live total from current order if this slot is active
         const liveTotal = (isSelected && Object.keys(order).length)
             ? Object.values(order).reduce((a, i) => a + i.total_price, 0)
             : slot.total;
@@ -657,7 +619,6 @@ async function removeDabao(id, e) {
     showToast(`Dabao D${id} closed`, 'dp');
 }
 
-// Debounce: save dabao customer name 800ms after user stops typing
 function debounceSaveDabaoName() {
     clearTimeout(dabaoNameTimer);
     dabaoNameTimer = setTimeout(() => saveDabaoName(), 800);
@@ -677,7 +638,7 @@ async function saveDabaoName() {
 }
 
 // ════════════════════════════════════════════════
-// MENU — load from DB (categories + products)
+// MENU
 // ════════════════════════════════════════════════
 async function loadMenu() {
     const data = await apiFetch('/menu');
@@ -712,9 +673,8 @@ async function selectTable(tableId) {
     renderTables();
     renderDabao();
 
-    // Load existing cart from DB for this table
     await loadCart(tableId);
-    pushState({ page: 'order' }); 
+    pushState({ page: 'order' });
 }
 
 // ════════════════════════════════════════════════
@@ -740,7 +700,6 @@ async function selectDabao(slotId) {
     renderTables();
     renderDabao();
 
-    // Load existing cart from DB for this dabao slot
     await loadCart(slotId);
     pushState({ page: 'order' });
 }
@@ -766,6 +725,10 @@ async function loadCart(tableId) {
     const data = await apiFetch(`/cart/${tableId}`);
     order = {};
     data.forEach(item => {
+        // addons may be stored as JSON array on the cart item
+        const addons = item.addons
+            ? (typeof item.addons === 'string' ? JSON.parse(item.addons) : item.addons)
+            : [];
         order[item.id] = {
             cartId:      item.id,
             productId:   item.product_id,
@@ -773,48 +736,141 @@ async function loadCart(tableId) {
             price:       parseFloat(item.single_price),
             qty:         item.quantity,
             total_price: parseFloat(item.total_price),
+            addons:      addons,
         };
     });
     renderCart();
 }
 
 // ════════════════════════════════════════════════
-// ADD ITEM TO CART
+// ADDON MODAL
 // ════════════════════════════════════════════════
-async function addItem(product) {
+
+// Called when a menu item is clicked
+async function handleMenuItemClick(product) {
     if (product.has_stock && product.stock_quantity !== null && product.stock_quantity <= 0) {
         showToast('Out of stock', 'err');
         return;
     }
 
-    const tableId = currentMode === 'table' ? currentTable.id : currentDabao.id;
+    // Addons are already loaded in the product object from getMenu() via with(['addons'])
+    const addons = Array.isArray(product.addons) ? product.addons.filter(a => a.is_active != 0) : [];
+
+    if (addons.length > 0) {
+        openAddonModal(product, addons);
+    } else {
+        await addItem(product, []);
+    }
+}
+
+function openAddonModal(product, addons) {
+    addonPendingProduct = product;
+    addonSelected       = {};
+
+    const isDabao = currentMode === 'dabao';
+
+    document.getElementById('addonProductName').textContent  = product.product_name;
+    document.getElementById('addonProductPrice').textContent = `Base price: RM ${parseFloat(product.selling_price).toFixed(2)}`;
+
+    // Style confirm button for dabao
+    const confirmBtn = document.getElementById('addonConfirmBtn');
+    confirmBtn.className = isDabao ? 'addon-confirm dp' : 'addon-confirm';
+
+    // Build addon list
+    const listEl = document.getElementById('addonList');
+    listEl.innerHTML = '';
+    addons.forEach(addon => {
+        const item = document.createElement('div');
+        item.className   = 'addon-item';
+        item.dataset.id  = addon.id;
+        item.innerHTML   = `
+            <div class="addon-checkbox"></div>
+            <span class="addon-item-name">${addon.addon_name ?? addon.name}</span>
+            <span class="addon-item-price">+ RM ${parseFloat(addon.addon_price ?? addon.price).toFixed(2)}</span>`;
+        item.onclick = () => toggleAddon(item, addon);
+        listEl.appendChild(item);
+    });
+
+    updateAddonSubtotal(product);
+    document.getElementById('addonOverlay').classList.add('open');
+}
+
+function toggleAddon(itemEl, addon) {
+    const id = addon.id;
+    if (addonSelected[id]) {
+        delete addonSelected[id];
+        itemEl.classList.remove('selected');
+        itemEl.querySelector('.addon-checkbox').textContent = '';
+    } else {
+        addonSelected[id] = addon;
+        itemEl.classList.add('selected');
+        itemEl.querySelector('.addon-checkbox').textContent = '✓';
+    }
+    updateAddonSubtotal(addonPendingProduct);
+}
+
+function updateAddonSubtotal(product) {
+    const base      = parseFloat(product.selling_price);
+    const addonSum  = Object.values(addonSelected).reduce((a, ao) => a + parseFloat(ao.addon_price ?? ao.price), 0);
+    document.getElementById('addonSubtotal').textContent = `RM ${(base + addonSum).toFixed(2)}`;
+}
+
+async function confirmAddon() {
+    const selectedAddons = Object.values(addonSelected);
+    await addItem(addonPendingProduct, selectedAddons);
+    closeAddonModal();
+}
+
+function closeAddonModal() {
+    document.getElementById('addonOverlay').classList.remove('open');
+    addonPendingProduct = null;
+    addonSelected       = {};
+}
+
+function closeAddonOnBg(e) {
+    if (e.target === document.getElementById('addonOverlay')) closeAddonModal();
+}
+
+// ════════════════════════════════════════════════
+// ADD ITEM TO CART
+// ════════════════════════════════════════════════
+async function addItem(product, addons = []) {
+    const tableId   = currentMode === 'table' ? currentTable.id : currentDabao.id;
+    const addonSum  = addons.reduce((a, ao) => a + parseFloat(ao.addon_price ?? ao.price), 0);
+    const unitPrice = parseFloat(product.selling_price) + addonSum;
 
     const data = await apiFetch('/cart', {
         method: 'POST',
         body: JSON.stringify({
-            table_id:   tableId,
-            product_id: product.id,
-            quantity:   1,
+            table_id:    tableId,
+            product_id:  product.id,
+            quantity:    1,
+            addons:      addons.map(ao => ({
+                id:    ao.id,
+                name:  ao.addon_name ?? ao.name,
+                price: parseFloat(ao.addon_price ?? ao.price),
+            })),
+            unit_price: unitPrice,  // send computed unit price including addons
         }),
     });
 
-    // If product already in cart, update existing entry; else add new
-    const existing = Object.values(order).find(o => o.productId === product.id);
-    if (existing) {
-        existing.qty         = data.quantity;
-        existing.total_price = parseFloat(data.total_price);
-    } else {
-        order[data.id] = {
-            cartId:      data.id,
-            productId:   data.product_id,
-            name:        product.product_name,
-            price:       parseFloat(data.single_price),
-            qty:         data.quantity,
-            total_price: parseFloat(data.total_price),
-        };
-    }
-
-    // Sync table total locally
+    // Determine addon label for display
+    const addonsMapped = addons.map(ao => ({
+        id:    ao.id,
+        name:  ao.addon_name ?? ao.name,
+        price: parseFloat(ao.addon_price ?? ao.price),
+    }));
+    // ALWAYS write using the server's cart row ID as the key
+    const qty = data.quantity ?? 1;
+    order[data.id] = {
+        cartId:      data.id,
+        productId:   data.product_id,
+        name:        product.product_name,
+        price:       unitPrice,
+        qty:         qty,
+        total_price: unitPrice * qty,
+        addons:      addonsMapped,
+    };
     syncLocalTotal(tableId);
     renderCart();
     renderDabao();
@@ -827,15 +883,14 @@ async function changeQty(cartId, delta) {
     const item = order[cartId];
     if (!item) return;
 
-    const newQty = item.qty + delta;
+    const newQty  = item.qty + delta;
     const tableId = currentMode === 'table' ? currentTable.id : currentDabao.id;
 
     if (newQty <= 0) {
-        // Remove from cart
         await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
         delete order[cartId];
     } else {
-        const data = await apiFetch(`/cart/${cartId}`, {
+        await apiFetch(`/cart/${cartId}`, {
             method: 'PUT',
             body: JSON.stringify({ quantity: newQty }),
         });
@@ -848,7 +903,6 @@ async function changeQty(cartId, delta) {
     renderDabao();
 }
 
-// Keep local table.total in sync without re-fetching
 function syncLocalTotal(tableId) {
     const total = Object.values(order).reduce((a, i) => a + i.total_price, 0);
 
@@ -867,7 +921,6 @@ async function clearOrder() {
     const tableId = currentMode === 'table' ? currentTable?.id : currentDabao?.id;
     if (!tableId) return;
 
-    // Delete all cart items for this table
     const deletes = Object.keys(order).map(cartId =>
         apiFetch(`/cart/${cartId}`, { method: 'DELETE' })
     );
@@ -883,11 +936,11 @@ async function clearOrder() {
 // RENDER CART
 // ════════════════════════════════════════════════
 function renderCart() {
-    const cartEl  = document.getElementById('cartItems');
-    const totalEl = document.getElementById('cartTotal');
-    const btn     = document.getElementById('checkoutBtn');
+    const cartEl   = document.getElementById('cartItems');
+    const totalEl  = document.getElementById('cartTotal');
+    const btn      = document.getElementById('checkoutBtn');
     const printBtn = document.getElementById('printBtn');
-    const items   = Object.values(order);
+    const items    = Object.values(order);
 
     if (!items.length) {
         cartEl.innerHTML    = '<div class="cart-empty">No items yet</div>';
@@ -904,8 +957,19 @@ function renderCart() {
         total += it.total_price;
         const row = document.createElement('div');
         row.className = 'cart-row';
+
+        // Build addon tags HTML
+        let addonTagsHtml = '';
+        if (it.addons && it.addons.length > 0) {
+            const tags = it.addons.map(ao =>
+                `<span class="cart-addon-tag">+ ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})</span>`
+            ).join('');
+            addonTagsHtml = `<div class="cart-addon-tags">${tags}</div>`;
+        }
+
         row.innerHTML = `
             <div class="cart-item-name">${it.name}</div>
+            ${addonTagsHtml}
             <div class="cart-ctrl">
                 <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
                 <span class="qty-num">${it.qty}</span>
@@ -921,7 +985,7 @@ function renderCart() {
 }
 
 // ════════════════════════════════════════════════
-// MENU TABS (from DB categories)
+// MENU TABS
 // ════════════════════════════════════════════════
 function buildMenuTabs() {
     const tabsEl  = document.getElementById('menuTabsEl');
@@ -930,7 +994,6 @@ function buildMenuTabs() {
 
     if (!categories.length) return;
 
-    // Default to first category — no "All" tab
     currentCatId = categories[0].id;
 
     categories.forEach((cat, index) => {
@@ -990,7 +1053,6 @@ function renderMenu() {
 
     let products;
     if (searchQuery) {
-        // Search across all products regardless of selected tab
         products = allProducts.filter(p =>
             p.product_name.toLowerCase().includes(searchQuery) ||
             p.category_name.toLowerCase().includes(searchQuery)
@@ -1008,9 +1070,11 @@ function renderMenu() {
     products.forEach(product => {
         const stockEnforced = product.has_stock == 1;
         const outOfStock    = stockEnforced && product.stock_quantity !== null && product.stock_quantity <= 0;
+        // addons already loaded via getMenu() → with(["addons"])
+        const hasAddons = Array.isArray(product.addons) && product.addons.some(a => a.is_active != 0);
 
         const div = document.createElement('div');
-        div.className = `menu-item${isDabao ? ' dp' : ''}${outOfStock ? ' out-of-stock' : ''}`;
+        div.className = `menu-item${isDabao ? ' dp' : ''}${outOfStock ? ' out-of-stock' : ''}${hasAddons ? ' has-addon' : ''}`;
 
         const stockLabel = stockEnforced && product.stock_quantity !== null
             ? `<div class="item-stock${product.stock_quantity <= 5 ? ' low' : ''}">
@@ -1018,7 +1082,6 @@ function renderMenu() {
                </div>`
             : '';
 
-        // Only show category tag when searching (since tabs already filter by category)
         const showCat = !!searchQuery;
 
         div.innerHTML = `
@@ -1028,7 +1091,7 @@ function renderMenu() {
             ${stockLabel}
             ${outOfStock ? `<div class="item-stock low">Out of stock</div>` : ''}`;
 
-        if (!outOfStock) div.onclick = () => addItem(product);
+        if (!outOfStock) div.onclick = () => handleMenuItemClick(product);
         area.appendChild(div);
     });
 }
@@ -1057,7 +1120,7 @@ function openPayment() {
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
     document.getElementById('paySub').textContent = label;
 
-    // Build summary lines
+    // Build summary lines (include addons)
     const linesEl = document.getElementById('paySummaryLines');
     linesEl.innerHTML = '';
     items.forEach(it => {
@@ -1065,13 +1128,22 @@ function openPayment() {
         line.className = 'pay-line';
         line.innerHTML = `<span>${it.name} × ${it.qty}</span><span>RM ${it.total_price.toFixed(2)}</span>`;
         linesEl.appendChild(line);
+        // Show addon breakdown under each item
+        if (it.addons && it.addons.length > 0) {
+            it.addons.forEach(ao => {
+                const addonLine = document.createElement('div');
+                addonLine.className = 'pay-line-addon';
+                addonLine.innerHTML = `<span>↳ + ${ao.name}</span><span>RM ${parseFloat(ao.price).toFixed(2)}</span>`;
+                linesEl.appendChild(addonLine);
+            });
+        }
     });
     const totalLine = document.createElement('div');
     totalLine.className = 'pay-total-line';
     totalLine.innerHTML = `<span class="pay-total-label">Total</span><span class="pay-total-val">RM ${payTotal.toFixed(2)}</span>`;
     linesEl.appendChild(totalLine);
 
-    // Build dynamic payment method buttons from DB
+    // Build payment method buttons
     const btnsEl = document.getElementById('payMethodBtns');
     btnsEl.innerHTML = '';
     paymentMethods.forEach(pm => {
@@ -1094,7 +1166,6 @@ function openPayment() {
         btnsEl.appendChild(btn);
     });
 
-    // Reset sections
     document.getElementById('cashSection').classList.remove('visible');
     document.getElementById('qrSection').classList.remove('visible');
     document.getElementById('payInput').value          = '';
@@ -1105,11 +1176,9 @@ function openPayment() {
     pushState({ page: 'payment' });
 }
 
-// pm = full PaymentMethod object from DB
 function selectPayMethod(pm) {
     selectedMethodObj = pm;
 
-    // Highlight selected button
     document.querySelectorAll('.pay-method-btn').forEach(b => {
         b.classList.remove('selected-cash', 'selected-qr');
         if (parseInt(b.dataset.id) === pm.id) {
@@ -1133,13 +1202,11 @@ function selectPayMethod(pm) {
             btn.onclick     = () => { document.getElementById('payInput').value = amt.toFixed(2); calcChange(); };
             quickEl.appendChild(btn);
         });
-
     } else {
         document.getElementById('qrSection').classList.add('visible');
         document.getElementById('cashSection').classList.remove('visible');
         document.getElementById('qrAmount').textContent = `RM ${payTotal.toFixed(2)}`;
 
-        // Replace QR box content with payment method image
         const qrBox = document.querySelector('.qr-box');
         if (pm.image_full_url) {
             qrBox.innerHTML = `
@@ -1147,41 +1214,12 @@ function selectPayMethod(pm) {
                      onerror="this.src=''; this.alt='No image';"
                      style="width:240px;object-fit:contain;border-radius:8px;display:block;">`;
         } else {
-            // Fallback if no image — show payment method name
             qrBox.innerHTML = `
                 <div style="width:240px;display:flex;align-items:center;justify-content:center;
                             font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;
                             color:#333;text-align:center;padding:8px;">
                     ${pm.payment_method_name}
                 </div>`;
-        }
-    }
-}
-
-function drawQR(amount) {
-    const svg = document.getElementById('qrSvg');
-    svg.innerHTML = '';
-    const S = 160, N = 21, cell = S / N;
-    let seed = Math.round(amount * 100) + 42;
-    function rand() { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 0xffffffff; }
-    const finders    = [[0,0],[14,0],[0,14]];
-    const finderCells = new Set();
-    finders.forEach(([fx, fy]) => { for (let r=0;r<7;r++) for (let c=0;c<7;c++) finderCells.add(`${fy+r},${fx+c}`); });
-    for (let r = 0; r < N; r++) {
-        for (let c = 0; c < N; c++) {
-            const key = `${r},${c}`;
-            let dark;
-            if (finderCells.has(key)) {
-                const fr = r%7, fc = c%7;
-                dark = fr===0||fr===6||fc===0||fc===6||(fr>=2&&fr<=4&&fc>=2&&fc<=4);
-            } else { dark = rand() > 0.5; }
-            if (dark) {
-                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rect.setAttribute('x', c * cell); rect.setAttribute('y', r * cell);
-                rect.setAttribute('width', cell - 0.5); rect.setAttribute('height', cell - 0.5);
-                rect.setAttribute('fill', '#111');
-                svg.appendChild(rect);
-            }
         }
     }
 }
@@ -1211,7 +1249,6 @@ function calcChange() {
 function closePayment() { document.getElementById('payOverlay').classList.remove('open'); }
 function closePayOnBg(e) { if (e.target === document.getElementById('payOverlay')) closePayment(); }
 
-// ── CONFIRM PAYMENT — shows double-confirm modal first ──
 function confirmPayment() {
     if (!selectedMethodObj) { showToast('Please select a payment method', 'err'); return; }
 
@@ -1230,13 +1267,11 @@ function confirmPayment() {
         final_total:       payTotal,
     };
 
-    // Build confirm modal
     const label = currentMode === 'table'
         ? currentTable.label
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
 
     document.getElementById('confirmSub').textContent = label;
-
     document.getElementById('confirmDetails').innerHTML = `
         <div class="confirm-detail-row">
             <span class="label">Payment method</span>
@@ -1261,22 +1296,15 @@ function confirmPayment() {
 }
 
 function printOrder() {
-
     const items = Object.values(order);
+    if (!items.length) return;
 
-    if (!items.length) {
-        return;
-    }
-
-    // Table / Dabao label
     const label = currentMode === 'table'
         ? currentTable.label
         : `Dabao D${currentDabao.id}`;
 
-    // Current time
     const now = new Date().toLocaleString('en-MY');
 
-    // ESC/POS formatted receipt
     let receipt = `
 [C]<font size='big'><b>OUR KOPITIAM</b></font>
 
@@ -1287,13 +1315,13 @@ function printOrder() {
 [C]================================
 `;
 
-    // Food items
     items.forEach(item => {
-
-        receipt += `
-[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>
-`;
-
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
+        if (item.addons && item.addons.length > 0) {
+            item.addons.forEach(ao => {
+                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
+            });
+        }
     });
 
     receipt += `
@@ -1304,21 +1332,11 @@ function printOrder() {
 \n\n\n
 `;
 
-    // Android APK print
     if (window.AndroidPrinter) {
-
-        // USB printer
         AndroidPrinter.printUSB(receipt);
-
-        // If you want bluetooth instead:
-        // AndroidPrinter.printBluetooth(receipt);
-
         showToast('🖨 Printing order...', '');
-
     } else {
-
         alert('Printer only works inside Android APK');
-
     }
 }
 
@@ -1369,8 +1387,11 @@ function showToast(msg, cls) {
 }
 
 // ════════════════════════════════════════════════
-// START
+// HISTORY / BACK
 // ════════════════════════════════════════════════
+function pushState(state) {
+    history.pushState(state, '', window.location.href);
+}
 
 (function () {
     history.pushState(null, '', window.location.href);

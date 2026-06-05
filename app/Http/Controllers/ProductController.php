@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\ProductAddon;
 
 class ProductController extends Controller
 {
@@ -68,6 +69,20 @@ class ProductController extends Controller
         ]);
         $product = Product::create($request->all());
 
+        if ($request->has('addon_name')) {
+
+            foreach ($request->addon_name as $key => $name) {
+        
+                if (!$name) {
+                    continue;
+                }
+        
+                $product->addons()->create([
+                    'addon_name'  => $name,
+                    'addon_price' => $request->addon_price[$key] ?? 0,
+                ]);
+            }
+        }
         if ($product->initial <> 0) {
             $product->stockLogs()->create([
                 'branch_id'     => $product->branch_id,
@@ -131,6 +146,23 @@ class ProductController extends Controller
         }
 
         $product->update($request->all());
+        $product->addons()->delete();
+
+        if ($request->has('addon_name')) {
+
+            foreach ($request->addon_name as $key => $name) {
+
+                if (!$name) {
+                    continue;
+                }
+
+                $product->addons()->create([
+                    'addon_name'  => $name,
+                    'addon_price' => $request->addon_price[$key] ?? 0,
+                    'is_active'   => 1,
+                ]);
+            }
+        }
 
         return redirect()->route('product.index')->withSuccess('Data updated');
     }
