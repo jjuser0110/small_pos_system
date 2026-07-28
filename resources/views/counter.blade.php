@@ -1306,7 +1306,7 @@ function printOrder() {
     const now = new Date().toLocaleString('en-MY');
 
     let receipt = `
-[C]<font size='big'><b>OUR KOPITIAM</b></font>
+[C]<font size='big'><b>LAO YANG KOPITIAM</b></font>
 
 [C]<font size='big'><b>${label}</b></font>
 
@@ -1333,7 +1333,7 @@ function printOrder() {
 `;
 
     if (window.AndroidPrinter) {
-        AndroidPrinter.printUSB(receipt);
+        AndroidPrinter.printBluetooth(receipt);
         showToast('🖨 Printing order...', '');
     } else {
         alert('Printer only works inside Android APK');
