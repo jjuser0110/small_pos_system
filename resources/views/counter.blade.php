@@ -1353,6 +1353,9 @@ async function processPayment(payload) {
         if (tbl) { tbl.total = 0; tbl.status = 'available'; }
 
         const label = currentTable.label;
+
+        printReceipt(payload);   // paid receipt
+
         closePayment();
         deselect();
         showToast(`✓ ${label} paid via ${payload.payment_method}!`, '');
@@ -1364,11 +1367,75 @@ async function processPayment(payload) {
             body: JSON.stringify(payload),
         });
 
+        printReceipt(payload);   // paid receipt
+
         dabaoSlots = dabaoSlots.filter(s => s.id !== id);
         closePayment();
         deselect();
         renderDabao();
         showToast(`✓ Dabao D${id} paid via ${payload.payment_method}!`, 'dp');
+    }
+}
+
+function printReceipt(payload) {
+    const items = Object.values(order);
+    if (!items.length) return;
+
+    const label = currentMode === 'table'
+        ? currentTable.label
+        : `Dabao D${currentDabao.id}`;
+
+    const now = new Date().toLocaleString('en-MY');
+
+    let receipt = `
+[C]<font size='big'><b>LAO YANG KOPITIAM</b></font>
+
+[C]<font size='big'><b>${label}</b></font>
+
+[C]${now}
+
+[C]================================
+`;
+
+    items.forEach(item => {
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
+        receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
+        if (item.addons && item.addons.length > 0) {
+            item.addons.forEach(ao => {
+                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
+            });
+        }
+    });
+
+    receipt += `
+[C]--------------------------------
+[L]<b>Total</b>
+[R]<b>RM ${payload.final_total.toFixed(2)}</b>
+[L]Payment
+[R]${payload.payment_method}
+`;
+
+    if (payload.payment_method.toLowerCase() === 'cash') {
+        receipt += `[L]Received
+[R]RM ${payload.amount_received.toFixed(2)}
+[L]Change
+[R]RM ${payload.change.toFixed(2)}
+`;
+    }
+
+    receipt += `
+[C]================================
+
+[C]Thank You!
+
+\n\n\n
+`;
+
+    if (window.AndroidPrinter) {
+        AndroidPrinter.printBluetooth(receipt);
+        showToast('🖨 Printing receipt...', '');
+    } else {
+        alert('Printer only works inside Android APK');
     }
 }
 
