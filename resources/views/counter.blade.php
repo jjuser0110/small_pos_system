@@ -1345,7 +1345,7 @@ function printOrder() {
 `;
 
     if (window.AndroidPrinter) {
-        AndroidPrinter.printBluetooth(receipt);
+        AndroidPrinter.printBluetooth('[[OPEN_DRAWER]]' + receipt);
         showToast('🖨 Printing order...', '');
     } else {
         alert('Printer only works inside Android APK');
