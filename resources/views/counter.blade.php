@@ -485,12 +485,24 @@ function apiFetch(url, options = {}) {
             ...(options.headers ?? {}),
         },
     })
-    .then(res => {
-        if (!res.ok) throw new Error(`API ${res.status}`);
+    .then(async res => {
+        if (!res.ok) {
+            let msg = `Error ${res.status}`;
+            try {
+                const body = await res.json();
+                msg = body.message || body.error || msg;
+            } catch (_) {}
+            throw new Error(msg);
+        }
         return res.json();
     })
     .catch(err => {
-        showToast('⚠ Network error', 'err');
+        // Only a genuine network failure lands here as a TypeError
+        // (fetch itself couldn't reach the server at all)
+        const msg = err instanceof TypeError
+            ? '⚠ No connection to server'
+            : `⚠ ${err.message}`;
+        showToast(msg, 'err');
         throw err;
     });
 }
