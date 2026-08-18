@@ -264,9 +264,22 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .confirm-cancel:hover{border-color:var(--text);color:var(--text);}
 .confirm-ok{flex:2;padding:11px;border-radius:10px;border:none;background:var(--green);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
 .confirm-ok:hover{background:#5fdfaa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(62,207,142,0.35);}
+.confirm-ok-noreceipt{flex:2;padding:11px;border-radius:10px;border:none;background:#4d8fff;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.confirm-ok-noreceipt:hover{background:#6ba0ff;transform:translateY(-1px);box-shadow:0 4px 16px rgba(77,143,255,0.35);}
 .print-btn{width:100%;padding:10px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;margin-top:6px;margin-bottom:4px;}
 .print-btn:hover{background:rgba(245,166,35,0.12);}
 .print-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+.pay-actions-stacked,
+.confirm-actions-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pay-actions-stacked button,
+.confirm-actions-stacked button {
+  width: 100%;
+}
 </style>
 </head>
 <body>
@@ -392,9 +405,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
         <span class="change-label" id="changeLabel">Change</span>
         <span class="change-val"   id="changeVal">RM 0.00</span>
       </div>
-      <div class="pay-actions">
-        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
+      <div class="pay-actions pay-actions-stacked">
         <button class="pay-confirm" id="payConfirmBtn" onclick="confirmPayment()" disabled>Confirm Payment</button>
+        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
       </div>
     </div>
 
@@ -404,9 +417,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
         <div class="qr-hint">Scan to pay</div>
         <div class="qr-amount" id="qrAmount">RM 0.00</div>
       </div>
-      <div class="pay-actions">
-        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
+      <div class="pay-actions pay-actions-stacked">
         <button class="qr-done-btn" onclick="confirmPayment()">✓ Payment Received</button>
+        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
       </div>
     </div>
   </div>
@@ -419,9 +432,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
     <div class="confirm-title">Confirm Payment?</div>
     <div class="confirm-sub" id="confirmSub"></div>
     <div class="confirm-details" id="confirmDetails"></div>
-    <div class="confirm-actions">
+    <div class="confirm-actions confirm-actions-stacked">
+      <button class="confirm-ok" id="confirmOkBtn">Yes, with Receipt</button>
+      <button class="confirm-ok-noreceipt" id="confirmOkNoReceiptBtn">Yes, No Receipt</button>
       <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
-      <button class="confirm-ok" id="confirmOkBtn">Yes, Confirm</button>
     </div>
   </div>
 </div>
@@ -1303,7 +1317,14 @@ function confirmPayment() {
             <span>RM ${payTotal.toFixed(2)}</span>
         </div>`;
 
-    document.getElementById('confirmOkBtn').onclick = () => processPayment(payload);
+    document.getElementById('confirmOkBtn').onclick = () => {
+        processPayment({ ...payload, print_receipt: true });
+    };
+
+    document.getElementById('confirmOkNoReceiptBtn').onclick = () => {
+        processPayment({ ...payload, print_receipt: false });
+    };
+
     document.getElementById('confirmOverlay').classList.add('open');
 }
 
