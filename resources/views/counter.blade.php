@@ -34,6 +34,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .left-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .section-label{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
 .floor-map{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.table-card-empty{flex:1;min-width:0; padding: 20px 10px 20px;}
 .table-row{display:flex;gap:8px;}
 .table-row .table-card{flex:1;min-width:0;}
 .table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 10px 20px;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s;position:relative;overflow:hidden;user-select:none;}
@@ -543,9 +544,15 @@ async function loadTables() {
         status: parseFloat(t.total) > 0 ? 'occupied' : 'available',
         total:  parseFloat(t.total),
     }));
-    tableRows = chunkBy(tables, [3, 1, 2, 2, 2]);
     renderTables();
 }
+
+const FLOOR_LAYOUT = [
+    [8, 9, 10],
+    [5, 6, 7],
+    [null, 3, 4],
+    [null, 1, 2],
+];
 
 function chunkBy(arr, sizes) {
     const rows = [];
@@ -558,14 +565,22 @@ function chunkBy(arr, sizes) {
 function renderTables() {
     const map = document.getElementById('floorMap');
     map.innerHTML = '';
-    if (!tableRows.length) {
+    if (!tables.length) {
         map.innerHTML = '<div style="color:var(--muted);font-size:0.75rem;padding:8px 0;opacity:.6;">No tables found.</div>';
         return;
     }
-    tableRows.forEach(row => {
+    FLOOR_LAYOUT.forEach(row => {
         const rowEl = document.createElement('div');
         rowEl.className = 'table-row';
-        row.forEach(t => {
+        row.forEach(num => {
+            if (num === null) {
+                const empty = document.createElement('div');
+                empty.className = 'table-card-empty';
+                rowEl.appendChild(empty);
+                return;
+            }
+            const t = tables.find(tb => tb.id === num);
+            if (!t) return;
             const isSelected = currentMode === 'table' && currentTable?.id === t.id;
             const card = document.createElement('div');
             card.className = `table-card ${t.status}${isSelected ? ' selected' : ''}`;
@@ -1387,7 +1402,7 @@ async function processPayment(payload) {
 
         const label = currentTable.label;
 
-        printReceipt(payload);   // paid receipt
+        if (payload.print_receipt) printReceipt(payload);
 
         closePayment();
         deselect();
