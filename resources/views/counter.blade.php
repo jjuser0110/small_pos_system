@@ -1402,7 +1402,7 @@ async function processPayment(payload) {
 
         const label = currentTable.label;
 
-        if (payload.print_receipt) printReceipt(payload);
+        printReceipt(payload, payload.print_receipt);
 
         closePayment();
         deselect();
@@ -1415,7 +1415,7 @@ async function processPayment(payload) {
             body: JSON.stringify(payload),
         });
 
-        printReceipt(payload);   // paid receipt
+        printReceipt(payload, payload.print_receipt);
 
         dabaoSlots = dabaoSlots.filter(s => s.id !== id);
         closePayment();
@@ -1425,7 +1425,19 @@ async function processPayment(payload) {
     }
 }
 
-function printReceipt(payload) {
+function printReceipt(payload, withReceipt = true) {
+    if (!window.AndroidPrinter) {
+        alert('Printer only works inside Android APK');
+        return;
+    }
+
+    if (!withReceipt) {
+        // Just open the cash drawer, skip the printed receipt content
+        AndroidPrinter.printBluetooth('[[OPEN_DRAWER]]');
+        showToast('💵 Drawer opened', '');
+        return;
+    }
+
     const items = Object.values(order);
     if (!items.length) return;
 
@@ -1479,12 +1491,8 @@ function printReceipt(payload) {
 \n\n\n
 `;
 
-    if (window.AndroidPrinter) {
-        AndroidPrinter.printBluetooth('[[OPEN_DRAWER]]' + receipt);
-        showToast('🖨 Printing receipt...', '');
-    } else {
-        alert('Printer only works inside Android APK');
-    }
+    AndroidPrinter.printBluetooth('[[OPEN_DRAWER]]' + receipt);
+    showToast('🖨 Printing receipt...', '');
 }
 
 function closeConfirm() {
