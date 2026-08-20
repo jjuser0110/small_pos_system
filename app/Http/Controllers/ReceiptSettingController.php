@@ -32,4 +32,14 @@ class ReceiptSettingController extends Controller
 
         return redirect()->route('receipt_setting.index')->withSuccess('Data saved');
     }
+
+    public function forPos()
+    {
+        $receipt_setting = ReceiptSetting::find(1);
+
+        return response()->json([
+            'header' => $receipt_setting->header ?? 'WILDFIRE',
+            'footer' => $receipt_setting->footer ?? '',
+        ]);
+    }
 }
