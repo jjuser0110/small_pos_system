@@ -1497,7 +1497,7 @@ ${formatReceiptLines(receiptHeader)}
     receipt += `
 [C]================================
 
-[C]${receiptFooter || 'Thank You!'}
+${formatReceiptLines(receiptFooter || 'Thank You!', false)}
 
 \n\n\n
 `;
