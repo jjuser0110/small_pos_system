@@ -1366,14 +1366,14 @@ function printOrder() {
     const now = new Date().toLocaleString('en-MY');
 
     let receipt = `
-    [C]<font size='big'><b>${receiptHeader}</b></font>
+${formatReceiptLines(receiptHeader)}
 
-    [C]<font size='big'><b>${label}</b></font>
+[C]<font size='big'><b>${label}</b></font>
 
-    [C]${now}
+[C]${now}
 
-    [C]================================
-    `;
+[C]================================
+`;
 
     items.forEach(item => {
         receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
@@ -1444,7 +1444,6 @@ function printReceipt(payload, withReceipt = true) {
     }
 
     if (!withReceipt) {
-        // Just open the cash drawer, skip the printed receipt content
         AndroidPrinter.printBluetooth('[[OPEN_DRAWER]]');
         showToast('💵 Drawer opened', '');
         return;
@@ -1460,7 +1459,7 @@ function printReceipt(payload, withReceipt = true) {
     const now = new Date().toLocaleString('en-MY');
 
     let receipt = `
-[C]<font size='big'><b>${receiptHeader}</b></font>
+${formatReceiptLines(receiptHeader)}
 
 [C]<font size='big'><b>${label}</b></font>
 
@@ -1519,6 +1518,22 @@ function showToast(msg, cls) {
     t.textContent = msg;
     t.className = `toast${cls ? ' ' + cls : ''} show`;
     setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ════════════════════════════════════════════════
+// RECEIPT TEXT FORMATTING
+// ════════════════════════════════════════════════
+function formatReceiptLines(text, tagWrap = true) {
+    if (!text) return '';
+    return text
+        .replace(/\r/g, '')      // strip stray carriage returns
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => tagWrap
+            ? `[C]<font size='big'><b>${line}</b></font>`
+            : `[C]${line}`)
+        .join('\n\n');
 }
 
 // ════════════════════════════════════════════════
