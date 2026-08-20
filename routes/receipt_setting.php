@@ -11,3 +11,5 @@ Route::prefix('/receipt_setting')->as('receipt_setting.')->middleware(['auth'])-
     Route::post('/update/{receipt_setting}', 'ReceiptSettingController@update')->name('update');
     Route::get('/destroy/{receipt_setting}', 'ReceiptSettingController@destroy')->name('destroy');
 });
+
+Route::get('/pos/receipt-settings', 'ReceiptSettingController@forPos');

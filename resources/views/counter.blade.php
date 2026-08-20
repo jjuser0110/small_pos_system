@@ -459,6 +459,8 @@ let categories   = [];
 let allProducts  = [];
 let paymentMethods    = [];
 let selectedMethodObj = null;
+let receiptHeader = 'WILDFIRE';
+let receiptFooter = 'THANK YOU';
 
 let currentMode  = null;
 let currentTable = null;
@@ -526,11 +528,21 @@ function apiFetch(url, options = {}) {
 // BOOT
 // ════════════════════════════════════════════════
 async function boot() {
-    await Promise.all([loadTables(), loadDabao(), loadMenu(), loadPaymentMethods()]);
+    await Promise.all([loadTables(), loadDabao(), loadMenu(), loadPaymentMethods(), loadReceiptSettings()]);
 }
 
 async function loadPaymentMethods() {
     paymentMethods = await apiFetch('/payment-methods');
+}
+
+async function loadReceiptSettings() {
+    try {
+        const data = await apiFetch('/receipt-settings');
+        if (data.header) receiptHeader = data.header;
+        if (data.footer) receiptFooter = data.footer;
+    } catch (err) {
+        console.error('Failed to load receipt settings, using fallback', err);
+    }
 }
 
 // ════════════════════════════════════════════════
@@ -1354,14 +1366,14 @@ function printOrder() {
     const now = new Date().toLocaleString('en-MY');
 
     let receipt = `
-[C]<font size='big'><b>LAO YANG KOPITIAM</b></font>
+    [C]<font size='big'><b>${receiptHeader}</b></font>
 
-[C]<font size='big'><b>${label}</b></font>
+    [C]<font size='big'><b>${label}</b></font>
 
-[C]${now}
+    [C]${now}
 
-[C]================================
-`;
+    [C]================================
+    `;
 
     items.forEach(item => {
         receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
@@ -1448,7 +1460,7 @@ function printReceipt(payload, withReceipt = true) {
     const now = new Date().toLocaleString('en-MY');
 
     let receipt = `
-[C]<font size='big'><b>LAO YANG KOPITIAM</b></font>
+[C]<font size='big'><b>${receiptHeader}</b></font>
 
 [C]<font size='big'><b>${label}</b></font>
 
@@ -1486,7 +1498,7 @@ function printReceipt(payload, withReceipt = true) {
     receipt += `
 [C]================================
 
-[C]Thank You!
+[C]${receiptFooter || 'Thank You!'}
 
 \n\n\n
 `;
