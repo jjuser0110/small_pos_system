@@ -38,7 +38,7 @@ class ReceiptSettingController extends Controller
         $receipt_setting = ReceiptSetting::find(1);
 
         return response()->json([
-            'header' => $receipt_setting->header ?? 'WILDFIRE',
+            'header' => $receipt_setting->header ?? 'LAO YANG KOPITIAM',
             'footer' => $receipt_setting->footer ?? '',
         ]);
     }
