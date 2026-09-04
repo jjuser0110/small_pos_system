@@ -1368,7 +1368,7 @@ function printOrder() {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<font size='big'><b>${label}</b></font>
+[C]<font size='normal'><b>${label}</b></font>
 
 [C]${now}
 
@@ -1376,7 +1376,7 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
+        receipt += `\n[L]<font size='normal'><b>${item.qty} x ${item.name}</b></font>\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
                 receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
@@ -1461,7 +1461,7 @@ function printReceipt(payload, withReceipt = true) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<font size='big'><b>${label}</b></font>
+[C]<font size='normal'><b>${label}</b></font>
 
 [C]${now}
 
@@ -1469,7 +1469,7 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
+        receipt += `\n[L]<font size='normal'><b>${item.qty} x ${item.name}</b></font>\n`;
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
@@ -1531,7 +1531,7 @@ function formatReceiptLines(text, tagWrap = true) {
         .map(line => line.trim())
         .filter(line => line.length > 0)
         .map(line => tagWrap
-            ? `[C]<font size='big'><b>${line}</b></font>`
+            ? `[C]<font size='normal'><b>${line}</b></font>`
             : `[C]${line}`)
         .join('\n\n');
 }

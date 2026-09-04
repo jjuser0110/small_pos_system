@@ -99,6 +99,12 @@
                     <label class="form-check-label" for="remember-me"> Remember Me </label>
                   </div>
                 </div> -->
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                  <label class="form-check-label" for="remember">
+                      Remember Me
+                  </label>
+              </div>
                 @if ($errors->any())
                     <div class="alert alert-danger" id="error-alert">
                         <ul class="mb-0">

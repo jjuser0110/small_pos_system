@@ -109,48 +109,75 @@
                     </thead>
                     <tbody>
                         @foreach($order as $index => $row)
-                        <tr style="{{ $row->status <> 'Active' ? 'background: lightgrey;' : '' }}">
-                            <td>{{$index+1??""}}</td>
-                            <td>{{$row->order_no??""}}</td>
-                            <td>{{$row->created_at??""}}</td>
-                            <td>{{$row->user->username??""}}</td>
-                            <td>{{$row->total_product??""}}</td>
-                            <td>{{$row->total_item??""}}</td>
-                            <td data-order="{{ $row->final_total }}">{{number_format($row->final_total, 2)??""}}</td>
-                            <td>{{$row->payment_method??""}}</td>
-                            <td>{{$row->amount_received??""}}</td>
-                            <td>{{$row->change??""}}</td>
-                            <td>{{$row->status??""}}</td>
+                            @php
+                                $printItems = $row->items->map(function ($item) {
+                                    return [
+                                        'name'        => $item->product->product_name ?? ($item->product_name ?? '-'),
+                                        'qty'         => $item->quantity,
+                                        'total_price' => $item->total_price,
+                                        'addons'      => $item->addons
+                                            ? (is_string($item->addons) ? json_decode($item->addons, true) : $item->addons)
+                                            : [],
+                                    ];
+                                });
 
-                            @if (in_array(Auth::user()->role_id, [1, 2, 3]))
-                                <td>
-                                    <form method="POST" action="{{ route('order.discount', $row->id) }}" class="d-flex align-items-center gap-2">
-                                        @csrf
-                                        <input type="number" class="form-control" name="discount" value="{{ $row->discount ?? '' }}" min="0" step="0.01" style="min-width: 65px;" required>
-                                        <button type="submit" class="btn btn-xs btn-primary px-2 py-1">
-                                            <i class="bx bx-save"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            @endif
+                                $printData = [
+                                    'order_no'        => $row->order_no,
+                                    'created_at'      => $row->created_at,
+                                    'payment_method'  => $row->payment_method,
+                                    'amount_received' => $row->amount_received,
+                                    'change'          => $row->change,
+                                    'final_total'     => $row->final_total,
+                                    'items'           => $printItems,
+                                ];
+                            @endphp
+                            <tr style="{{ $row->status <> 'Active' ? 'background: lightgrey;' : '' }}">
+                                <td>{{$index+1??""}}</td>
+                                <td>{{$row->order_no??""}}</td>
+                                <td>{{$row->created_at??""}}</td>
+                                <td>{{$row->user->username??""}}</td>
+                                <td>{{$row->total_product??""}}</td>
+                                <td>{{$row->total_item??""}}</td>
+                                <td data-order="{{ $row->final_total }}">{{number_format($row->final_total, 2)??""}}</td>
+                                <td>{{$row->payment_method??""}}</td>
+                                <td>{{$row->amount_received??""}}</td>
+                                <td>{{$row->change??""}}</td>
+                                <td>{{$row->status??""}}</td>
 
-                            <td>
-                                <a href="{{ route('order.view',$row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a>
-
-                                @if (auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
-                                    @if($row->status !== 'Voided')
-                                        <a href="javascript:void(0)"
-                                        class="text-danger"
-                                        onclick="openVoidModal('{{ route('order.void', $row->id) }}')">
-                                            <i class="fa-solid fa-ban"></i>
-                                        </a>
-                                    @endif
+                                @if (in_array(Auth::user()->role_id, [1, 2, 3]))
+                                    <td>
+                                        <form method="POST" action="{{ route('order.discount', $row->id) }}" class="d-flex align-items-center gap-2">
+                                            @csrf
+                                            <input type="number" class="form-control" name="discount" value="{{ $row->discount ?? '' }}" min="0" step="0.01" style="min-width: 65px;" required>
+                                            <button type="submit" class="btn btn-xs btn-primary px-2 py-1">
+                                                <i class="bx bx-save"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 @endif
 
-                                <!-- <a href="{{ route('order.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
-                                <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('order.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a> -->
-                            </td>
-                        </tr>
+                                <td>
+                                    <button type="button"
+                                            class="btn btn-sm p-0 border-0 bg-transparent text-success print-receipt-btn"
+                                            title="Print Receipt"
+                                            data-order='@json($printData)'
+                                            onclick="printOrderReceipt(this)">
+                                        <i class="fa-solid fa-print"></i>
+                                    </button>
+
+                                    <a href="{{ route('order.view',$row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a>
+
+                                    @if (auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
+                                        @if($row->status !== 'Voided')
+                                            <a href="javascript:void(0)"
+                                            class="text-danger"
+                                            onclick="openVoidModal('{{ route('order.void', $row->id) }}')">
+                                                <i class="fa-solid fa-ban"></i>
+                                            </a>
+                                        @endif
+                                    @endif
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -330,6 +357,122 @@ function showProfitTable() {
 
     if ($.fn.DataTable.isDataTable('#mytable3')) {
         $('#mytable3').DataTable().columns.adjust().draw(false);
+    }
+}
+</script>
+
+<script>
+// ════════════════════════════════════════════════
+// RECEIPT SETTINGS (same source as POS screen)
+// ════════════════════════════════════════════════
+let receiptHeader = 'WILDFIRE';
+let receiptFooter = 'THANK YOU';
+
+fetch('/pos/receipt-settings', {
+    headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+    }
+})
+.then(res => res.ok ? res.json() : null)
+.then(data => {
+    if (!data) return;
+    if (data.header) receiptHeader = data.header;
+    if (data.footer) receiptFooter = data.footer;
+})
+.catch(err => console.error('Failed to load receipt settings, using fallback', err));
+
+// ════════════════════════════════════════════════
+// RECEIPT TEXT FORMATTING (same as POS screen)
+// ════════════════════════════════════════════════
+function formatReceiptLines(text, tagWrap = true) {
+    if (!text) return '';
+    return text
+        .replace(/\r/g, '')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => tagWrap
+            ? `[C]<font size='normal'><b>${line}</b></font>`
+            : `[C]${line}`)
+        .join('\n\n');
+}
+
+// ════════════════════════════════════════════════
+// PRINT RECEIPT — from Order Listing row
+// ════════════════════════════════════════════════
+function printOrderReceipt(btn) {
+    if (!window.AndroidPrinter) {
+        alert('Printer only works inside Android APK');
+        return;
+    }
+
+    let order;
+    try {
+        order = JSON.parse(btn.dataset.order);
+    } catch (e) {
+        console.error('Invalid order data', e);
+        return;
+    }
+
+    const items = order.items || [];
+    if (!items.length) {
+        alert('No items found for this order');
+        return;
+    }
+
+    const now = order.created_at
+        ? new Date(order.created_at).toLocaleString('en-MY')
+        : new Date().toLocaleString('en-MY');
+
+    let receipt = `
+${formatReceiptLines(receiptHeader)}
+
+[C]<font size='normal'><b>${order.order_no ?? ''}</b></font>
+
+[C]${now}
+
+[C]================================
+`;
+
+    items.forEach(item => {
+        receipt += `\n[L]<font size='normal'><b>${item.qty} x ${item.name}</b></font>\n`;
+        receipt += `[R]RM ${parseFloat(item.total_price ?? 0).toFixed(2)}\n`;
+        if (item.addons && item.addons.length > 0) {
+            item.addons.forEach(ao => {
+                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
+            });
+        }
+    });
+
+    receipt += `
+[C]--------------------------------
+[L]<b>Total</b>
+[R]<b>RM ${parseFloat(order.final_total ?? 0).toFixed(2)}</b>
+[L]Payment
+[R]${order.payment_method ?? '-'}
+`;
+
+    if ((order.payment_method ?? '').toLowerCase() === 'cash') {
+        receipt += `[L]Received
+[R]RM ${parseFloat(order.amount_received ?? 0).toFixed(2)}
+[L]Change
+[R]RM ${parseFloat(order.change ?? 0).toFixed(2)}
+`;
+    }
+
+    receipt += `
+[C]================================
+
+${formatReceiptLines(receiptFooter || 'Thank You!', false)}
+
+\n\n\n
+`;
+
+    AndroidPrinter.printBluetooth(receipt);
+
+    if (typeof showToast === 'function') {
+        showToast('🖨 Printing receipt...', '');
     }
 }
 </script>

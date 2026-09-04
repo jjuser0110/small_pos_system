@@ -32,6 +32,14 @@ $currentRoute = request()->route()->getName();
                 <div>Go to Counter</div>
             </a>
         </li>
+        @if(auth()->user()->role_id == 5 )
+        <li class="menu-item {{ Str::contains($currentRoute, 'order.index') ? 'active' : ''}}">
+            <a href="{{ route('order.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Order</div>
+            </a>
+        </li>
+        @endif
         <!-- <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
             <a href="{{ route('shift_closing.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>

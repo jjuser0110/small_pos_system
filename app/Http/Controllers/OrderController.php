@@ -41,8 +41,6 @@ class OrderController extends Controller
         } elseif ($login_user->role_id == 4) {
             $branches = Branch::where('id', $login_user->branch_id)->get();
             $companies = Company::where('id', $login_user->company_id)->get();
-        } elseif ($login_user->role_id == 5) {
-            return redirect('home')->withErrors('Access Denied');
         } else {
             $branches = Branch::all();
             $companies = Company::all();
