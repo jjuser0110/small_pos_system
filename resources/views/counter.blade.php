@@ -977,9 +977,9 @@ async function clearOrder() {
     if (!tableId) return;
 
     const deletes = Object.keys(order).map(cartId =>
-        apiFetch(`/cart/${cartId}`, { method: 'DELETE' })
+        apiFetch(`/cart/${cartId}`, { method: 'DELETE' }).catch(() => null)
     );
-    await Promise.all(deletes);
+    await Promise.allSettled(deletes);
 
     order = {};
     syncLocalTotal(tableId);
