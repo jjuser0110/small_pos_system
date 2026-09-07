@@ -392,9 +392,7 @@ function formatReceiptLines(text, tagWrap = true) {
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0)
-        .map(line => tagWrap
-            ? `[C]<font size='normal'><b>${line}</b></font>`
-            : `[C]${line}`)
+        .map(line => `[C]${line}`)
         .join('\n\n');
 }
 
@@ -428,7 +426,7 @@ function printOrderReceipt(btn) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<font size='normal'><b>${order.order_no ?? ''}</b></font>
+[C]${order.order_no ?? ''}
 
 [C]${now}
 
@@ -436,7 +434,7 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<font size='normal'><b>${item.qty} x ${item.name}</b></font>\n`;
+        receipt += `\n[L]${item.qty} x ${item.name}\n`;
         receipt += `[R]RM ${parseFloat(item.total_price ?? 0).toFixed(2)}\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
@@ -447,8 +445,8 @@ ${formatReceiptLines(receiptHeader)}
 
     receipt += `
 [C]--------------------------------
-[L]<b>Total</b>
-[R]<b>RM ${parseFloat(order.final_total ?? 0).toFixed(2)}</b>
+[L]Total
+[R]RM ${parseFloat(order.final_total ?? 0).toFixed(2)}
 [L]Payment
 [R]${order.payment_method ?? '-'}
 `;

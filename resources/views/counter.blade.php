@@ -1368,7 +1368,7 @@ function printOrder() {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]${label}
+[C]<font size='big'><b>${label}</b></font>
 
 [C]${now}
 
@@ -1376,7 +1376,7 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]${item.qty} x ${item.name}\n`;
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
                 receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
