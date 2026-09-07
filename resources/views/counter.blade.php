@@ -186,8 +186,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .pay-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:4px;}
 .pay-sub{font-size:0.75rem;color:var(--muted);margin-bottom:20px;}
 .pay-summary{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
-.pay-line{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);padding:3px 0;}
-.pay-line-addon{font-size:0.7rem;color:var(--muted);padding:1px 0 1px 12px;opacity:.8;}
+.pay-line{display:flex;justify-content:space-between;align-items:flex-start;font-size:0.78rem;color:var(--muted);padding:3px 0;gap:10px;}
+.pay-line-name{flex:1;min-width:0;}
+.pay-line-price{flex-shrink:0;white-space:nowrap;text-align:right;}
+.pay-line-addon{display:flex;justify-content:space-between;align-items:flex-start;font-size:0.7rem;color:var(--muted);padding:1px 0 1px 12px;opacity:.8;gap:10px;}
 .pay-total-line{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid var(--border);}
 .pay-total-label{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;}
 .pay-total-val{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--accent);}
@@ -1175,18 +1177,18 @@ function openPayment() {
 
     // Build summary lines (include addons)
     const linesEl = document.getElementById('paySummaryLines');
-    linesEl.innerHTML = '';
-    items.forEach(it => {
+        linesEl.innerHTML = '';
+        items.forEach(it => {
         const line = document.createElement('div');
         line.className = 'pay-line';
-        line.innerHTML = `<span>${it.name} × ${it.qty}</span><span>RM ${it.total_price.toFixed(2)}</span>`;
+        line.innerHTML = `<span class="pay-line-name">${it.name} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
         linesEl.appendChild(line);
         // Show addon breakdown under each item
         if (it.addons && it.addons.length > 0) {
             it.addons.forEach(ao => {
                 const addonLine = document.createElement('div');
                 addonLine.className = 'pay-line-addon';
-                addonLine.innerHTML = `<span>↳ + ${ao.name}</span><span> (RM ${parseFloat(ao.price).toFixed(2)})</span>`;
+                addonLine.innerHTML = `<span class="pay-line-name">↳ + ${ao.name}</span><span class="pay-line-price">RM ${parseFloat(ao.price).toFixed(2)}</span>`;
                 linesEl.appendChild(addonLine);
             });
         }
