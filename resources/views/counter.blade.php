@@ -1368,7 +1368,7 @@ function printOrder() {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<b>${label}</b>
+[C]${label}
 
 [C]${now}
 
@@ -1376,7 +1376,7 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<b>${item.qty} x ${item.name}</b>\n`;
+        receipt += `\n[L]${item.qty} x ${item.name}\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
                 receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
@@ -1461,7 +1461,7 @@ function printReceipt(payload, withReceipt = true) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<b>${label}</b>
+[C]${label}
 
 [C]${now}
 
@@ -1469,7 +1469,7 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<b>${item.qty} x ${item.name}</b>\n`;
+        receipt += `\n[L]${item.qty} x ${item.name}\n`;
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
@@ -1480,8 +1480,8 @@ ${formatReceiptLines(receiptHeader)}
 
     receipt += `
 [C]--------------------------------
-[L]<b>Total</b>
-[R]<b>RM ${payload.final_total.toFixed(2)}</b>
+[L]Total
+[R]RM ${payload.final_total.toFixed(2)}
 [L]Payment
 [R]${payload.payment_method}
 `;
@@ -1526,13 +1526,11 @@ function showToast(msg, cls) {
 function formatReceiptLines(text, tagWrap = true) {
     if (!text) return '';
     return text
-        .replace(/\r/g, '')      // strip stray carriage returns
+        .replace(/\r/g, '')
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0)
-        .map(line => tagWrap
-            ? `[C]<b>${line}</b>`
-            : `[C]${line}`)
+        .map(line => `[C]${line}`)
         .join('\n\n');
 }
 
