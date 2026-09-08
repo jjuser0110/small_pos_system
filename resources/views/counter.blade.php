@@ -676,7 +676,7 @@ function renderDabao() {
                     <div class="d-num">D${slot.id}</div>
                     <span class="d-tag">Takeaway</span>
                 </div>
-                <button class="d-remove" onclick="confirmRemoveDabao(${slot.id}, event)">✕ Done</button>
+                <button class="d-remove" onclick="confirmRemoveDabao(${slot.id}, event)">✕ 完成 Done</button>
             </div>
             ${slot.name
                 ? `<div class="d-meta">👤 <strong>${slot.name}</strong></div>`
@@ -701,7 +701,7 @@ function confirmRemoveDabao(id, e) {
     e.stopPropagation();
     openActionConfirm({
         icon: '🥡',
-        title: '取消打包订单 Close this Dabao order?',
+        title: '关闭打包订单 Close this Dabao order?',
         sub: `打包D${id}将会被移除 Dabao D${id} will be marked as done and removed from the list.`,
         yesLabel: '是 Yes',
         danger: true,
