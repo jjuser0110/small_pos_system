@@ -1173,6 +1173,7 @@ function renderMenu() {
     area.innerHTML = '';
 
     let products;
+    let categoryName = '';
     if (searchQuery) {
         products = allProducts.filter(p =>
             p.product_name.toLowerCase().includes(searchQuery) ||
@@ -1180,13 +1181,17 @@ function renderMenu() {
         );
     } else {
         const cat = categories.find(c => c.id === currentCatId);
-        products  = cat ? cat.products : [];
+        products     = cat ? cat.products : [];
+        categoryName = cat ? cat.category_name : '';
     }
 
     if (!products.length) {
         area.innerHTML = `<div class="no-results">No items found${searchQuery ? ` for "<strong>${searchQuery}</strong>"` : ''}</div>`;
         return;
     }
+
+    // Detect drink category (case-insensitive match on the name)
+    const isDrinkCategory = categoryName.toLowerCase().includes('drink');
 
     products.forEach((product, index) => {
         const stockEnforced = product.has_stock == 1;
@@ -1204,9 +1209,14 @@ function renderMenu() {
 
         const showCat = !!searchQuery;
 
+        // Letter index for drinks, number index otherwise
+        const indexLabel = (isDrinkCategory && !searchQuery)
+            ? getLetterIndex(index)
+            : index + 1;
+
         div.innerHTML = `
             <div class="item-index-wrap">
-                <div class="item-index">${index + 1}</div>
+                <div class="item-index">${indexLabel}</div>
                 <div class="item-divider"></div>
             </div>
             <div class="item-content">
@@ -1221,6 +1231,17 @@ function renderMenu() {
         if (!outOfStock) div.onclick = () => handleMenuItemClick(product);
         area.appendChild(div);
     });
+}
+
+// Converts 0→A, 1→B ... 25→Z, 26→AA, 27→AB, etc. (handles more than 26 drinks)
+function getLetterIndex(index) {
+    let n = index;
+    let label = '';
+    do {
+        label = String.fromCharCode(65 + (n % 26)) + label;
+        n = Math.floor(n / 26) - 1;
+    } while (n >= 0);
+    return label;
 }
 
 function highlightMatch(text, query) {
