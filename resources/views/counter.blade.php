@@ -701,9 +701,9 @@ function confirmRemoveDabao(id, e) {
     e.stopPropagation();
     openActionConfirm({
         icon: '🥡',
-        title: 'Close this Dabao order?',
-        sub: `Dabao D${id} will be marked as done and removed from the list.`,
-        yesLabel: 'Yes, Close It',
+        title: '取消打包订单 Close this Dabao order?',
+        sub: `打包D${id}将会被移除 Dabao D${id} will be marked as done and removed from the list.`,
+        yesLabel: '是 Yes',
         danger: true,
         onYes: () => removeDabao(id),
     });
