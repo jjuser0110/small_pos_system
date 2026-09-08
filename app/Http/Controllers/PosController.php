@@ -142,55 +142,55 @@ class PosController extends Controller
     // Add or increment an item in the cart
     // POST /api/cart
     // Add or increment an item in the cart
-    public function addToCart(Request $request)
-    {
-        $request->validate([
-            'table_id'   => 'required|integer',
-            'product_id' => 'required|integer',
-            'quantity'   => 'required|integer|min:1',
+    // POST /api/cart
+// Add or increment an item in the cart
+public function addToCart(Request $request)
+{
+    $request->validate([
+        'table_id'   => 'required|integer',
+        'product_id' => 'required|integer',
+        'quantity'   => 'required|integer|min:1',
+    ]);
+
+    $product     = Product::findOrFail($request->product_id);
+    $addons      = $request->input('addons', []);   // array from frontend
+    $unitPrice   = $request->input('unit_price')
+                    ?? $product->selling_price;
+
+    // Normalise addons to a sorted JSON string for comparison
+    $addonsJson  = collect($addons)
+                    ->sortBy('id')
+                    ->values()
+                    ->toJson();
+
+    // Match on table + product + EXACT addon combo
+    $cartItem = Cart::where('table_id',   $request->table_id)
+                    ->where('product_id', $request->product_id)
+                    ->where('addons',     $addonsJson)
+                    ->first();
+
+    if ($cartItem) {
+        // Same product, same add-ons → increment
+        $cartItem->quantity   += $request->quantity;
+        $cartItem->total_price = $cartItem->quantity * $cartItem->single_price;
+        $cartItem->save();
+    } else {
+        // New row — different add-ons OR first time
+        $cartItem = Cart::create([
+            'user_id'      => Auth::id() ?? 1,
+            'table_id'     => $request->table_id,
+            'product_id'   => $request->product_id,
+            'quantity'     => $request->quantity,
+            'single_price' => $unitPrice,
+            'total_price'  => $request->quantity * $unitPrice,
+            'addons'       => $addonsJson,
         ]);
-
-        $product     = Product::findOrFail($request->product_id);
-        $addons      = $request->input('addons', []);   // array from frontend
-        $unitPrice   = $request->input('unit_price')
-                        ?? $product->selling_price;
-
-        // Normalise addons to a sorted JSON string for comparison
-        $addonsJson  = collect($addons)
-                        ->sortBy('id')
-                        ->values()
-                        ->toJson();
-
-        // Match on table + product + EXACT addon combo + NOT YET PRINTED
-        $cartItem = Cart::where('table_id',   $request->table_id)
-                        ->where('product_id', $request->product_id)
-                        ->where('addons',     $addonsJson)
-                        ->where('print_order', 0)   // ← only merge into unprinted rows
-                        ->first();
-
-        if ($cartItem) {
-            // Same product, same add-ons, not printed yet → increment
-            $cartItem->quantity   += $request->quantity;
-            $cartItem->total_price = $cartItem->quantity * $cartItem->single_price;
-            $cartItem->save();
-        } else {
-            // New row — different add-ons, first time, OR existing row already printed
-            $cartItem = Cart::create([
-                'user_id'      => Auth::id() ?? 1,
-                'table_id'     => $request->table_id,
-                'product_id'   => $request->product_id,
-                'quantity'     => $request->quantity,
-                'single_price' => $unitPrice,
-                'total_price'  => $request->quantity * $unitPrice,
-                'addons'       => $addonsJson,
-                'print_order'  => 0,   // ← explicit, so new rows always start unprinted
-            ]);
-        }
-
-        $this->syncTableTotal($request->table_id);
-
-        return response()->json($cartItem->load('product'));
     }
+
+    $this->syncTableTotal($request->table_id);
+
+    return response()->json($cartItem->load('product'));
+}
 
     // PUT /api/cart/{cartId}
     // Update quantity of a cart item (pass quantity=0 to remove)

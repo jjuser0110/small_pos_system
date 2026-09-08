@@ -1089,7 +1089,7 @@ function renderCart() {
         //     : '';
 
         row.innerHTML = `
-            <div class="cart-item-name">${it.name}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
+            <div class="cart-item-name">${it.name}${it.printed ? ' ' : ''}</div>
             ${addonTagsHtml}
             <div class="cart-ctrl">
                 <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
@@ -1503,10 +1503,10 @@ function closeActionConfirm() {
 
 function confirmPrintOrder() {
     const items = Object.values(order).filter(it => !it.printed);
-    if (!items.length) {
-        showToast('没有新订单 Nothing new to print', 'err');
-        return;
-    }
+    // if (!items.length) {
+    //     showToast('没有新订单 Nothing new to print', 'err');
+    //     return;
+    // }
     openActionConfirm({
         icon: '🖨️',
         title: '打印订单 Print this order?',
@@ -1519,22 +1519,21 @@ function confirmPrintOrder() {
 
 async function printOrder() {
     const allItems = Object.values(order);
-    if (!allItems.length) {
-        showToast('没有新订单 Nothing new to print', 'err');
-        return;
-    }
+    // if (!allItems.length) {
+    //     showToast('没有新订单 Nothing new to print', 'err');
+    //     return;
+    // }
 
-    // If every item is already marked printed, reprint everything.
     // Otherwise (mixed 1s and 0s), only print the ones still at 0.
     const allPrinted = allItems.every(it => it.printed);
     const items = allPrinted
         ? allItems
         : allItems.filter(it => !it.printed);
 
-    if (!items.length) {
-        showToast('没有新订单 Nothing new to print', 'err');
-        return;
-    }
+    // if (!items.length) {
+    //     showToast('没有新订单 Nothing new to print', 'err');
+    //     return;
+    // }
 
     const label = currentMode === 'table'
         ? currentTable.label
