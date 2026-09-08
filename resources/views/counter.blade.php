@@ -1518,7 +1518,19 @@ function confirmPrintOrder() {
 }
 
 async function printOrder() {
-    const items = Object.values(order).filter(it => !it.printed);
+    const allItems = Object.values(order);
+    if (!allItems.length) {
+        showToast('没有新订单 Nothing new to print', 'err');
+        return;
+    }
+
+    // If every item is already marked printed, reprint everything.
+    // Otherwise (mixed 1s and 0s), only print the ones still at 0.
+    const allPrinted = allItems.every(it => it.printed);
+    const items = allPrinted
+        ? allItems
+        : allItems.filter(it => !it.printed);
+
     if (!items.length) {
         showToast('没有新订单 Nothing new to print', 'err');
         return;
