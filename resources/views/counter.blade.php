@@ -102,12 +102,16 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .menu-area{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;align-content:start;}
 .menu-area::-webkit-scrollbar{width:4px;}
 .menu-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-.menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:3px;}
+.menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:row;align-items:stretch;gap:8px;position:relative;}
+.item-index-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.item-index{font-family:'Syne',sans-serif;font-weight:800;font-size:0.85rem;color:var(--muted);min-width:14px;text-align:center;}
+.item-divider{width:1px;align-self:stretch;background:var(--border);}
+.item-content{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
 .menu-item:hover{border-color:var(--accent);background:var(--card-hover);transform:scale(1.03);}
 .menu-item.dp:hover{border-color:var(--purple);}
 .menu-item.out-of-stock{opacity:.4;cursor:not-allowed;}
 .menu-item.out-of-stock:hover{transform:none;border-color:var(--border);}
-.menu-item.has-addon::after{content:'+ Add-ons';font-size:0.55rem;color:var(--accent);font-weight:700;letter-spacing:0.3px;opacity:.9;}
+.item-addon-tag{font-size:0.55rem;color:var(--accent);font-weight:700;letter-spacing:0.3px;opacity:.9;}
 .item-emoji{font-size:1.4rem;}
 .item-name{font-size:0.75rem;font-weight:600;color:var(--text);line-height:1.2;}
 .item-price{font-size:0.73rem;color:var(--accent);font-weight:700;}
@@ -184,7 +188,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .pay-modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 @keyframes popIn{from{transform:scale(.92);opacity:0;}to{transform:scale(1);opacity:1;}}
 .pay-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:4px;}
-.pay-sub{font-size:0.75rem;color:var(--muted);margin-bottom:20px;}
+.pay-sub{font-size:1.05rem;color:var(--text);font-weight:800;font-family:'Syne',sans-serif;margin-bottom:20px;}
 .pay-summary{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
 .pay-line{display:flex;justify-content:space-between;align-items:flex-start;font-size:0.78rem;color:var(--muted);padding:3px 0;gap:10px;}
 .pay-line-name{flex:1;min-width:0;}
@@ -197,9 +201,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .pay-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;outline:none;transition:border-color .2s;margin-bottom:12px;}
 .pay-input:focus{border-color:var(--accent);}
 .pay-input::placeholder{color:var(--border);}
-.quick-amounts{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.quick-amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
 .quick-btn{padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s;}
 .quick-btn:hover{border-color:var(--accent);color:var(--accent);}
+.quick-btn.active{border-color:var(--accent);background:rgba(232,98,42,0.12);color:var(--accent);font-weight:800;}
 .change-box{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
 .change-label{font-size:0.78rem;color:#188a45;font-weight:600;}
 .change-val{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:#188a45;}
@@ -211,12 +216,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .pay-confirm{flex:2;padding:12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
 .pay-confirm:hover{background:#3fd975;transform:translateY(-1px);box-shadow:0 4px 16px rgba(34,197,94,0.35);}
 .pay-confirm:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;}
-.pay-method-label{font-size:0.75rem;color:var(--muted);font-weight:600;margin-bottom:10px;}
-.pay-method-btns{display:flex;gap:10px;margin-bottom:18px;}
-.pay-method-btn{flex:1;padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pay-method-btns{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.pay-method-btn{flex:1;min-width:80px;padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;}
 .pay-method-btn .pm-icon{font-size:1.6rem;}
 .pay-method-btn:hover{border-color:var(--muted);background:var(--card-hover);}
-.pay-method-btn.selected-cash{border-color:var(--accent);background:rgba(232,98,42,0.1);color:var(--accent);}
 .pay-method-btn.selected-qr{border-color:var(--green);background:rgba(34,197,94,0.1);color:#188a45;}
 .pay-detail-section{display:none;}
 .pay-detail-section.visible{display:block;}
@@ -283,6 +286,22 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .confirm-actions-stacked button {
   width: 100%;
 }
+
+/* ─── SMALL ACTION-CONFIRM MODAL (print / clear / done) ─── */
+.action-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(43,23,16,0.55);z-index:450;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.action-confirm-overlay.open{display:flex;}
+.action-confirm-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:300px;padding:26px 22px;animation:popIn .2s ease;box-shadow:0 20px 60px rgba(120,72,30,0.25);text-align:center;}
+.action-confirm-icon{font-size:2.2rem;margin-bottom:8px;}
+.action-confirm-title{font-family:'Syne',sans-serif;font-size:1.02rem;font-weight:800;margin-bottom:6px;}
+.action-confirm-sub{font-size:0.78rem;color:var(--muted);margin-bottom:18px;}
+.action-confirm-actions{display:flex;flex-direction:column;gap:10px;}
+.action-confirm-actions button{width:100%;padding:11px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.action-confirm-yes{border:none;background:var(--accent);color:#fff;}
+.action-confirm-yes:hover{background:#f0763e;transform:translateY(-1px);}
+.action-confirm-yes.danger{background:var(--red);}
+.action-confirm-yes.danger:hover{background:#ef4444;}
+.action-confirm-no{border:1px solid var(--border);background:transparent;color:var(--muted);}
+.action-confirm-no:hover{border-color:var(--text);color:var(--text);}
 </style>
 </head>
 <body>
@@ -358,9 +377,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
               <span class="cart-total-label">Total</span>
               <span class="cart-total-val" id="cartTotal">RM 0.00</span>
             </div>
-            <button class="print-btn" onclick="printOrder()" id="printBtn" disabled>🖨 Print Order</button>
+            <button class="print-btn" onclick="confirmPrintOrder()" id="printBtn" disabled>🖨 Print Order</button>
             <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" disabled>Checkout →</button>
-            <button class="clear-btn" onclick="clearOrder()">Clear order</button>
+            <button class="clear-btn" onclick="confirmClearOrder()">Clear order</button>
           </div>
         </div>
       </div>
@@ -396,13 +415,12 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     <div class="pay-summary" id="paySummaryLines"></div>
 
-    <div class="pay-method-label">Select Payment Method</div>
-    <div class="pay-method-btns" id="payMethodBtns"></div>
+    <!-- <div class="pay-method-btns" id="payMethodBtns"></div> -->
 
     <div class="pay-detail-section" id="cashSection">
       <div class="pay-input-label">Amount Received (RM)</div>
       <input class="pay-input" id="payInput" type="number" inputmode="decimal"
-             placeholder="0.00" oninput="calcChange()">
+             placeholder="0.00" oninput="document.getElementById('quickAmounts').querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active'));calcChange()">
       <div class="quick-amounts" id="quickAmounts"></div>
       <div class="change-box" id="changeBox" style="display:none">
         <span class="change-label" id="changeLabel">Change</span>
@@ -442,6 +460,20 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
     </div>
   </div>
 </div>
+
+<!-- ════ SMALL ACTION-CONFIRM MODAL (print / clear / done) ════ -->
+<div class="action-confirm-overlay" id="actionConfirmOverlay">
+  <div class="action-confirm-modal">
+    <div class="action-confirm-icon" id="actionConfirmIcon">⚠️</div>
+    <div class="action-confirm-title" id="actionConfirmTitle">Are you sure?</div>
+    <div class="action-confirm-sub" id="actionConfirmSub"></div>
+    <div class="action-confirm-actions">
+      <button class="action-confirm-yes" id="actionConfirmYesBtn">Yes</button>
+      <button class="action-confirm-no" onclick="closeActionConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+<!-- ════ END SMALL ACTION-CONFIRM MODAL ════ -->
 
 <div class="toast" id="toast"></div>
 
@@ -644,7 +676,7 @@ function renderDabao() {
                     <div class="d-num">D${slot.id}</div>
                     <span class="d-tag">Takeaway</span>
                 </div>
-                <button class="d-remove" onclick="removeDabao(${slot.id}, event)">✕ Done</button>
+                <button class="d-remove" onclick="confirmRemoveDabao(${slot.id}, event)">✕ Done</button>
             </div>
             ${slot.name
                 ? `<div class="d-meta">👤 <strong>${slot.name}</strong></div>`
@@ -665,8 +697,19 @@ async function newDabao() {
     selectDabao(data.id);
 }
 
-async function removeDabao(id, e) {
+function confirmRemoveDabao(id, e) {
     e.stopPropagation();
+    openActionConfirm({
+        icon: '🥡',
+        title: 'Close this Dabao order?',
+        sub: `Dabao D${id} will be marked as done and removed from the list.`,
+        yesLabel: 'Yes, Close It',
+        danger: true,
+        onYes: () => removeDabao(id),
+    });
+}
+
+async function removeDabao(id) {
     await apiFetch(`/dabao/${id}/pay`, { method: 'PUT' });
     if (currentDabao?.id === id) deselect();
     dabaoSlots = dabaoSlots.filter(s => s.id !== id);
@@ -972,6 +1015,19 @@ function syncLocalTotal(tableId) {
     renderTables();
 }
 
+function confirmClearOrder() {
+    const items = Object.values(order);
+    if (!items.length) return;
+    openActionConfirm({
+        icon: '🗑️',
+        title: 'Clear this order?',
+        sub: 'All items in the current order will be removed. This cannot be undone.',
+        yesLabel: 'Yes, Clear It',
+        danger: true,
+        onYes: () => clearOrder(),
+    });
+}
+
 async function clearOrder() {
     const tableId = currentMode === 'table' ? currentTable?.id : currentDabao?.id;
     if (!tableId) return;
@@ -1122,10 +1178,9 @@ function renderMenu() {
         return;
     }
 
-    products.forEach(product => {
+    products.forEach((product, index) => {
         const stockEnforced = product.has_stock == 1;
         const outOfStock    = stockEnforced && product.stock_quantity !== null && product.stock_quantity <= 0;
-        // addons already loaded via getMenu() → with(["addons"])
         const hasAddons = Array.isArray(product.addons) && product.addons.some(a => a.is_active != 0);
 
         const div = document.createElement('div');
@@ -1133,18 +1188,25 @@ function renderMenu() {
 
         const stockLabel = stockEnforced && product.stock_quantity !== null
             ? `<div class="item-stock${product.stock_quantity <= 5 ? ' low' : ''}">
-                 Stock: ${product.stock_quantity}
-               </div>`
+                Stock: ${product.stock_quantity}
+            </div>`
             : '';
 
         const showCat = !!searchQuery;
 
         div.innerHTML = `
-            <div class="item-name">${highlightMatch(product.product_name, searchQuery)}</div>
-            <div class="item-price">RM ${parseFloat(product.selling_price).toFixed(2)}</div>
-            ${showCat ? `<div class="item-cat-tag">${product.category_name}</div>` : ''}
-            ${stockLabel}
-            ${outOfStock ? `<div class="item-stock low">Out of stock</div>` : ''}`;
+            <div class="item-index-wrap">
+                <div class="item-index">${index + 1}</div>
+                <div class="item-divider"></div>
+            </div>
+            <div class="item-content">
+                <div class="item-name">${highlightMatch(product.product_name, searchQuery)}</div>
+                <div class="item-price">RM ${parseFloat(product.selling_price).toFixed(2)}</div>
+                ${hasAddons ? `<div class="item-addon-tag">+ Add-ons</div>` : ''}
+                ${showCat ? `<div class="item-cat-tag">${product.category_name}</div>` : ''}
+                ${stockLabel}
+                ${outOfStock ? `<div class="item-stock low">Out of stock</div>` : ''}
+            </div>`;
 
         if (!outOfStock) div.onclick = () => handleMenuItemClick(product);
         area.appendChild(div);
@@ -1199,27 +1261,27 @@ function openPayment() {
     linesEl.appendChild(totalLine);
 
     // Build payment method buttons
-    const btnsEl = document.getElementById('payMethodBtns');
-    btnsEl.innerHTML = '';
-    paymentMethods.forEach(pm => {
-        const btn = document.createElement('button');
-        btn.className  = 'pay-method-btn';
-        btn.dataset.id = pm.id;
+    // const btnsEl = document.getElementById('payMethodBtns');
+    // btnsEl.innerHTML = '';
+    // paymentMethods.forEach(pm => {
+    //     const btn = document.createElement('button');
+    //     btn.className  = 'pay-method-btn';
+    //     btn.dataset.id = pm.id;
 
-        const icon = pm.image_full_url
-            ? `<img src="${pm.image_full_url}"
-                    onerror="this.style.display='none'"
-                    style="width:36px;height:36px;object-fit:contain;border-radius:6px;">`
-            : `<span class="pm-icon"
-                    style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-                        font-size:1.4rem;background:var(--tag);border-radius:6px;">
-                ${pm.payment_method_name.charAt(0)}
-            </span>`;
+    //     const icon = pm.image_full_url
+    //         ? `<img src="${pm.image_full_url}"
+    //                 onerror="this.style.display='none'"
+    //                 style="width:36px;height:36px;object-fit:contain;border-radius:6px;">`
+    //         : `<span class="pm-icon"
+    //                 style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+    //                     font-size:1.4rem;background:var(--tag);border-radius:6px;">
+    //             ${pm.payment_method_name.charAt(0)}
+    //         </span>`;
 
-        btn.innerHTML = `${icon}<span>${pm.payment_method_name}</span>`;
-        btn.onclick   = () => selectPayMethod(pm);
-        btnsEl.appendChild(btn);
-    });
+    //     btn.innerHTML = `${icon}<span>${pm.payment_method_name}</span>`;
+    //     btn.onclick   = () => selectPayMethod(pm);
+    //     btnsEl.appendChild(btn);
+    // });
 
     document.getElementById('cashSection').classList.remove('visible');
     document.getElementById('qrSection').classList.remove('visible');
@@ -1228,6 +1290,13 @@ function openPayment() {
     document.getElementById('payConfirmBtn').disabled  = true;
 
     document.getElementById('payOverlay').classList.add('open');
+
+    // Auto-select Cash by default so its section (with quick amounts) shows immediately
+    const cashMethod = paymentMethods.find(pm => pm.payment_method_name.toLowerCase() === 'cash');
+    if (cashMethod) {
+        selectPayMethod(cashMethod);
+    }
+
     pushState({ page: 'payment' });
 }
 
@@ -1235,9 +1304,9 @@ function selectPayMethod(pm) {
     selectedMethodObj = pm;
 
     document.querySelectorAll('.pay-method-btn').forEach(b => {
-        b.classList.remove('selected-cash', 'selected-qr');
+        b.classList.remove('selected-qr');
         if (parseInt(b.dataset.id) === pm.id) {
-            b.classList.add(pm.payment_method_name.toLowerCase() === 'cash' ? 'selected-cash' : 'selected-qr');
+            b.classList.add('selected-qr');
         }
     });
 
@@ -1249,12 +1318,27 @@ function selectPayMethod(pm) {
 
         const quickEl = document.getElementById('quickAmounts');
         quickEl.innerHTML = '';
-        const rounded = Math.ceil(payTotal / 5) * 5;
-        [rounded, rounded + 5, rounded + 10, rounded + 20].forEach(amt => {
+
+        const selectQuickAmount = (btn, amount) => {
+            quickEl.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('payInput').value = amount.toFixed(2);
+            calcChange();
+        };
+
+        // "Exact amount" auto-fill button
+        const exactBtn       = document.createElement('button');
+        exactBtn.className   = 'quick-btn';
+        exactBtn.innerHTML = `Auto<br>(RM ${payTotal.toFixed(2)})`
+        exactBtn.onclick     = () => selectQuickAmount(exactBtn, payTotal);
+        quickEl.appendChild(exactBtn);
+
+        // Fixed common cash denominations
+        [30, 50, 100, 200].forEach(amt => {
             const btn       = document.createElement('button');
             btn.className   = 'quick-btn';
-            btn.textContent = `RM ${amt.toFixed(0)}`;
-            btn.onclick     = () => { document.getElementById('payInput').value = amt.toFixed(2); calcChange(); };
+            btn.textContent = `RM ${amt}`;
+            btn.onclick     = () => selectQuickAmount(btn, amt);
             quickEl.appendChild(btn);
         });
     } else {
@@ -1286,7 +1370,7 @@ function calcChange() {
     const changeLabel = document.getElementById('changeLabel');
     const confirmBtn  = document.getElementById('payConfirmBtn');
     if (received <= 0) { changeBox.style.display = 'none'; confirmBtn.disabled = true; return; }
-    const change = received - payTotal;
+    const change = Math.round((received - payTotal) * 100) / 100;
     changeBox.style.display = 'flex';
     if (change >= 0) {
         changeBox.className     = 'change-box';
@@ -1355,6 +1439,48 @@ function confirmPayment() {
     };
 
     document.getElementById('confirmOverlay').classList.add('open');
+}
+
+// ════════════════════════════════════════════════
+// SMALL ACTION-CONFIRM MODAL (print / clear / done)
+// ════════════════════════════════════════════════
+let actionConfirmYesHandler = null;
+
+function openActionConfirm({icon, title, sub, yesLabel, danger, onYes}) {
+    document.getElementById('actionConfirmIcon').textContent  = icon || '⚠️';
+    document.getElementById('actionConfirmTitle').textContent = title || 'Are you sure?';
+    document.getElementById('actionConfirmSub').textContent   = sub || '';
+
+    const yesBtn = document.getElementById('actionConfirmYesBtn');
+    yesBtn.textContent = yesLabel || 'Yes';
+    yesBtn.className   = `action-confirm-yes${danger ? ' danger' : ''}`;
+
+    actionConfirmYesHandler = onYes;
+    yesBtn.onclick = () => {
+        const handler = actionConfirmYesHandler;
+        closeActionConfirm();
+        if (typeof handler === 'function') handler();
+    };
+
+    document.getElementById('actionConfirmOverlay').classList.add('open');
+}
+
+function closeActionConfirm() {
+    document.getElementById('actionConfirmOverlay').classList.remove('open');
+    actionConfirmYesHandler = null;
+}
+
+function confirmPrintOrder() {
+    const items = Object.values(order);
+    if (!items.length) return;
+    openActionConfirm({
+        icon: '🖨️',
+        title: 'Print this order?',
+        sub: 'A kitchen order slip will be sent to the printer.',
+        yesLabel: 'Yes, Print',
+        danger: false,
+        onYes: () => printOrder(),
+    });
 }
 
 function printOrder() {
