@@ -982,25 +982,110 @@ async function addItem(product, addons = []) {
 async function changeQty(cartId, delta) {
     const item = order[cartId];
     if (!item) return;
-    // if (item.printed) {
-    //     showToast('这件订单已送往厨房 This item has already been sent to the kitchen', 'err');
-    //     return;
-    // }
 
-    const newQty  = item.qty + delta;
     const tableId = currentMode === 'table' ? currentTable.id : currentDabao.id;
 
-    if (newQty <= 0) {
-        await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
-        delete order[cartId];
+    const addonsKey = (it) => JSON.stringify((it.addons || []).map(a => a.id).sort());
+
+    function findSibling(printedState, excludeCartId) {
+        const key = addonsKey(item);
+        return Object.values(order).find(o =>
+            o.cartId !== excludeCartId &&
+            o.productId === item.productId &&
+            addonsKey(o) === key &&
+            !!o.printed === printedState
+        );
+    }
+
+    if (delta > 0) {
+        if (item.printed) {
+            // Printed row is locked — route the +1 to the unprinted sibling (or create one)
+            const sibling = findSibling(false, cartId);
+            if (sibling) {
+                const newQty = sibling.qty + 1;
+                await apiFetch(`/cart/${sibling.cartId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: newQty }),
+                });
+                sibling.qty         = newQty;
+                sibling.total_price = newQty * sibling.price;
+            } else {
+                const data = await apiFetch('/cart', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        table_id:   tableId,
+                        product_id: item.productId,
+                        quantity:   1,
+                        addons:     item.addons,
+                        unit_price: item.price,
+                    }),
+                });
+                order[data.id] = {
+                    cartId:      data.id,
+                    productId:   data.product_id,
+                    name:        item.name,
+                    price:       item.price,
+                    qty:         data.quantity ?? 1,
+                    total_price: item.price * (data.quantity ?? 1),
+                    addons:      item.addons,
+                    printed:     false,
+                };
+            }
+        } else {
+            const newQty = item.qty + 1;
+            await apiFetch(`/cart/${cartId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ quantity: newQty }),
+            });
+            item.qty         = newQty;
+            item.total_price = newQty * item.price;
+        }
     } else {
-        await apiFetch(`/cart/${cartId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ quantity: newQty }),
-        });
-        item.qty         = newQty;
-        item.total_price = newQty * item.price;
-        item.printed     = false;
+        if (item.printed) {
+            // Try to remove from the unprinted sibling first
+            const sibling = findSibling(false, cartId);
+            if (sibling) {
+                const newQty = sibling.qty - 1;
+                if (newQty <= 0) {
+                    await apiFetch(`/cart/${sibling.cartId}`, { method: 'DELETE' });
+                    delete order[sibling.cartId];
+                } else {
+                    await apiFetch(`/cart/${sibling.cartId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ quantity: newQty }),
+                    });
+                    sibling.qty         = newQty;
+                    sibling.total_price = newQty * sibling.price;
+                }
+            } else {
+                // No unprinted units left — this reduces the printed (already-cooked) row itself
+                const newQty = item.qty - 1;
+                if (newQty <= 0) {
+                    await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
+                    delete order[cartId];
+                } else {
+                    await apiFetch(`/cart/${cartId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ quantity: newQty }),
+                    });
+                    item.qty         = newQty;
+                    item.total_price = newQty * item.price;
+                }
+            }
+        } else {
+            const newQty = item.qty - 1;
+            if (newQty <= 0) {
+                await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
+                delete order[cartId];
+            } else {
+                await apiFetch(`/cart/${cartId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: newQty }),
+                });
+                item.qty         = newQty;
+                item.total_price = newQty * item.price;
+            }
+        }
     }
 
     syncLocalTotal(tableId);
@@ -1090,7 +1175,7 @@ function renderCart() {
         //     : '';
 
         row.innerHTML = `
-            <div class="cart-item-name">${it.name}${it.printed ? ' ' : ''}</div>
+            <div class="cart-item-name">${it.name}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
             ${addonTagsHtml}
             <div class="cart-ctrl">
                 <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
@@ -1257,6 +1342,23 @@ function highlightMatch(text, query) {
 // ════════════════════════════════════════════════
 // PAYMENT
 // ════════════════════════════════════════════════
+function groupItems(items) {
+    const groups = {};
+
+    items.forEach(it => {
+        const addonIds = (it.addons || []).map(a => a.id).sort().join(',');
+        const key = it.productId + '|' + addonIds;
+
+        if (!groups[key]) {
+            groups[key] = { ...it, qty: 0, total_price: 0 };
+        }
+        groups[key].qty         += it.qty;
+        groups[key].total_price += it.total_price;
+    });
+
+    return Object.values(groups);
+}
+
 function openPayment() {
     const items = Object.values(order);
     if (!items.length) return;
@@ -1272,21 +1374,22 @@ function openPayment() {
     // Build summary lines (include addons)
     const linesEl = document.getElementById('paySummaryLines');
         linesEl.innerHTML = '';
-        items.forEach(it => {
-        const line = document.createElement('div');
-        line.className = 'pay-line';
-        line.innerHTML = `<span class="pay-line-name">${it.name} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
-        linesEl.appendChild(line);
-        // Show addon breakdown under each item
-        if (it.addons && it.addons.length > 0) {
-            it.addons.forEach(ao => {
-                const addonLine = document.createElement('div');
-                addonLine.className = 'pay-line-addon';
-                addonLine.innerHTML = `<span class="pay-line-name">↳ + ${ao.name}</span><span class="pay-line-price">RM ${parseFloat(ao.price).toFixed(2)}</span>`;
-                linesEl.appendChild(addonLine);
-            });
-        }
-    });
+
+        groupItems(items).forEach(it => {
+            const line = document.createElement('div');
+            line.className = 'pay-line';
+            line.innerHTML = `<span class="pay-line-name">${it.name} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
+            linesEl.appendChild(line);
+
+            if (it.addons && it.addons.length > 0) {
+                it.addons.forEach(ao => {
+                    const addonLine = document.createElement('div');
+                    addonLine.className = 'pay-line-addon';
+                    addonLine.innerHTML = `<span class="pay-line-name">↳ + ${ao.name}</span><span class="pay-line-price">RM ${parseFloat(ao.price).toFixed(2)}</span>`;
+                    linesEl.appendChild(addonLine);
+                });
+            }
+        });
     const totalLine = document.createElement('div');
     totalLine.className = 'pay-total-line';
     totalLine.innerHTML = `<span class="pay-total-label">Total</span><span class="pay-total-val">RM ${payTotal.toFixed(2)}</span>`;
@@ -1637,7 +1740,7 @@ function printReceipt(payload, withReceipt = true) {
         return;
     }
 
-    const items = Object.values(order);
+    const items = groupItems(Object.values(order)); 
     if (!items.length) return;
 
     const label = currentMode === 'table'
