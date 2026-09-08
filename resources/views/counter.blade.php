@@ -869,7 +869,7 @@ function openAddonModal(product, addons) {
     const isDabao = currentMode === 'dabao';
 
     document.getElementById('addonProductName').textContent  = product.product_name;
-    document.getElementById('addonProductPrice').textContent = `Base price: RM ${parseFloat(product.selling_price).toFixed(2)}`;
+    document.getElementById('addonProductPrice').textContent = `原价 Base price: RM ${parseFloat(product.selling_price).toFixed(2)}`;
 
     // Style confirm button for dabao
     const confirmBtn = document.getElementById('addonConfirmBtn');
