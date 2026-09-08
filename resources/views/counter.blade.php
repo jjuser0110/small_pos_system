@@ -307,11 +307,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <body>
 
 <header>
-  <div class="brand"><a href="{{ route('home') }}">Wild<span>Fire</span></a></div>
+  <div class="brand"><a href="{{ route('home') }}">野火啫煲<span>WildFire</span></a></div>
   <div class="legend">
-    <div class="legend-item"><div class="dot available"></div>Available</div>
-    <div class="legend-item"><div class="dot occupied"></div>Occupied</div>
-    <div class="legend-item"><div class="dot dabao"></div>Dabao</div>
+    <div class="legend-item"><div class="dot available"></div>可用 Available</div>
+    <div class="legend-item"><div class="dot occupied"></div>占据 Occupied</div>
+    <div class="legend-item"><div class="dot dabao"></div>打包 Dabao</div>
   </div>
   <div class="time-badge" id="clock">--:--</div>
 </header>
@@ -319,20 +319,20 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <div class="app-body">
   <div class="left-panel">
     <div class="left-scroll">
-      <div class="section-label">Main Hall</div>
+      <div class="section-label">大厅 Main Hall</div>
       <div class="floor-map" id="floorMap">
-        <div style="color:var(--muted);font-size:0.75rem;padding:8px 0;opacity:.6;">Loading tables…</div>
+        <div style="color:var(--muted);font-size:0.75rem;padding:8px 0;opacity:.6;">加载座位 Loading tables…</div>
       </div>
-      <div class="section-label">🥡 Dabao (Takeaway)</div>
+      <div class="section-label">🥡 打包 Dabao (Takeaway)</div>
       <div class="dabao-list" id="dabaoList"></div>
-      <button class="add-dabao-btn" onclick="newDabao()">＋ New Dabao Order</button>
+      <button class="add-dabao-btn" onclick="newDabao()">＋ 新外送订单 New Dabao Order</button>
     </div>
   </div>
 
   <div class="right-panel" id="rightPanel">
     <div class="empty-state" id="emptyState">
       <div class="icon">👆</div>
-      <p>Select a table or dabao to start ordering</p>
+      <p>选择座位开始 Select a table or dabao to start ordering</p>
     </div>
 
     <div id="activeOrder" style="display:none;flex-direction:column;height:100%;">
@@ -342,7 +342,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
           <div class="ctx-sub"   id="ctxSub"></div>
         </div>
         <div class="ctx-actions">
-          <button class="ctx-btn" onclick="deselect()">✕ Close</button>
+          <button class="ctx-btn" onclick="deselect()">✕ 关闭 Close</button>
         </div>
       </div>
 
@@ -353,14 +353,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
       </div>
 
       <div class="menu-tabs" id="menuTabsEl">
-        <div class="loading-tab">Loading menu…</div>
+        <div class="loading-tab">加载菜单 Loading menu…</div>
       </div>
 
       <div class="search-bar-row">
         <div class="search-wrap">
           <span class="search-icon">🔎</span>
           <input class="search-input" id="searchInput" type="text"
-                 placeholder="Search menu items…" oninput="onSearch(this.value)">
+                 placeholder="搜索菜单项 Search menu items…" oninput="onSearch(this.value)">
           <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
         </div>
       </div>
@@ -368,18 +368,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
       <div class="order-body">
         <div class="menu-area" id="menuArea"></div>
         <div class="cart-area">
-          <div class="cart-header">Order</div>
+          <div class="cart-header">订单 Order</div>
           <div class="cart-items" id="cartItems">
-            <div class="cart-empty">No items yet</div>
+            <div class="cart-empty">没有订单 No items yet</div>
           </div>
           <div class="cart-footer">
             <div class="cart-total-row">
-              <span class="cart-total-label">Total</span>
+              <span class="cart-total-label">总共 Total</span>
               <span class="cart-total-val" id="cartTotal">RM 0.00</span>
             </div>
-            <button class="print-btn" onclick="confirmPrintOrder()" id="printBtn" disabled>🖨 Print Order</button>
-            <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" disabled>Checkout →</button>
-            <button class="clear-btn" onclick="confirmClearOrder()">Clear order</button>
+            <button class="print-btn" onclick="confirmPrintOrder()" id="printBtn" disabled>🖨 打印订单 Print Order</button>
+            <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" disabled>付款 Checkout →</button>
+            <button class="clear-btn" onclick="confirmClearOrder()">清除 Clear order</button>
           </div>
         </div>
       </div>
@@ -390,18 +390,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <!-- ════ ADDON MODAL ════ -->
 <div class="addon-overlay" id="addonOverlay" onclick="closeAddonOnBg(event)">
   <div class="addon-modal">
-    <div class="addon-modal-title">Customise Order</div>
+    <div class="addon-modal-title">Customise Order 客制化订单</div>
     <div class="addon-product-name" id="addonProductName"></div>
     <div class="addon-product-price" id="addonProductPrice"></div>
-    <div class="addon-section-label">Add-ons</div>
+    <div class="addon-section-label">Add-ons 添加</div>
     <div class="addon-list" id="addonList"></div>
     <div class="addon-subtotal">
-      <span class="addon-subtotal-label">Item total</span>
+      <span class="addon-subtotal-label">Item total 总数</span>
       <span class="addon-subtotal-val" id="addonSubtotal">RM 0.00</span>
     </div>
     <div class="addon-actions">
-      <button class="addon-cancel" onclick="closeAddonModal()">Cancel</button>
-      <button class="addon-confirm" id="addonConfirmBtn" onclick="confirmAddon()">Add to Order</button>
+      <button class="addon-cancel" onclick="closeAddonModal()">Cancel 取消</button>
+      <button class="addon-confirm" id="addonConfirmBtn" onclick="confirmAddon()">添加订单 Add to Order</button>
     </div>
   </div>
 </div>
@@ -410,7 +410,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <!-- PAYMENT MODAL -->
 <div class="pay-overlay" id="payOverlay" onclick="closePayOnBg(event)">
   <div class="pay-modal">
-    <div class="pay-title">💳 Payment</div>
+    <div class="pay-title">💳 Payment 支付</div>
     <div class="pay-sub" id="paySub"></div>
 
     <div class="pay-summary" id="paySummaryLines"></div>
@@ -418,17 +418,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
     <!-- <div class="pay-method-btns" id="payMethodBtns"></div> -->
 
     <div class="pay-detail-section" id="cashSection">
-      <div class="pay-input-label">Amount Received (RM)</div>
+      <div class="pay-input-label">收款 Amount Received (RM)</div>
       <input class="pay-input" id="payInput" type="number" inputmode="decimal"
              placeholder="0.00" oninput="document.getElementById('quickAmounts').querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active'));calcChange()">
       <div class="quick-amounts" id="quickAmounts"></div>
       <div class="change-box" id="changeBox" style="display:none">
-        <span class="change-label" id="changeLabel">Change</span>
+        <span class="change-label" id="changeLabel">找零 Change</span>
         <span class="change-val"   id="changeVal">RM 0.00</span>
       </div>
       <div class="pay-actions pay-actions-stacked">
-        <button class="pay-confirm" id="payConfirmBtn" onclick="confirmPayment()" disabled>Confirm Payment</button>
-        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
+        <button class="pay-confirm" id="payConfirmBtn" onclick="confirmPayment()" disabled>确认 Confirm Payment</button>
+        <button class="pay-cancel" onclick="closePayment()">取消 Cancel</button>
       </div>
     </div>
 
@@ -450,13 +450,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-modal">
     <div class="confirm-icon">🧾</div>
-    <div class="confirm-title">Confirm Payment?</div>
+    <div class="confirm-title">确认付款 Confirm Payment?</div>
     <div class="confirm-sub" id="confirmSub"></div>
     <div class="confirm-details" id="confirmDetails"></div>
     <div class="confirm-actions confirm-actions-stacked">
-      <button class="confirm-ok" id="confirmOkBtn">Yes, with Receipt</button>
-      <button class="confirm-ok-noreceipt" id="confirmOkNoReceiptBtn">Yes, No Receipt</button>
-      <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-ok" id="confirmOkBtn">有收据 Yes, with Receipt</button>
+      <button class="confirm-ok-noreceipt" id="confirmOkNoReceiptBtn">没有收据 Yes, No Receipt</button>
+      <button class="confirm-cancel" onclick="closeConfirm()">取消 Cancel</button>
     </div>
   </div>
 </div>
@@ -465,11 +465,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <div class="action-confirm-overlay" id="actionConfirmOverlay">
   <div class="action-confirm-modal">
     <div class="action-confirm-icon" id="actionConfirmIcon">⚠️</div>
-    <div class="action-confirm-title" id="actionConfirmTitle">Are you sure?</div>
+    <div class="action-confirm-title" id="actionConfirmTitle">确定 Are you sure?</div>
     <div class="action-confirm-sub" id="actionConfirmSub"></div>
     <div class="action-confirm-actions">
-      <button class="action-confirm-yes" id="actionConfirmYesBtn">Yes</button>
-      <button class="action-confirm-no" onclick="closeActionConfirm()">Cancel</button>
+      <button class="action-confirm-yes" id="actionConfirmYesBtn">是 Yes</button>
+      <button class="action-confirm-no" onclick="closeActionConfirm()">取消 Cancel</button>
     </div>
   </div>
 </div>
@@ -983,7 +983,7 @@ async function changeQty(cartId, delta) {
     const item = order[cartId];
     if (!item) return;
     if (item.printed) {
-        showToast('This item has already been sent to the kitchen', 'err');
+        showToast('这件订单已送往厨房 This item has already been sent to the kitchen', 'err');
         return;
     }
 
@@ -1026,9 +1026,9 @@ function confirmClearOrder() {
     if (!items.length) return;
     openActionConfirm({
         icon: '🗑️',
-        title: 'Clear this order?',
-        sub: 'All items in the current order will be removed. This cannot be undone.',
-        yesLabel: 'Yes, Clear It',
+        title: '清除订单 Clear this order?',
+        sub: '所有订单将被清除 All items in the current order will be removed. This cannot be undone.',
+        yesLabel: '清除 Clear It',
         danger: true,
         onYes: () => clearOrder(),
     });
@@ -1504,14 +1504,14 @@ function closeActionConfirm() {
 function confirmPrintOrder() {
     const items = Object.values(order).filter(it => !it.printed);
     if (!items.length) {
-        showToast('Nothing new to print', 'err');
+        showToast('没有新订单 Nothing new to print', 'err');
         return;
     }
     openActionConfirm({
         icon: '🖨️',
-        title: 'Print this order?',
-        sub: 'A kitchen order slip will be sent to the printer.',
-        yesLabel: 'Yes, Print',
+        title: '打印订单 Print this order?',
+        sub: '厨房订单将送往打印机 A kitchen order slip will be sent to the printer.',
+        yesLabel: '打印 Print',
         danger: false,
         onYes: () => printOrder(),
     });
@@ -1520,7 +1520,7 @@ function confirmPrintOrder() {
 async function printOrder() {
     const items = Object.values(order).filter(it => !it.printed);
     if (!items.length) {
-        showToast('Nothing new to print', 'err');
+        showToast('没有新订单 Nothing new to print', 'err');
         return;
     }
 
