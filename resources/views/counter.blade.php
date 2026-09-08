@@ -390,17 +390,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <!-- ════ ADDON MODAL ════ -->
 <div class="addon-overlay" id="addonOverlay" onclick="closeAddonOnBg(event)">
   <div class="addon-modal">
-    <div class="addon-modal-title">Customise Order 客制化订单</div>
+    <div class="addon-modal-title">客制化订单 Customise Order</div>
     <div class="addon-product-name" id="addonProductName"></div>
     <div class="addon-product-price" id="addonProductPrice"></div>
-    <div class="addon-section-label">Add-ons 添加</div>
+    <div class="addon-section-label">添加 Add-ons</div>
     <div class="addon-list" id="addonList"></div>
     <div class="addon-subtotal">
-      <span class="addon-subtotal-label">Item total 总数</span>
+      <span class="addon-subtotal-label">总数 Item total</span>
       <span class="addon-subtotal-val" id="addonSubtotal">RM 0.00</span>
     </div>
     <div class="addon-actions">
-      <button class="addon-cancel" onclick="closeAddonModal()">Cancel 取消</button>
+      <button class="addon-cancel" onclick="closeAddonModal()">取消 Cancel</button>
       <button class="addon-confirm" id="addonConfirmBtn" onclick="confirmAddon()">添加订单 Add to Order</button>
     </div>
   </div>
@@ -410,7 +410,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <!-- PAYMENT MODAL -->
 <div class="pay-overlay" id="payOverlay" onclick="closePayOnBg(event)">
   <div class="pay-modal">
-    <div class="pay-title">💳 Payment 支付</div>
+    <div class="pay-title">💳 支付 Payment</div>
     <div class="pay-sub" id="paySub"></div>
 
     <div class="pay-summary" id="paySummaryLines"></div>
