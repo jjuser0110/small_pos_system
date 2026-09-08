@@ -1000,6 +1000,7 @@ async function changeQty(cartId, delta) {
         });
         item.qty         = newQty;
         item.total_price = newQty * item.price;
+        item.printed     = false;
     }
 
     syncLocalTotal(tableId);
