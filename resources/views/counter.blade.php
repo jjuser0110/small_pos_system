@@ -1084,17 +1084,17 @@ function renderCart() {
             addonTagsHtml = `<div class="cart-addon-tags">${tags}</div>`;
         }
 
-        const lockedAttrs = it.printed
-            ? 'disabled style="opacity:.35;cursor:not-allowed;"'
-            : '';
+        // const lockedAttrs = it.printed
+        //     ? 'disabled style="opacity:.35;cursor:not-allowed;"'
+        //     : '';
 
         row.innerHTML = `
             <div class="cart-item-name">${it.name}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
             ${addonTagsHtml}
             <div class="cart-ctrl">
-                <button class="qty-btn" ${lockedAttrs} onclick="changeQty(${it.cartId}, -1)">−</button>
+                <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
                 <span class="qty-num">${it.qty}</span>
-                <button class="qty-btn" ${lockedAttrs} onclick="changeQty(${it.cartId}, 1)">+</button>
+                <button class="qty-btn" onclick="changeQty(${it.cartId}, 1)">+</button>
                 <span class="cart-item-price">RM ${it.total_price.toFixed(2)}</span>
             </div>`;
         cartEl.appendChild(row);
