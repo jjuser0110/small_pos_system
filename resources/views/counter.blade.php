@@ -1365,7 +1365,7 @@ function selectPayMethod(pm) {
         quickEl.appendChild(exactBtn);
 
         // Fixed common cash denominations
-        [30, 50, 100, 200， 300].forEach(amt => {
+        [30, 50, 100, 200, 300].forEach(amt => {
             const btn       = document.createElement('button');
             btn.className   = 'quick-btn';
             btn.textContent = `RM ${amt}`;
