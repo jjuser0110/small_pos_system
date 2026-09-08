@@ -57,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
     // Cart
     Route::get('/pos/cart/{tableId}',   [PosController::class, 'getCart']);
     Route::post('/pos/cart',            [PosController::class, 'addToCart']);
+    Route::put('/pos/cart/mark-printed', [PosController::class, 'markPrinted']);
     Route::put('/pos/cart/{cartId}',    [PosController::class, 'updateCart']);
     Route::delete('/pos/cart/{cartId}', [PosController::class, 'removeFromCart']);
 

@@ -140,6 +140,8 @@ class PosController extends Controller
 
     // POST /api/cart
     // Add or increment an item in the cart
+    // POST /api/cart
+    // Add or increment an item in the cart
     public function addToCart(Request $request)
     {
         $request->validate([
@@ -147,31 +149,32 @@ class PosController extends Controller
             'product_id' => 'required|integer',
             'quantity'   => 'required|integer|min:1',
         ]);
-    
+
         $product     = Product::findOrFail($request->product_id);
         $addons      = $request->input('addons', []);   // array from frontend
         $unitPrice   = $request->input('unit_price')
                         ?? $product->selling_price;
-    
+
         // Normalise addons to a sorted JSON string for comparison
         $addonsJson  = collect($addons)
                         ->sortBy('id')
                         ->values()
                         ->toJson();
-    
-        // Match on table + product + EXACT addon combo
+
+        // Match on table + product + EXACT addon combo + NOT YET PRINTED
         $cartItem = Cart::where('table_id',   $request->table_id)
                         ->where('product_id', $request->product_id)
                         ->where('addons',     $addonsJson)
+                        ->where('print_order', 0)   // ← only merge into unprinted rows
                         ->first();
-    
+
         if ($cartItem) {
-            // Same product, same add-ons → increment
+            // Same product, same add-ons, not printed yet → increment
             $cartItem->quantity   += $request->quantity;
             $cartItem->total_price = $cartItem->quantity * $cartItem->single_price;
             $cartItem->save();
         } else {
-            // New row — different add-ons OR first time
+            // New row — different add-ons, first time, OR existing row already printed
             $cartItem = Cart::create([
                 'user_id'      => Auth::id() ?? 1,
                 'table_id'     => $request->table_id,
@@ -180,11 +183,12 @@ class PosController extends Controller
                 'single_price' => $unitPrice,
                 'total_price'  => $request->quantity * $unitPrice,
                 'addons'       => $addonsJson,
+                'print_order'  => 0,   // ← explicit, so new rows always start unprinted
             ]);
         }
-    
+
         $this->syncTableTotal($request->table_id);
-    
+
         return response()->json($cartItem->load('product'));
     }
 
@@ -328,5 +332,13 @@ class PosController extends Controller
             });
 
         return response()->json($methods);
+    }
+
+    // PUT /api/cart/mark-printed
+    public function markPrinted(Request $request)
+    {
+        $ids = $request->input('cart_ids', []);
+        Cart::whereIn('id', $ids)->update(['print_order' => 1]);
+        return response()->json(['success' => true]);
     }
 }

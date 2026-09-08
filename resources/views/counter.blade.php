@@ -835,6 +835,7 @@ async function loadCart(tableId) {
             qty:         item.quantity,
             total_price: parseFloat(item.total_price),
             addons:      addons,
+            printed:     !!item.print_order,
         };
     });
     renderCart();
@@ -968,6 +969,7 @@ async function addItem(product, addons = []) {
         qty:         qty,
         total_price: unitPrice * qty,
         addons:      addonsMapped,
+        printed:     false,
     };
     syncLocalTotal(tableId);
     renderCart();
@@ -980,6 +982,10 @@ async function addItem(product, addons = []) {
 async function changeQty(cartId, delta) {
     const item = order[cartId];
     if (!item) return;
+    if (item.printed) {
+        showToast('This item has already been sent to the kitchen', 'err');
+        return;
+    }
 
     const newQty  = item.qty + delta;
     const tableId = currentMode === 'table' ? currentTable.id : currentDabao.id;
@@ -1078,13 +1084,17 @@ function renderCart() {
             addonTagsHtml = `<div class="cart-addon-tags">${tags}</div>`;
         }
 
+        const lockedAttrs = it.printed
+            ? 'disabled style="opacity:.35;cursor:not-allowed;"'
+            : '';
+
         row.innerHTML = `
-            <div class="cart-item-name">${it.name}</div>
+            <div class="cart-item-name">${it.name}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
             ${addonTagsHtml}
             <div class="cart-ctrl">
-                <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
+                <button class="qty-btn" ${lockedAttrs} onclick="changeQty(${it.cartId}, -1)">−</button>
                 <span class="qty-num">${it.qty}</span>
-                <button class="qty-btn" onclick="changeQty(${it.cartId}, 1)">+</button>
+                <button class="qty-btn" ${lockedAttrs} onclick="changeQty(${it.cartId}, 1)">+</button>
                 <span class="cart-item-price">RM ${it.total_price.toFixed(2)}</span>
             </div>`;
         cartEl.appendChild(row);
@@ -1471,8 +1481,11 @@ function closeActionConfirm() {
 }
 
 function confirmPrintOrder() {
-    const items = Object.values(order);
-    if (!items.length) return;
+    const items = Object.values(order).filter(it => !it.printed);
+    if (!items.length) {
+        showToast('Nothing new to print', 'err');
+        return;
+    }
     openActionConfirm({
         icon: '🖨️',
         title: 'Print this order?',
@@ -1483,9 +1496,12 @@ function confirmPrintOrder() {
     });
 }
 
-function printOrder() {
-    const items = Object.values(order);
-    if (!items.length) return;
+async function printOrder() {
+    const items = Object.values(order).filter(it => !it.printed);
+    if (!items.length) {
+        showToast('Nothing new to print', 'err');
+        return;
+    }
 
     const label = currentMode === 'table'
         ? currentTable.label
@@ -1525,6 +1541,17 @@ ${formatReceiptLines(receiptHeader)}
         showToast('🖨 Printing order...', '');
     } else {
         alert('Printer only works inside Android APK');
+    }
+
+    // Mark these cart rows as printed (print_order = 1)
+    try {
+        await apiFetch('/cart/mark-printed', {
+            method: 'PUT',
+            body: JSON.stringify({ cart_ids: items.map(it => it.cartId) }),
+        });
+        items.forEach(it => { order[it.cartId].printed = true; });
+    } catch (err) {
+        console.error('Failed to mark items as printed', err);
     }
 }
 
