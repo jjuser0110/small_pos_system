@@ -982,10 +982,10 @@ async function addItem(product, addons = []) {
 async function changeQty(cartId, delta) {
     const item = order[cartId];
     if (!item) return;
-    if (item.printed) {
-        showToast('这件订单已送往厨房 This item has already been sent to the kitchen', 'err');
-        return;
-    }
+    // if (item.printed) {
+    //     showToast('这件订单已送往厨房 This item has already been sent to the kitchen', 'err');
+    //     return;
+    // }
 
     const newQty  = item.qty + delta;
     const tableId = currentMode === 'table' ? currentTable.id : currentDabao.id;
