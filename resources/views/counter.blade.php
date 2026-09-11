@@ -1371,25 +1371,29 @@ function openPayment() {
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
     document.getElementById('paySub').textContent = label;
 
-    // Build summary lines (include addons)
+    // Build summary lines (include addons), ordered by category arrangement
     const linesEl = document.getElementById('paySummaryLines');
-        linesEl.innerHTML = '';
+    linesEl.innerHTML = '';
 
-        groupItems(items).forEach(it => {
-            const line = document.createElement('div');
-            line.className = 'pay-line';
-            line.innerHTML = `<span class="pay-line-name">${it.name} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
-            linesEl.appendChild(line);
+    const grouped = groupItems(items);
+    const sortedGrouped = sortByCategoryOrder(grouped);
 
-            if (it.addons && it.addons.length > 0) {
-                it.addons.forEach(ao => {
-                    const addonLine = document.createElement('div');
-                    addonLine.className = 'pay-line-addon';
-                    addonLine.innerHTML = `<span class="pay-line-name">↳ + ${ao.name}</span><span class="pay-line-price">RM ${parseFloat(ao.price).toFixed(2)}</span>`;
-                    linesEl.appendChild(addonLine);
-                });
-            }
-        });
+    sortedGrouped.forEach(it => {
+        const line = document.createElement('div');
+        line.className = 'pay-line';
+        line.innerHTML = `<span class="pay-line-name">${it.name} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
+        linesEl.appendChild(line);
+
+        if (it.addons && it.addons.length > 0) {
+            it.addons.forEach(ao => {
+                const addonLine = document.createElement('div');
+                addonLine.className = 'pay-line-addon';
+                addonLine.innerHTML = `<span class="pay-line-name">↳ + ${ao.name}</span><span class="pay-line-price">RM ${parseFloat(ao.price).toFixed(2)}</span>`;
+                linesEl.appendChild(addonLine);
+            });
+        }
+    });
+
     const totalLine = document.createElement('div');
     totalLine.className = 'pay-total-line';
     totalLine.innerHTML = `<span class="pay-total-label">Total</span><span class="pay-total-val">RM ${payTotal.toFixed(2)}</span>`;
@@ -1579,6 +1583,21 @@ function confirmPayment() {
 // ════════════════════════════════════════════════
 // SMALL ACTION-CONFIRM MODAL (print / clear / done)
 // ════════════════════════════════════════════════
+// Returns the index of this item's category within the `categories` array
+// (i.e. its position in your category arrangement/order)
+function getCategoryOrder(item) {
+    const idx = categories.findIndex(cat =>
+        Array.isArray(cat.products) && cat.products.some(p => p.id === item.productId)
+    );
+    return idx === -1 ? categories.length : idx; // unknown category goes last
+}
+
+// Sorts items by category arrangement order (category 1 first, 2 next, etc.)
+// Stable sort — items within the same category keep their original order.
+function sortByCategoryOrder(items) {
+    return [...items].sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b));
+}
+
 let actionConfirmYesHandler = null;
 
 function openActionConfirm({icon, title, sub, yesLabel, danger, onYes}) {
@@ -1655,7 +1674,9 @@ ${formatReceiptLines(receiptHeader)}
 [C]================================
 `;
 
-    items.forEach(item => {
+    const sortedItems = sortByCategoryOrder(items);
+
+    sortedItems.forEach(item => {
         receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
         if (item.addons && item.addons.length > 0) {
             item.addons.forEach(ao => {
@@ -1740,7 +1761,7 @@ function printReceipt(payload, withReceipt = true) {
         return;
     }
 
-    const items = groupItems(Object.values(order)); 
+    const items = groupItems(Object.values(order));
     if (!items.length) return;
 
     const label = currentMode === 'table'
@@ -1759,7 +1780,9 @@ ${formatReceiptLines(receiptHeader)}
 [C]================================
 `;
 
-    items.forEach(item => {
+    const sortedItems = sortByCategoryOrder(items);
+
+    sortedItems.forEach(item => {
         receipt += `\n[L]${item.qty} x ${item.name}\n`;
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
         if (item.addons && item.addons.length > 0) {
