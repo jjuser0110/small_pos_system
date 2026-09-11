@@ -112,6 +112,12 @@ $currentRoute = request()->route()->getName();
                 <div>Branch</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'supplier.index') ? 'active' : ''}}">
+            <a href="{{ route('supplier.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Supplier</div>
+            </a>
+        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'uom.index') ? 'active' : ''}}">
             <a href="{{ route('uom.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>

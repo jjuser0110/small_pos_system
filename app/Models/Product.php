@@ -26,6 +26,7 @@ class Product extends Model
         'arrangement',
         'connected_product_id',
         'connected_product_quantity',
+        'supplier_id',
     ];
 
     public function branch()
@@ -66,5 +67,10 @@ class Product extends Model
     public function used_in_boxes()
     {
         return $this->hasMany(Product::class, 'connected_product_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

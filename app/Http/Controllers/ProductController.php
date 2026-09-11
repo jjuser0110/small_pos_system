@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\BatchItem;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\Supplier;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -50,10 +51,11 @@ class ProductController extends Controller
         }else{
             $category = Category::all();
             $product_link = Product::all();
+            $supplier = Supplier::all();
         }
 
         $uom = Uom::all();
-        return view('product.create')->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
+        return view('product.create')->with('supplier',$supplier)->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
     }
 
     public function store(Request $request)
@@ -97,9 +99,10 @@ class ProductController extends Controller
         }else{
             $category = Category::all();
             $product_link = Product::where('id','!=',$product->id)->get();
+            $supplier = Supplier::all();
         }
         $uom = Uom::all();
-        return view('product.create')->with('product',$product)->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
+        return view('product.create')->with('supplier',$supplier)->with('product',$product)->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
     }
 
     public function update(Request $request, Product $product)

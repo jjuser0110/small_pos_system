@@ -116,6 +116,18 @@
                             <input class="form-control" type="number" step="0.01" min="0" name="connected_product_quantity" value="{{$product->connected_product_quantity??''}}">
                         </div>
                     <hr>
+
+                    <div class="col-md-7 mb-4">
+                        <label for="select2Basic" class="form-label">Supplier</label>
+                        <select id="select2Basic" name="supplier_id" class="select2 form-select" data-allow-clear="true">
+                            @foreach($supplier as $sup)
+                                <option value="{{ $sup->id }}" @if(isset($product) && $product->supplier_id == $sup->id) selected @endif>
+                                    {{ $sup->name ?? '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="col-12">
                         <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>
                     </div>

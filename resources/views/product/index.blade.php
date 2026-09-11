@@ -52,6 +52,7 @@
                             <th>Stock Bal.</th>
                             <th>Company</th>
                             <th>Branch</th>
+                            <th>Supplier</th>
                             {{-- <th>Arrange</th> --}}
                             <th>Status</th>
                             <th>Actions</th>
@@ -69,6 +70,7 @@
                             <td>{{$row->stock_quantity??""}}</td>
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->branch->branch_code??""}}</td>
+                            <td>{{$row->supplier->name??""}}</td>
                             {{-- <td>{{$row->arrangement??""}}</td> --}}
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>

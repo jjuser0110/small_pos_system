@@ -227,7 +227,12 @@
                         <label class="col-form-label">Product</label>
                         <select id="product_id" name="product_id" class="select2 form-select" data-allow-clear="true" required>
                             @foreach($product as $prod)
-                                <option value="{{$prod->id}}" data-barcode="{{$prod->barcode??''}}">{{$prod->product_name??''}} ({{$prod->uom_dt->uom_unit??''}})</option>
+                                <option 
+                                    value="{{$prod->id}}" 
+                                    data-barcode="{{$prod->barcode??''}}"
+                                    data-supplier="{{$prod->supplier->name??''}}"
+                                    data-supplier-id="{{$prod->supplier_id??''}}"
+                                >{{$prod->product_name??''}} ({{$prod->uom_dt->uom_unit??''}})</option>
                             @endforeach
                         </select>
                     </div>
@@ -246,6 +251,11 @@
                     <div class="col-12">
                         <label class="col-form-label">Total Cost</label>
                         <input class="form-control" type="number" step="0.01" min="0" name="total_cost" id="total_cost" onkeyup="countCost(this)" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="col-form-label">Supplier</label>
+                        <input class="form-control" type="text" id="supplier_display" value="{{$prod->supplier->name??''}}" readonly>
+                        <input type="hidden" name="supplier_id" id="supplier_id_hidden">
                     </div>
                 </div>
             </div>
@@ -332,6 +342,12 @@
             info: false,
             ordering: false,
             searching: true,
+        });
+
+        $('#product_id').on('change', function () {
+            const selected = $(this).find('option:selected');
+            $('#supplier_display').val(selected.data('supplier') ?? '');
+            $('#supplier_id_hidden').val(selected.data('supplier-id') ?? '');
         });
     });
 
