@@ -1642,21 +1642,12 @@ function confirmPrintOrder() {
 
 async function printOrder() {
     const allItems = Object.values(order);
-    // if (!allItems.length) {
-    //     showToast('没有新订单 Nothing new to print', 'err');
-    //     return;
-    // }
-
-    // Otherwise (mixed 1s and 0s), only print the ones still at 0.
     const allPrinted = allItems.every(it => it.printed);
     const items = allPrinted
         ? allItems
         : allItems.filter(it => !it.printed);
 
-    // if (!items.length) {
-    //     showToast('没有新订单 Nothing new to print', 'err');
-    //     return;
-    // }
+    if (!items.length) return;
 
     const label = currentMode === 'table'
         ? currentTable.label
@@ -1675,7 +1666,6 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     const sortedItems = sortByCategoryOrder(items);
-
     sortedItems.forEach(item => {
         receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
         if (item.addons && item.addons.length > 0) {
@@ -1693,6 +1683,23 @@ ${formatReceiptLines(receiptHeader)}
 \n\n\n
 `;
 
+    // Ask the server first — it's the only thing both devices share
+    let res;
+    try {
+        res = await apiFetch('/cart/mark-printed', {
+            method: 'PUT',
+            body: JSON.stringify({ cart_ids: items.map(it => it.cartId) }),
+        });
+    } catch (err) {
+        console.error('Failed to mark items as printed', err);
+        return;
+    }
+
+    if (res.blocked) {
+        showToast('🖨 打印机使用中 Printer in use, try again shortly', 'err');
+        return; // ← stops here, nothing prints
+    }
+
     if (window.AndroidPrinter) {
         AndroidPrinter.printBluetooth(receipt);
         showToast('🖨 Printing order...', '');
@@ -1700,17 +1707,8 @@ ${formatReceiptLines(receiptHeader)}
         alert('Printer only works inside Android APK');
     }
 
-    // Mark these cart rows as printed (print_order = 1)
-    try {
-        await apiFetch('/cart/mark-printed', {
-            method: 'PUT',
-            body: JSON.stringify({ cart_ids: items.map(it => it.cartId) }),
-        });
-        items.forEach(it => { order[it.cartId].printed = true; });
-        renderCart();   // ← re-render immediately so "🖨 sent" shows without needing a refresh
-    } catch (err) {
-        console.error('Failed to mark items as printed', err);
-    }
+    items.forEach(it => { order[it.cartId].printed = true; });
+    renderCart();
 }
 
 async function processPayment(payload) {

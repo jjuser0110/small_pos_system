@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentMethod;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 
 class PosController extends Controller
@@ -335,8 +336,18 @@ class PosController extends Controller
     // PUT /api/cart/mark-printed
     public function markPrinted(Request $request)
     {
+        // ── 10s global print cooldown, shared across all devices ──
+        $now = now();
+        $lastPrint = Cache::get('last_print_at');
+
+        if ($lastPrint && $now->diffInSeconds($lastPrint) < 10) {
+            return response()->json(['blocked' => true]);
+        }
+        Cache::put('last_print_at', $now, 15);
+        // ── END cooldown check ──
+
         $ids = $request->input('cart_ids', []);
         Cart::whereIn('id', $ids)->update(['print_order' => 1]);
-        return response()->json(['success' => true]);
+        return response()->json(['blocked' => false, 'success' => true]);
     }
 }
