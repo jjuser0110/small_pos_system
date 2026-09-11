@@ -1707,6 +1707,7 @@ ${formatReceiptLines(receiptHeader)}
             body: JSON.stringify({ cart_ids: items.map(it => it.cartId) }),
         });
         items.forEach(it => { order[it.cartId].printed = true; });
+        renderCart();   // ← re-render immediately so "🖨 sent" shows without needing a refresh
     } catch (err) {
         console.error('Failed to mark items as printed', err);
     }
