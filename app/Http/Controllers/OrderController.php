@@ -77,7 +77,7 @@ class OrderController extends Controller
         $date_from_input = $date_from->format('Y-m-d\TH:i');
         $date_to_input   = $date_to->format('Y-m-d\TH:i');
 
-        $activeOrders = $order->where('status', 'Active');
+        $activeOrders = $order->where('status', 'paid');
 
         $categoryTotals = OrderItem::query()
             ->when($login_user->role_id == 3, function ($q) use ($login_user) {
@@ -93,7 +93,7 @@ class OrderController extends Controller
                 $q->whereIn('company_id', $request->company_id);
             })
             ->whereHas('order', function ($q) use ($date_from, $date_to) {
-                $q->where('status', 'Active')
+                $q->where('status', 'paid')
                 ->whereBetween('created_at', [$date_from, $date_to]);
             })
             ->select(
@@ -278,5 +278,83 @@ class OrderController extends Controller
         ]);
 
         return back()->with('success', 'Discount added.');
+    }
+
+    public function productReport(Request $request)
+    {
+        $date_from = $request->date_from
+            ? Carbon::parse($request->date_from)
+            : Carbon::now()->startOfDay();
+
+        $date_to = $request->date_to
+            ? Carbon::parse($request->date_to)
+            : Carbon::now()->endOfDay();
+
+        $login_user = Auth::user();
+
+        if ($login_user->role_id == 3) {
+            $branches = Branch::where('id', $login_user->branch_id)->get();
+            $companies = Company::where('branch_id', $login_user->branch_id)->get();
+        } elseif ($login_user->role_id == 4) {
+            $branches = Branch::where('id', $login_user->branch_id)->get();
+            $companies = Company::where('id', $login_user->company_id)->get();
+        } else {
+            $branches = Branch::all();
+            $companies = Company::all();
+        }
+
+        $productTotals = OrderItem::query()
+            ->when($login_user->role_id == 3, function ($q) use ($login_user) {
+                $q->where('branch_id', $login_user->branch_id);
+            })
+            ->when($login_user->role_id == 4, function ($q) use ($login_user) {
+                $q->where('company_id', $login_user->company_id);
+            })
+            ->when($request->filled('branch_id'), function ($q) use ($request) {
+                $q->whereIn('branch_id', $request->branch_id);
+            })
+            ->when($request->filled('company_id'), function ($q) use ($request) {
+                $q->whereIn('company_id', $request->company_id);
+            })
+            ->whereHas('order', function ($q) use ($date_from, $date_to) {
+                $q->whereNotIn('status', ['Voided', 'Refunded'])
+                ->whereBetween('created_at', [$date_from, $date_to]);
+            })
+            ->select(
+                'product_id',
+                'branch_id',
+                'company_id',
+                'category_id',
+                DB::raw('SUM(quantity) as total_quantity'),
+                DB::raw('SUM(total_price) as total_amount'),
+                DB::raw('COUNT(*) as order_count')
+            )
+            ->with([
+                'product:id,product_name',
+                'category:id,category_name',
+                'branch:id,branch_name',
+                'company:id,company_name',
+            ])
+            ->groupBy('product_id', 'branch_id', 'company_id', 'category_id')
+            ->orderByDesc('total_quantity')
+            ->get();
+
+        $totalProductsOrdered = $productTotals->count();
+        $totalQuantity = $productTotals->sum('total_quantity');
+        $totalAmount = $productTotals->sum('total_amount');
+
+        $date_from_input = $date_from->format('Y-m-d\TH:i');
+        $date_to_input   = $date_to->format('Y-m-d\TH:i');
+
+        return view('order.product_summary', [
+            'productTotals' => $productTotals,
+            'totalProductsOrdered' => $totalProductsOrdered,
+            'totalQuantity' => $totalQuantity,
+            'totalAmount' => $totalAmount,
+            'date_from' => $date_from_input,
+            'date_to' => $date_to_input,
+            'branches' => $branches,
+            'companies' => $companies,
+        ]);
     }
 }

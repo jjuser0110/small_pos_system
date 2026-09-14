@@ -39,6 +39,13 @@ $currentRoute = request()->route()->getName();
                 <div>Order</div>
             </a>
         </li>
+
+        <li class="menu-item {{ Str::contains($currentRoute, 'order.productReport') ? 'active' : ''}}">
+            <a href="{{ route('order.productReport') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Product Order</div>
+            </a>
+        </li>
         @endif
         <!-- <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
             <a href="{{ route('shift_closing.index') }}" class="menu-link">
@@ -55,6 +62,12 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('order.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Order</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'order.productReport') ? 'active' : ''}}">
+            <a href="{{ route('order.productReport') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Product Order</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">

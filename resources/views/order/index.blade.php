@@ -65,16 +65,16 @@
                         </div>
                     </div>
                     <div class="col-sm-3 col-lg-3 mb-3">
-                        <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showAmountTable()">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-2 pb-1">
-                            <h4 class="ms-1 mb-0">Total Amount</h4>
+                        <div class="card card-border-shadow-primary h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2 pb-1">
+                                    <h4 class="ms-1 mb-0">Total Amount</h4>
+                                </div>
+                                <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($activeOrderTotal, 2) }}</p>
                             </div>
-                            <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($activeOrderTotal, 2) }}</p>
-                        </div>
                         </div>
                     </div>
-                    <div class="col-sm-3 col-lg-3 mb-3">
+                    <!-- <div class="col-sm-3 col-lg-3 mb-3">
                         <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showProfitTable()">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2 pb-1">
@@ -83,7 +83,7 @@
                                 <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($total_profit ?? 0, 2) }}</p>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <div id="ordersTableWrapper" class="card-datatable text-nowrap">
