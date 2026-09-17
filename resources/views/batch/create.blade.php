@@ -123,6 +123,7 @@
                                         <th>Total Cost Per Unit</th>
                                         <th>Total Cost</th>
                                         <th>Balance</th>
+                                        <th>Supplier</th>
                                         <th>Created At</th>
                                         <th>Updated At</th>
                                         <th>Actions</th>
@@ -138,6 +139,7 @@
                                         <td style="text-align:center">{{number_format($row->cost_per_unit??0,2)}}</td>
                                         <td style="text-align:center">{{number_format($row->total_cost??0,2)}}</td>
                                         <td style="text-align:center">{{$row->balance??""}}</td>
+                                        <td>{{$row->product->supplier->name??""}}</td>
                                         <td style="text-align:center">{{$row->created_at??""}}</td>
                                         <td style="text-align:center">{{$row->updated_at??""}}</td>
                                         <td>
