@@ -1741,10 +1741,14 @@ async function printOrder() {
 
     const now = new Date().toLocaleString('en-MY');
 
-    const sortedItems  = sortByCategoryOrder(items);
-    const drinkItems   = sortedItems.filter(it => isDrinkItem(it));
-    const foodItems    = sortedItems.filter(it => !isDrinkItem(it));
-    const needsSplit   = drinkItems.length > 0 && foodItems.length > 0;
+    const sortedItems = sortByCategoryOrder(items);
+
+    // Only split food/drink on a fresh print. On a reprint (everything
+    // already printed), send one combined slip instead.
+    const isReprint  = allPrinted;
+    const drinkItems = isReprint ? [] : sortedItems.filter(it => isDrinkItem(it));
+    const foodItems  = isReprint ? sortedItems : sortedItems.filter(it => !isDrinkItem(it));
+    const needsSplit = !isReprint && drinkItems.length > 0 && foodItems.length > 0;
 
     // Ask the server first — it's the only thing both devices share
     let res;
@@ -1760,15 +1764,11 @@ async function printOrder() {
 
     if (res.blocked) {
         showToast('🖨 打印机使用中 Printer in use, try again shortly', 'err');
-        return; // ← stops here, nothing prints
+        return;
     }
 
     if (window.AndroidPrinter) {
         showToast('🖨 Printing order...', '');
-        // Food/others slip first, then drinks slip — each is its own paper.
-        // Waits for the printer to fully finish (BLE connect→write→disconnect)
-        // before sending the next job, so the two papers never race on the
-        // same Bluetooth connection.
         if (foodItems.length) {
             await printAndWait(
                 buildKitchenSlipText(foodItems, label, now, needsSplit ? '食物 FOOD' : null)
