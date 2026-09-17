@@ -842,6 +842,19 @@ async function loadCart(tableId) {
 }
 
 // ════════════════════════════════════════════════
+// DISPLAY NAME HELPER (prepend addon names in front of product name)
+// e.g. addon "招牌 Signature" + product "嘟嘟鸡煲 Sizzling Chicken Claypot"
+//      → "招牌 Signature 嘟嘟鸡煲 Sizzling Chicken Claypot"
+// ════════════════════════════════════════════════
+function displayItemName(item) {
+    if (item.addons && item.addons.length) {
+        const addonPart = item.addons.map(a => a.name).join(' + ');
+        return `${addonPart} ${item.name}`;
+    }
+    return item.name;
+}
+
+// ════════════════════════════════════════════════
 // ADDON MODAL
 // ════════════════════════════════════════════════
 
@@ -1161,22 +1174,10 @@ function renderCart() {
         const row = document.createElement('div');
         row.className = 'cart-row';
 
-        // Build addon tags HTML
-        let addonTagsHtml = '';
-        if (it.addons && it.addons.length > 0) {
-            const tags = it.addons.map(ao =>
-                `<span class="cart-addon-tag">+ ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})</span>`
-            ).join('');
-            addonTagsHtml = `<div class="cart-addon-tags">${tags}</div>`;
-        }
-
-        // const lockedAttrs = it.printed
-        //     ? 'disabled style="opacity:.35;cursor:not-allowed;"'
-        //     : '';
+        const displayName = displayItemName(it);
 
         row.innerHTML = `
-            <div class="cart-item-name">${it.name}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
-            ${addonTagsHtml}
+            <div class="cart-item-name">${displayName}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
             <div class="cart-ctrl">
                 <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
                 <span class="qty-num">${it.qty}</span>
@@ -1371,7 +1372,7 @@ function openPayment() {
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
     document.getElementById('paySub').textContent = label;
 
-    // Build summary lines (include addons), ordered by category arrangement
+    // Build summary lines (addons folded into item name), ordered by category arrangement
     const linesEl = document.getElementById('paySummaryLines');
     linesEl.innerHTML = '';
 
@@ -1381,17 +1382,8 @@ function openPayment() {
     sortedGrouped.forEach(it => {
         const line = document.createElement('div');
         line.className = 'pay-line';
-        line.innerHTML = `<span class="pay-line-name">${it.name} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
+        line.innerHTML = `<span class="pay-line-name">${displayItemName(it)} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
         linesEl.appendChild(line);
-
-        if (it.addons && it.addons.length > 0) {
-            it.addons.forEach(ao => {
-                const addonLine = document.createElement('div');
-                addonLine.className = 'pay-line-addon';
-                addonLine.innerHTML = `<span class="pay-line-name">↳ + ${ao.name}</span><span class="pay-line-price">RM ${parseFloat(ao.price).toFixed(2)}</span>`;
-                linesEl.appendChild(addonLine);
-            });
-        }
     });
 
     const totalLine = document.createElement('div');
@@ -1667,12 +1659,7 @@ ${formatReceiptLines(receiptHeader)}
 
     const sortedItems = sortByCategoryOrder(items);
     sortedItems.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
-        if (item.addons && item.addons.length > 0) {
-            item.addons.forEach(ao => {
-                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
-            });
-        }
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
     });
 
     receipt += `
@@ -1782,13 +1769,8 @@ ${formatReceiptLines(receiptHeader)}
     const sortedItems = sortByCategoryOrder(items);
 
     sortedItems.forEach(item => {
-        receipt += `\n[L]${item.qty} x ${item.name}\n`;
+        receipt += `\n[L]${item.qty} x ${displayItemName(item)}\n`;
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
-        if (item.addons && item.addons.length > 0) {
-            item.addons.forEach(ao => {
-                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
-            });
-        }
     });
 
     receipt += `
