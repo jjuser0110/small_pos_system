@@ -1632,6 +1632,41 @@ function confirmPrintOrder() {
     });
 }
 
+// Whether a cart item's product belongs to a "drink" category
+// (same match rule as the drink lettering in renderMenu — case-insensitive "drink" in category name)
+function isDrinkItem(item) {
+    const cat = categories.find(c =>
+        Array.isArray(c.products) && c.products.some(p => p.id === item.productId)
+    );
+    return !!cat && cat.category_name.toLowerCase().includes('drink');
+}
+
+// Builds one kitchen/bar slip's receipt text for a subset of items
+function buildKitchenSlipText(items, label, now, sectionTitle) {
+    let receipt = `
+${formatReceiptLines(receiptHeader)}
+
+[C]<font size='big'><b>${label}</b></font>
+
+[C]${now}
+${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
+[C]================================
+`;
+
+    items.forEach(item => {
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
+    });
+
+    receipt += `
+[C]================================
+
+[C]Please Prepare Order
+
+\n\n\n
+`;
+    return receipt;
+}
+
 async function printOrder() {
     const allItems = Object.values(order);
     const allPrinted = allItems.every(it => it.printed);
@@ -1647,28 +1682,10 @@ async function printOrder() {
 
     const now = new Date().toLocaleString('en-MY');
 
-    let receipt = `
-${formatReceiptLines(receiptHeader)}
-
-[C]<font size='big'><b>${label}</b></font>
-
-[C]${now}
-
-[C]================================
-`;
-
-    const sortedItems = sortByCategoryOrder(items);
-    sortedItems.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
-    });
-
-    receipt += `
-[C]================================
-
-[C]Please Prepare Order
-
-\n\n\n
-`;
+    const sortedItems  = sortByCategoryOrder(items);
+    const drinkItems   = sortedItems.filter(it => isDrinkItem(it));
+    const foodItems    = sortedItems.filter(it => !isDrinkItem(it));
+    const needsSplit   = drinkItems.length > 0 && foodItems.length > 0;
 
     // Ask the server first — it's the only thing both devices share
     let res;
@@ -1688,7 +1705,17 @@ ${formatReceiptLines(receiptHeader)}
     }
 
     if (window.AndroidPrinter) {
-        AndroidPrinter.printBluetooth(receipt);
+        // Food/others slip first, then drinks slip — each is its own paper
+        if (foodItems.length) {
+            AndroidPrinter.printBluetooth(
+                buildKitchenSlipText(foodItems, label, now, needsSplit ? '食物 FOOD' : null)
+            );
+        }
+        if (drinkItems.length) {
+            AndroidPrinter.printBluetooth(
+                buildKitchenSlipText(drinkItems, label, now, needsSplit ? '饮料 DRINKS' : null)
+            );
+        }
         showToast('🖨 Printing order...', '');
     } else {
         alert('Printer only works inside Android APK');
