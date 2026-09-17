@@ -842,16 +842,34 @@ async function loadCart(tableId) {
 }
 
 // ════════════════════════════════════════════════
-// DISPLAY NAME HELPER (prepend addon names in front of product name)
+// DISPLAY NAME HELPER (prepend addon names in front of product name,
+// grouping the Chinese parts together and the English parts together)
 // e.g. addon "招牌 Signature" + product "嘟嘟鸡煲 Sizzling Chicken Claypot"
-//      → "招牌 Signature 嘟嘟鸡煲 Sizzling Chicken Claypot"
+//      → "招牌 嘟嘟鸡煲 Signature Sizzling Chicken Claypot"
 // ════════════════════════════════════════════════
+
+// Splits a "中文 English" style name into its Chinese part and English part,
+// based on where the first English letter appears.
+function splitZhEn(text) {
+    const idx = text.search(/[A-Za-z]/);
+    if (idx === -1) return { zh: text.trim(), en: '' };   // no English letters at all
+    if (idx === 0)  return { zh: '', en: text.trim() };   // no Chinese part at all
+    return { zh: text.slice(0, idx).trim(), en: text.slice(idx).trim() };
+}
+
 function displayItemName(item) {
-    if (item.addons && item.addons.length) {
-        const addonPart = item.addons.map(a => a.name).join(' + ');
-        return `${addonPart} ${item.name}`;
-    }
-    return item.name;
+    if (!item.addons || !item.addons.length) return item.name;
+
+    const addonParts  = item.addons.map(a => splitZhEn(a.name));
+    const productPart = splitZhEn(item.name);
+
+    const addonZh = addonParts.map(a => a.zh).filter(Boolean).join(' + ');
+    const addonEn = addonParts.map(a => a.en).filter(Boolean).join(' + ');
+
+    const zhFull = [addonZh, productPart.zh].filter(Boolean).join(' ');
+    const enFull = [addonEn, productPart.en].filter(Boolean).join(' ');
+
+    return [zhFull, enFull].filter(Boolean).join(' ');
 }
 
 // ════════════════════════════════════════════════
@@ -1632,6 +1650,82 @@ function confirmPrintOrder() {
     });
 }
 
+// ════════════════════════════════════════════════
+// SEQUENTIAL BLE PRINT QUEUE
+// The BLE printer can only hold one connection at a time. Each
+// AndroidPrinter.printBluetooth() call does a full async
+// connect → write → disconnect cycle on the Android side, and reports back
+// via window.onPrintResult(success, message) when it's done. We wait for
+// that callback before starting the next print job, so multi-paper prints
+// (e.g. food slip + drinks slip) never race on the same connection.
+// ════════════════════════════════════════════════
+let _printResultResolver = null;
+
+window.onPrintResult = function (success, message) {
+    if (_printResultResolver) {
+        const resolve = _printResultResolver;
+        _printResultResolver = null;
+        resolve({ success, message });
+    }
+};
+
+function printAndWait(receiptText, timeoutMs = 20000) {
+    return new Promise((resolve) => {
+        let settled = false;
+        _printResultResolver = (result) => {
+            if (settled) return;
+            settled = true;
+            resolve(result);
+        };
+        // Safety net: if the Android side never calls back (older app build,
+        // or something goes wrong before it can report), don't hang forever —
+        // move on after a timeout so the rest of the order can still print.
+        setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            _printResultResolver = null;
+            resolve({ success: false, message: 'Timed out waiting for print result' });
+        }, timeoutMs);
+
+        AndroidPrinter.printBluetooth(receiptText);
+    });
+}
+
+// Whether a cart item's product belongs to a "drink" category
+// (same match rule as the drink lettering in renderMenu — case-insensitive "drink" in category name)
+function isDrinkItem(item) {
+    const cat = categories.find(c =>
+        Array.isArray(c.products) && c.products.some(p => p.id === item.productId)
+    );
+    return !!cat && cat.category_name.toLowerCase().includes('drink');
+}
+
+// Builds one kitchen/bar slip's receipt text for a subset of items
+function buildKitchenSlipText(items, label, now, sectionTitle) {
+    let receipt = `
+${formatReceiptLines(receiptHeader)}
+
+[C]<font size='big'><b>${label}</b></font>
+
+[C]${now}
+${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
+[C]================================
+`;
+
+    items.forEach(item => {
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
+    });
+
+    receipt += `
+[C]================================
+
+[C]Please Prepare Order
+
+\n\n\n
+`;
+    return receipt;
+}
+
 async function printOrder() {
     const allItems = Object.values(order);
     const allPrinted = allItems.every(it => it.printed);
@@ -1647,28 +1741,10 @@ async function printOrder() {
 
     const now = new Date().toLocaleString('en-MY');
 
-    let receipt = `
-${formatReceiptLines(receiptHeader)}
-
-[C]<font size='big'><b>${label}</b></font>
-
-[C]${now}
-
-[C]================================
-`;
-
-    const sortedItems = sortByCategoryOrder(items);
-    sortedItems.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
-    });
-
-    receipt += `
-[C]================================
-
-[C]Please Prepare Order
-
-\n\n\n
-`;
+    const sortedItems  = sortByCategoryOrder(items);
+    const drinkItems   = sortedItems.filter(it => isDrinkItem(it));
+    const foodItems    = sortedItems.filter(it => !isDrinkItem(it));
+    const needsSplit   = drinkItems.length > 0 && foodItems.length > 0;
 
     // Ask the server first — it's the only thing both devices share
     let res;
@@ -1688,8 +1764,21 @@ ${formatReceiptLines(receiptHeader)}
     }
 
     if (window.AndroidPrinter) {
-        AndroidPrinter.printBluetooth(receipt);
         showToast('🖨 Printing order...', '');
+        // Food/others slip first, then drinks slip — each is its own paper.
+        // Waits for the printer to fully finish (BLE connect→write→disconnect)
+        // before sending the next job, so the two papers never race on the
+        // same Bluetooth connection.
+        if (foodItems.length) {
+            await printAndWait(
+                buildKitchenSlipText(foodItems, label, now, needsSplit ? '食物 FOOD' : null)
+            );
+        }
+        if (drinkItems.length) {
+            await printAndWait(
+                buildKitchenSlipText(drinkItems, label, now, needsSplit ? '饮料 DRINKS' : null)
+            );
+        }
     } else {
         alert('Printer only works inside Android APK');
     }
