@@ -523,6 +523,7 @@ updateClock();
 function apiFetch(url, options = {}) {
     return fetch(API + url, {
         ...options,
+        cache: 'no-store',   // ← add this line: never serve a cached response
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
@@ -1911,18 +1912,24 @@ function pushState(state) {
 boot();
 
 // ════════════════════════════════════════════════
-// AUTO REFRESH — keep floor/dabao status current across devices
+// AUTO REFRESH — keep floor/dabao status AND the product menu current.
 //
-// Refreshes the Tables and Dabao lists every 1 minute in the background.
+// Refreshes Tables, Dabao, and the Menu every 1 minute in the background.
 // Deliberately does NOT do a full page reload — a hard reload would wipe
 // whatever the cashier is mid-typing (Amount Received, Dabao name) and
-// force-close any open modal (Payment, Addon, Confirm). This just keeps
-// table occupancy / totals in sync if another device changes them,
-// without interrupting whoever is actively using this screen.
+// force-close any open modal (Payment, Addon, Confirm).
 // ════════════════════════════════════════════════
 setInterval(() => {
     loadTables();
     loadDabao();
+    loadMenu().then(() => {
+        // loadMenu() only updates the categories/allProducts variables in
+        // memory — it doesn't redraw anything by itself. If the cashier is
+        // currently looking at the menu, re-render it so updated prices/
+        // stock/new products show up immediately instead of silently
+        // sitting in memory until they switch tabs.
+        if (currentMode) renderMenu();
+    });
 }, 60000); // 60,000ms = 1 minute
 </script>
 </body>
