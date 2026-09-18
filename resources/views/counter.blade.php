@@ -1909,6 +1909,21 @@ function pushState(state) {
 })();
 
 boot();
+
+// ════════════════════════════════════════════════
+// AUTO REFRESH — keep floor/dabao status current across devices
+//
+// Refreshes the Tables and Dabao lists every 1 minute in the background.
+// Deliberately does NOT do a full page reload — a hard reload would wipe
+// whatever the cashier is mid-typing (Amount Received, Dabao name) and
+// force-close any open modal (Payment, Addon, Confirm). This just keeps
+// table occupancy / totals in sync if another device changes them,
+// without interrupting whoever is actively using this screen.
+// ════════════════════════════════════════════════
+setInterval(() => {
+    loadTables();
+    loadDabao();
+}, 60000); // 60,000ms = 1 minute
 </script>
 </body>
 </html>
