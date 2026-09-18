@@ -132,7 +132,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .qty-btn:hover{background:var(--border);}
 .qty-num{font-weight:700;font-size:0.8rem;min-width:18px;text-align:center;}
 .cart-item-price{font-size:0.72rem;color:var(--accent);font-weight:700;}
-/* Add-on tags in cart */
 .cart-addon-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
 .cart-addon-tag{font-size:0.6rem;background:rgba(232,98,42,0.15);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:600;}
 .cart-footer{border-top:1px solid var(--border);padding:10px 14px;}
@@ -147,7 +146,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .clear-btn{width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;margin-top:6px;transition:all .2s;}
 .clear-btn:hover{border-color:var(--red);color:var(--red);}
 
-/* ─── ADDON MODAL ─── */
 .addon-overlay{display:none;position:fixed;inset:0;background:rgba(43,23,16,0.55);z-index:350;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .addon-overlay.open{display:flex;}
 .addon-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;padding:24px;animation:popIn .22s ease;box-shadow:0 20px 60px rgba(120,72,30,0.25);}
@@ -179,7 +177,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   .addon-modal{max-width:100%;margin:0;border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:88vh;}
   .addon-overlay.open{align-items:flex-end;}
 }
-/* ─── END ADDON MODAL ─── */
 
 .pay-overlay{display:none;position:fixed;inset:0;background:rgba(43,23,16,0.55);z-index:300;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .pay-overlay.open{display:flex;}
@@ -287,7 +284,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   width: 100%;
 }
 
-/* ─── SMALL ACTION-CONFIRM MODAL (print / clear / done) ─── */
 .action-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(43,23,16,0.55);z-index:450;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .action-confirm-overlay.open{display:flex;}
 .action-confirm-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:300px;padding:26px 22px;animation:popIn .2s ease;box-shadow:0 20px 60px rgba(120,72,30,0.25);text-align:center;}
@@ -415,7 +411,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 
     <div class="pay-summary" id="paySummaryLines"></div>
 
-    <!-- <div class="pay-method-btns" id="payMethodBtns"></div> -->
+    <div class="pay-method-btns" id="payMethodBtns"></div>
 
     <div class="pay-detail-section" id="cashSection">
       <div class="pay-input-label">收款 Amount Received (RM)</div>
@@ -439,8 +435,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
         <div class="qr-amount" id="qrAmount">RM 0.00</div>
       </div>
       <div class="pay-actions pay-actions-stacked">
-        <button class="qr-done-btn" onclick="confirmPayment()">✓ Payment Received</button>
-        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
+        <button class="qr-done-btn" onclick="confirmPayment()">确认 Confirm Payment</button>
+        <button class="pay-cancel" onclick="closePayment()">取消 Cancel</button>
       </div>
     </div>
   </div>
@@ -491,8 +487,6 @@ let tables       = [];
 let dabaoSlots   = [];
 let categories   = [];
 let allProducts  = [];
-let paymentMethods    = [];
-let selectedMethodObj = null;
 let receiptHeader = 'WILDFIRE';
 let receiptFooter = 'THANK YOU';
 
@@ -506,7 +500,7 @@ let order = {};
 
 let searchQuery       = '';
 let payTotal          = 0;
-let selectedPayMethod = null;
+let selectedPayMethod = null; // 'cash' | 'qr'
 let dabaoNameTimer    = null;
 
 // ── Addon modal state ──
@@ -562,11 +556,7 @@ function apiFetch(url, options = {}) {
 // BOOT
 // ════════════════════════════════════════════════
 async function boot() {
-    await Promise.all([loadTables(), loadDabao(), loadMenu(), loadPaymentMethods(), loadReceiptSettings()]);
-}
-
-async function loadPaymentMethods() {
-    paymentMethods = await apiFetch('/payment-methods');
+    await Promise.all([loadTables(), loadDabao(), loadMenu(), loadReceiptSettings()]);
 }
 
 async function loadReceiptSettings() {
@@ -1384,7 +1374,7 @@ function openPayment() {
     if (!items.length) return;
 
     payTotal          = items.reduce((a, i) => a + i.total_price, 0);
-    selectedMethodObj = null;
+    selectedPayMethod = null;
 
     const label = currentMode === 'table'
         ? currentTable.label
@@ -1410,28 +1400,23 @@ function openPayment() {
     totalLine.innerHTML = `<span class="pay-total-label">Total</span><span class="pay-total-val">RM ${payTotal.toFixed(2)}</span>`;
     linesEl.appendChild(totalLine);
 
-    // Build payment method buttons
-    // const btnsEl = document.getElementById('payMethodBtns');
-    // btnsEl.innerHTML = '';
-    // paymentMethods.forEach(pm => {
-    //     const btn = document.createElement('button');
-    //     btn.className  = 'pay-method-btn';
-    //     btn.dataset.id = pm.id;
+    // ── Build the two payment method buttons: Cash / QR ──
+    const btnsEl = document.getElementById('payMethodBtns');
+    btnsEl.innerHTML = '';
 
-    //     const icon = pm.image_full_url
-    //         ? `<img src="${pm.image_full_url}"
-    //                 onerror="this.style.display='none'"
-    //                 style="width:36px;height:36px;object-fit:contain;border-radius:6px;">`
-    //         : `<span class="pm-icon"
-    //                 style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-    //                     font-size:1.4rem;background:var(--tag);border-radius:6px;">
-    //             ${pm.payment_method_name.charAt(0)}
-    //         </span>`;
+    const cashBtn = document.createElement('button');
+    cashBtn.className  = 'pay-method-btn';
+    cashBtn.dataset.method = 'cash';
+    cashBtn.innerHTML  = `<span class="pm-icon">💵</span><span>现金 Cash</span>`;
+    cashBtn.onclick    = () => selectPayMethod('cash', cashBtn);
+    btnsEl.appendChild(cashBtn);
 
-    //     btn.innerHTML = `${icon}<span>${pm.payment_method_name}</span>`;
-    //     btn.onclick   = () => selectPayMethod(pm);
-    //     btnsEl.appendChild(btn);
-    // });
+    const qrBtn = document.createElement('button');
+    qrBtn.className  = 'pay-method-btn';
+    qrBtn.dataset.method = 'qr';
+    qrBtn.innerHTML  = `<span class="pm-icon">📱</span><span>QR 支付</span>`;
+    qrBtn.onclick    = () => selectPayMethod('qr', qrBtn);
+    btnsEl.appendChild(qrBtn);
 
     document.getElementById('cashSection').classList.remove('visible');
     document.getElementById('qrSection').classList.remove('visible');
@@ -1441,26 +1426,19 @@ function openPayment() {
 
     document.getElementById('payOverlay').classList.add('open');
 
-    // Auto-select Cash by default so its section (with quick amounts) shows immediately
-    const cashMethod = paymentMethods.find(pm => pm.payment_method_name.toLowerCase() === 'cash');
-    if (cashMethod) {
-        selectPayMethod(cashMethod);
-    }
+    // Default to Cash selected
+    selectPayMethod('cash', cashBtn);
 
     pushState({ page: 'payment' });
 }
 
-function selectPayMethod(pm) {
-    selectedMethodObj = pm;
+function selectPayMethod(method, btnEl) {
+    selectedPayMethod = method; // 'cash' or 'qr'
 
-    document.querySelectorAll('.pay-method-btn').forEach(b => {
-        b.classList.remove('selected-qr');
-        if (parseInt(b.dataset.id) === pm.id) {
-            b.classList.add('selected-qr');
-        }
-    });
+    document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('selected-qr'));
+    if (btnEl) btnEl.classList.add('selected-qr');
 
-    const isCash = pm.payment_method_name.toLowerCase() === 'cash';
+    const isCash = method === 'cash';
 
     if (isCash) {
         document.getElementById('cashSection').classList.add('visible');
@@ -1492,24 +1470,19 @@ function selectPayMethod(pm) {
             quickEl.appendChild(btn);
         });
     } else {
+        // QR
         document.getElementById('qrSection').classList.add('visible');
         document.getElementById('cashSection').classList.remove('visible');
         document.getElementById('qrAmount').textContent = `RM ${payTotal.toFixed(2)}`;
+        document.getElementById('payConfirmBtn').disabled = false; // not used in qr view, harmless
 
         const qrBox = document.querySelector('.qr-box');
-        if (pm.image_full_url) {
-            qrBox.innerHTML = `
-                <img src="${pm.image_full_url}"
-                     onerror="this.src=''; this.alt='No image';"
-                     style="width:240px;object-fit:contain;border-radius:8px;display:block;">`;
-        } else {
-            qrBox.innerHTML = `
-                <div style="width:240px;display:flex;align-items:center;justify-content:center;
-                            font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;
-                            color:#333;text-align:center;padding:8px;">
-                    ${pm.payment_method_name}
-                </div>`;
-        }
+        qrBox.innerHTML = `
+            <div style="width:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+                        font-family:'Syne',sans-serif;font-weight:700;color:#333;text-align:center;padding:8px;">
+                <span style="font-size:2.4rem;">📱</span>
+                <span style="font-size:0.9rem;">Scan with your banking / e-wallet app</span>
+            </div>`;
     }
 }
 
@@ -1539,32 +1512,34 @@ function closePayment() { document.getElementById('payOverlay').classList.remove
 function closePayOnBg(e) { if (e.target === document.getElementById('payOverlay')) closePayment(); }
 
 function confirmPayment() {
-    if (!selectedMethodObj) { showToast('Please select a payment method', 'err'); return; }
+    if (!selectedPayMethod) { showToast('Please select a payment method', 'err'); return; }
 
-    const isCash   = selectedMethodObj.payment_method_name.toLowerCase() === 'cash';
+    const isCash   = selectedPayMethod === 'cash';
     const received = isCash
-        ? parseFloat(document.getElementById('payInput').value) || payTotal
+        ? (parseFloat(document.getElementById('payInput').value) || payTotal)
         : payTotal;
     const change   = Math.max(0, received - payTotal);
 
+    // payment_method is saved exactly as 'cash' or 'qr'
     const payload = {
-        payment_method_id: selectedMethodObj.id,
-        payment_method:    selectedMethodObj.payment_method_name,
-        amount_received:   received,
-        change:            change,
-        tax_amount:        0,
-        final_total:       payTotal,
+        payment_method:   selectedPayMethod, // 'cash' | 'qr'
+        amount_received:  received,
+        change:           change,
+        tax_amount:       0,
+        final_total:      payTotal,
     };
 
     const label = currentMode === 'table'
         ? currentTable.label
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
 
+    const methodLabel = isCash ? 'Cash' : 'QR';
+
     document.getElementById('confirmSub').textContent = label;
     document.getElementById('confirmDetails').innerHTML = `
         <div class="confirm-detail-row">
             <span class="label">Payment method</span>
-            <span>${selectedMethodObj.payment_method_name}</span>
+            <span>${methodLabel}</span>
         </div>
         ${isCash ? `
         <div class="confirm-detail-row">
@@ -1868,10 +1843,10 @@ ${formatReceiptLines(receiptHeader)}
 [L]Total
 [R]RM ${payload.final_total.toFixed(2)}
 [L]Payment
-[R]${payload.payment_method}
+[R]${payload.payment_method === 'cash' ? 'Cash' : 'QR'}
 `;
 
-    if (payload.payment_method.toLowerCase() === 'cash') {
+    if (payload.payment_method === 'cash') {
         receipt += `[L]Received
 [R]RM ${payload.amount_received.toFixed(2)}
 [L]Change

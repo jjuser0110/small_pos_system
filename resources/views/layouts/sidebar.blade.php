@@ -43,7 +43,7 @@ $currentRoute = request()->route()->getName();
         <li class="menu-item {{ Str::contains($currentRoute, 'order.productReport') ? 'active' : ''}}">
             <a href="{{ route('order.productReport') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Product Order</div>
+                <div>Order Summary</div>
             </a>
         </li>
         @endif
@@ -67,7 +67,7 @@ $currentRoute = request()->route()->getName();
         <li class="menu-item {{ Str::contains($currentRoute, 'order.productReport') ? 'active' : ''}}">
             <a href="{{ route('order.productReport') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Product Order</div>
+                <div>Order Summary</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">

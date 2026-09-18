@@ -2,6 +2,25 @@
 @section('content')
     <!-- Content -->
 
+    @php
+        // Build a lightweight dataset of the CURRENTLY LOADED orders (i.e. whatever
+        // is on this page after the GET filter form was applied) for report printing.
+        // Voided orders are excluded from report totals.
+        $reportOrders = $order->map(function ($row) {
+            return [
+                'status'         => $row->status,
+                'payment_method' => $row->payment_method,
+                'items'          => $row->items->map(function ($item) {
+                    return [
+                        'name'        => $item->product->product_name ?? ($item->product_name ?? '-'),
+                        'qty'         => $item->quantity,
+                        'total_price' => $item->total_price,
+                    ];
+                }),
+            ];
+        });
+    @endphp
+
     <div class="container-xxl flex-grow-1 container-p-y">
         <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Order </span></h4>
 
@@ -9,7 +28,25 @@
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label" style="margin-bottom:10px">
-                    <h5 class="card-title mb-0">Order Listing</h5>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center" style="gap:10px">
+                        <h5 class="card-title mb-0">Order Listing</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button"
+                                    class="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
+                                    onclick="printTodayReport()"
+                                    title="Prints total qty/price, QR sales, cash sales and a per-product breakdown for today's business day (2:00 AM to 2:00 AM the next day).">
+                                <i class="fa-solid fa-calendar-day"></i>
+                                <span>Print Today's Report</span>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-primary d-flex align-items-center gap-2"
+                                    onclick="printFilteredReport()"
+                                    title="Prints the same report using whatever date range / branch / company filters are currently applied above.">
+                                <i class="fa-solid fa-filter"></i>
+                                <span>Print Filtered Report</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-12 col-12 mb-4">
                     <form method="GET">
@@ -334,7 +371,6 @@ function showOrdersTable() {
     document.getElementById('amountTableWrapper').classList.add('d-none');
     document.getElementById('profitTableWrapper').classList.add('d-none');
 
-    // redraw DataTable if needed
     if ($.fn.DataTable.isDataTable('#mytable')) {
         $('#mytable').DataTable().columns.adjust().draw(false);
     }
@@ -362,9 +398,7 @@ function showProfitTable() {
 </script>
 
 <script>
-// ════════════════════════════════════════════════
-// RECEIPT SETTINGS (same source as POS screen)
-// ════════════════════════════════════════════════
+
 let receiptHeader = 'WILDFIRE';
 let receiptFooter = 'THANK YOU';
 
@@ -382,9 +416,6 @@ fetch('/pos/receipt-settings', {
 })
 .catch(err => console.error('Failed to load receipt settings, using fallback', err));
 
-// ════════════════════════════════════════════════
-// RECEIPT TEXT FORMATTING (same as POS screen)
-// ════════════════════════════════════════════════
 function formatReceiptLines(text, tagWrap = true) {
     if (!text) return '';
     return text
@@ -396,9 +427,6 @@ function formatReceiptLines(text, tagWrap = true) {
         .join('\n\n');
 }
 
-// ════════════════════════════════════════════════
-// PRINT RECEIPT — from Order Listing row
-// ════════════════════════════════════════════════
 function printOrderReceipt(btn) {
     if (!window.AndroidPrinter) {
         alert('Printer only works inside Android APK');
@@ -473,5 +501,187 @@ ${formatReceiptLines(receiptFooter || 'Thank You!', false)}
         showToast('🖨 Printing receipt...', '');
     }
 }
+</script>
+
+<script>
+
+let allOrdersData = @json($reportOrders);
+
+function computeReportTotals(orders) {
+    let totalQty = 0, totalPrice = 0;
+    let qrQty = 0, qrPrice = 0;
+    let cashQty = 0, cashPrice = 0;
+    let productMap = {}; // name -> { qty, total }
+
+    (orders || []).forEach(o => {
+        if ((o.status || '').toLowerCase() === 'voided') return;
+
+        const pm = (o.payment_method || '').trim().toLowerCase();
+
+        (o.items || []).forEach(item => {
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.total_price) || 0;
+
+            totalQty += qty;
+            totalPrice += price;
+
+            if (pm === 'qr') {
+                qrQty += qty;
+                qrPrice += price;
+            } else if (pm === 'cash') {
+                cashQty += qty;
+                cashPrice += price;
+            }
+
+            const name = item.name || '-';
+            if (!productMap[name]) {
+                productMap[name] = { qty: 0, total: 0 };
+            }
+            productMap[name].qty += qty;
+            productMap[name].total += price;
+        });
+    });
+
+    return { totalQty, totalPrice, qrQty, qrPrice, cashQty, cashPrice, productMap };
+}
+
+function buildReportReceipt(title, orders) {
+    const { totalQty, totalPrice, qrQty, qrPrice, cashQty, cashPrice, productMap } = computeReportTotals(orders);
+
+    const now = new Date().toLocaleString('en-MY');
+
+    let receipt = `
+${formatReceiptLines(receiptHeader)}
+
+[C]${title}
+
+[C]${now}
+
+[C]================================
+`;
+
+    receipt += `\n[L]Total Qty\n[R]${totalQty}\n`;
+    receipt += `[L]Total Price\n[R]RM ${totalPrice.toFixed(2)}\n`;
+
+    receipt += `
+[C]--------------------------------
+`;
+    receipt += `\n[L]QR Qty\n[R]${qrQty}\n`;
+    receipt += `[L]QR Price\n[R]RM ${qrPrice.toFixed(2)}\n`;
+
+    receipt += `
+[C]--------------------------------
+`;
+    receipt += `\n[L]Cash Qty\n[R]${cashQty}\n`;
+    receipt += `[L]Cash Price\n[R]RM ${cashPrice.toFixed(2)}\n`;
+
+    receipt += `
+[C]================================
+[C]Product Breakdown
+[C]================================
+`;
+
+    Object.keys(productMap).sort().forEach(name => {
+        const p = productMap[name];
+        receipt += `\n[L]${name}\n`;
+        receipt += `[L]  Qty: ${p.qty}\n`;
+        receipt += `[R]RM ${p.total.toFixed(2)}\n`;
+    });
+
+    receipt += `
+[C]================================
+
+${formatReceiptLines(receiptFooter || 'Thank You!', false)}
+
+\n\n\n
+`;
+
+    return receipt;
+}
+
+function printReportFromData(title, orders) {
+    if (!window.AndroidPrinter) {
+        alert('Printer only works inside Android APK');
+        return;
+    }
+    if (!orders || !orders.length) {
+        alert('No orders found for this report');
+        return;
+    }
+
+    const receipt = buildReportReceipt(title, orders);
+    AndroidPrinter.printBluetooth(receipt);
+
+    if (typeof showToast === 'function') {
+        showToast('🖨 Printing report...', '');
+    }
+}
+
+function printFilteredReport() {
+    if (!allOrdersData || !allOrdersData.length) {
+        alert('No orders are currently loaded to report on.');
+        return;
+    }
+
+    const confirmed = confirm(
+        `Print report for the currently filtered orders?\n\n` +
+        `Orders in view: ${allOrdersData.length}\n\n`
+    );
+    if (!confirmed) return;
+
+    printReportFromData('FILTERED ORDER REPORT', allOrdersData);
+}
+
+async function printTodayReport() {
+    const now = new Date();
+    let start = new Date(now);
+    start.setHours(2, 0, 0, 0);
+
+    // If it's currently before 2 AM, "today's business day" actually
+    // started at 2 AM yesterday.
+    if (now.getHours() < 2) {
+        start.setDate(start.getDate() - 1);
+    }
+
+    let end = new Date(start);
+    end.setDate(end.getDate() + 1);
+
+    const fmt = (d) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    const displayFmt = (d) => d.toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' });
+
+    const confirmed = confirm(
+        `Print TODAY'S order report?\n\n` +
+        `Covers: ${displayFmt(start)}  →  ${displayFmt(end)}\n\n`
+    );
+    if (!confirmed) return;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('date_from', fmt(start));
+    url.searchParams.set('date_to', fmt(end));
+
+    try {
+        const res = await fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error('Request failed: ' + res.status);
+
+        const html = await res.text();
+        const match = html.match(/let\s+allOrdersData\s*=\s*(\[[\s\S]*?\]);/);
+        if (!match) throw new Error('Could not find order data in response');
+
+        const todayOrdersData = JSON.parse(match[1]);
+        printReportFromData("TODAY'S ORDER REPORT (2AM - 2AM)", todayOrdersData);
+    } catch (err) {
+        console.error(err);
+        alert("Couldn't load today's orders. Please try again.");
+    }
+}
+
+
 </script>
 @endsection
