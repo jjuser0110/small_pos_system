@@ -33,17 +33,10 @@
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button"
                                     class="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
-                                    onclick="printTodayReport()"
-                                    title="Prints total qty/price, QR sales, cash sales and a per-product breakdown for today's business day (2:00 AM to 2:00 AM the next day).">
-                                <i class="fa-solid fa-calendar-day"></i>
-                                <span>Print Today's Report</span>
-                            </button>
-                            <button type="button"
-                                    class="btn btn-outline-primary d-flex align-items-center gap-2"
-                                    onclick="printFilteredReport()"
-                                    title="Prints the same report using whatever date range / branch / company filters are currently applied above.">
-                                <i class="fa-solid fa-filter"></i>
-                                <span>Print Filtered Report</span>
+                                    onclick="openReportDateModal()"
+                                    title="Pick a date to print an order report for that business day (2:00 AM to 2:00 AM the next day).">
+                                <i class="fa-solid fa-print"></i>
+                                <span>Print Report</span>
                             </button>
                         </div>
                     </div>
@@ -317,6 +310,34 @@
         </div>
     </div>
 
+    <div class="modal fade" id="reportDateModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-print text-primary"></i> Print Order Report
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="reportDateInput" class="form-label">Select date</label>
+                    <input type="date" id="reportDateInput" class="form-control">
+                    <p class="text-muted mt-2 mb-0" style="font-size:13px">
+                        Covers that day's business hours: <strong>2:00 AM</strong> to <strong>2:00 AM the next day</strong>.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="reportDatePrintBtn">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- / Content -->
 @endsection
 
@@ -371,6 +392,7 @@ function showOrdersTable() {
     document.getElementById('amountTableWrapper').classList.add('d-none');
     document.getElementById('profitTableWrapper').classList.add('d-none');
 
+    // redraw DataTable if needed
     if ($.fn.DataTable.isDataTable('#mytable')) {
         $('#mytable').DataTable().columns.adjust().draw(false);
     }
@@ -398,7 +420,9 @@ function showProfitTable() {
 </script>
 
 <script>
-
+// ════════════════════════════════════════════════
+// RECEIPT SETTINGS (same source as POS screen)
+// ════════════════════════════════════════════════
 let receiptHeader = 'WILDFIRE';
 let receiptFooter = 'THANK YOU';
 
@@ -416,6 +440,9 @@ fetch('/pos/receipt-settings', {
 })
 .catch(err => console.error('Failed to load receipt settings, using fallback', err));
 
+// ════════════════════════════════════════════════
+// RECEIPT TEXT FORMATTING (same as POS screen)
+// ════════════════════════════════════════════════
 function formatReceiptLines(text, tagWrap = true) {
     if (!text) return '';
     return text
@@ -427,6 +454,58 @@ function formatReceiptLines(text, tagWrap = true) {
         .join('\n\n');
 }
 
+// ════════════════════════════════════════════════
+// DISPLAY NAME HELPER — identical logic to counter.blade.php's
+// displayItemName()/splitZhEn(), so a reprinted receipt here matches
+// the one that printed at checkout. Folds addon names in front of the
+// product name, grouping the Chinese parts together and the English
+// parts together.
+// e.g. addon "招牌 Signature" + product "嘟嘟鸡煲 Sizzling Chicken Claypot"
+//      → "招牌 嘟嘟鸡煲 Signature Sizzling Chicken Claypot"
+// ════════════════════════════════════════════════
+function splitZhEn(text) {
+    const idx = text.search(/[A-Za-z]/);
+    if (idx === -1) return { zh: text.trim(), en: '' };
+    if (idx === 0)  return { zh: '', en: text.trim() };
+    return { zh: text.slice(0, idx).trim(), en: text.slice(idx).trim() };
+}
+
+function displayItemName(item) {
+    if (!item.addons || !item.addons.length) return item.name;
+
+    const addonParts  = item.addons.map(a => splitZhEn(a.name));
+    const productPart = splitZhEn(item.name);
+
+    const addonZh = addonParts.map(a => a.zh).filter(Boolean).join(' + ');
+    const addonEn = addonParts.map(a => a.en).filter(Boolean).join(' + ');
+
+    const zhFull = [addonZh, productPart.zh].filter(Boolean).join(' ');
+    const enFull = [addonEn, productPart.en].filter(Boolean).join(' ');
+
+    return [zhFull, enFull].filter(Boolean).join(' ');
+}
+
+// Groups duplicate product+addon combos into one line, same as
+// counter.blade.php's groupItems(). This dataset has no productId, so
+// the product name + sorted addon names stands in as the group key.
+function groupReceiptItems(items) {
+    const groups = {};
+    items.forEach(it => {
+        const addonKey = (it.addons || []).map(a => a.name).sort().join(',');
+        const key = it.name + '|' + addonKey;
+
+        if (!groups[key]) {
+            groups[key] = { ...it, qty: 0, total_price: 0 };
+        }
+        groups[key].qty         += parseFloat(it.qty) || 0;
+        groups[key].total_price += parseFloat(it.total_price) || 0;
+    });
+    return Object.values(groups);
+}
+
+// ════════════════════════════════════════════════
+// PRINT RECEIPT — from Order Listing row
+// ════════════════════════════════════════════════
 function printOrderReceipt(btn) {
     if (!window.AndroidPrinter) {
         alert('Printer only works inside Android APK');
@@ -441,7 +520,7 @@ function printOrderReceipt(btn) {
         return;
     }
 
-    const items = order.items || [];
+    const items = groupReceiptItems(order.items || []);
     if (!items.length) {
         alert('No items found for this order');
         return;
@@ -462,21 +541,21 @@ ${formatReceiptLines(receiptHeader)}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]${item.qty} x ${item.name}\n`;
+        receipt += `\n[L]${item.qty} x ${displayItemName(item)}\n`;
         receipt += `[R]RM ${parseFloat(item.total_price ?? 0).toFixed(2)}\n`;
-        if (item.addons && item.addons.length > 0) {
-            item.addons.forEach(ao => {
-                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
-            });
-        }
     });
+
+    // Cash / QR — matches counter.blade.php's method label exactly
+    const methodLabel = (order.payment_method ?? '').toLowerCase() === 'cash' ? 'Cash'
+        : (order.payment_method ?? '').toLowerCase() === 'qr' ? 'QR'
+        : (order.payment_method ?? '-');
 
     receipt += `
 [C]--------------------------------
 [L]Total
 [R]RM ${parseFloat(order.final_total ?? 0).toFixed(2)}
 [L]Payment
-[R]${order.payment_method ?? '-'}
+[R]${methodLabel}
 `;
 
     if ((order.payment_method ?? '').toLowerCase() === 'cash') {
@@ -495,6 +574,9 @@ ${formatReceiptLines(receiptFooter || 'Thank You!', false)}
 \n\n\n
 `;
 
+    // Note: no [[OPEN_DRAWER]] prefix here, unlike counter.blade.php's
+    // printReceipt() — this is a historical reprint, not a live sale,
+    // so it should not trigger the cash drawer.
     AndroidPrinter.printBluetooth(receipt);
 
     if (typeof showToast === 'function') {
@@ -504,9 +586,49 @@ ${formatReceiptLines(receiptFooter || 'Thank You!', false)}
 </script>
 
 <script>
-
+// ════════════════════════════════════════════════
+// ORDER REPORT DATA
+// This is the set of orders CURRENTLY loaded on the page
+// (i.e. whatever the GET filter form above produced).
+// Voided orders are excluded from totals.
+// ════════════════════════════════════════════════
 let allOrdersData = @json($reportOrders);
 
+// ════════════════════════════════════════════════
+// REPORT DATE MODAL — lets the user pick which business day to print.
+// Uses the same Bootstrap modal pattern as the Void modal.
+// ════════════════════════════════════════════════
+let reportDateModalInstance = null;
+
+function openReportDateModal() {
+    const input = document.getElementById('reportDateInput');
+
+    // Default to "today" in local time (YYYY-MM-DD)
+    if (!input.value) {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        input.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    }
+
+    if (!reportDateModalInstance) {
+        reportDateModalInstance = new bootstrap.Modal(document.getElementById('reportDateModal'));
+    }
+    reportDateModalInstance.show();
+}
+
+document.getElementById('reportDatePrintBtn').addEventListener('click', function () {
+    const dateStr = document.getElementById('reportDateInput').value;
+    if (!dateStr) {
+        alert('Please select a date.');
+        return;
+    }
+    reportDateModalInstance.hide();
+    printReportForDate(dateStr);
+});
+
+// ════════════════════════════════════════════════
+// REPORT AGGREGATION
+// ════════════════════════════════════════════════
 function computeReportTotals(orders) {
     let totalQty = 0, totalPrice = 0;
     let qrQty = 0, qrPrice = 0;
@@ -545,6 +667,9 @@ function computeReportTotals(orders) {
     return { totalQty, totalPrice, qrQty, qrPrice, cashQty, cashPrice, productMap };
 }
 
+// ════════════════════════════════════════════════
+// BUILD REPORT RECEIPT TEXT (same tag format as printOrderReceipt)
+// ════════════════════════════════════════════════
 function buildReportReceipt(title, orders) {
     const { totalQty, totalPrice, qrQty, qrPrice, cashQty, cashPrice, productMap } = computeReportTotals(orders);
 
@@ -599,6 +724,9 @@ ${formatReceiptLines(receiptFooter || 'Thank You!', false)}
     return receipt;
 }
 
+// ════════════════════════════════════════════════
+// PRINT REPORT — shared entry point
+// ════════════════════════════════════════════════
 function printReportFromData(title, orders) {
     if (!window.AndroidPrinter) {
         alert('Printer only works inside Android APK');
@@ -617,47 +745,29 @@ function printReportFromData(title, orders) {
     }
 }
 
-function printFilteredReport() {
-    if (!allOrdersData || !allOrdersData.length) {
-        alert('No orders are currently loaded to report on.');
-        return;
-    }
+// ════════════════════════════════════════════════
+// PRINT REPORT FOR A CHOSEN DATE
+//
+// Covers that date's business day: 2:00 AM -> 2:00 AM the next day.
+// Does NOT reload/navigate the page — it fetches the same page in the
+// background with date_from/date_to set to that window, pulls the
+// "allOrdersData" that page would have embedded, and prints from that.
+// Uses the same AndroidPrinter.printBluetooth() call already proven to
+// work in printOrderReceipt() / printReportFromData() above.
+// ════════════════════════════════════════════════
+async function printReportForDate(dateStr) {
+    // dateStr is "YYYY-MM-DD" from the <input type="date">
+    const [y, m, d] = dateStr.split('-').map(Number);
 
-    const confirmed = confirm(
-        `Print report for the currently filtered orders?\n\n` +
-        `Orders in view: ${allOrdersData.length}\n\n`
-    );
-    if (!confirmed) return;
+    let start = new Date(y, m - 1, d, 2, 0, 0, 0); // that date, 2:00 AM
+    let end   = new Date(start);
+    end.setDate(end.getDate() + 1);                // next day, 2:00 AM
 
-    printReportFromData('FILTERED ORDER REPORT', allOrdersData);
-}
-
-async function printTodayReport() {
-    const now = new Date();
-    let start = new Date(now);
-    start.setHours(2, 0, 0, 0);
-
-    // If it's currently before 2 AM, "today's business day" actually
-    // started at 2 AM yesterday.
-    if (now.getHours() < 2) {
-        start.setDate(start.getDate() - 1);
-    }
-
-    let end = new Date(start);
-    end.setDate(end.getDate() + 1);
-
-    const fmt = (d) => {
+    const fmt = (dt) => {
         const pad = (n) => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
     };
-
-    const displayFmt = (d) => d.toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' });
-
-    const confirmed = confirm(
-        `Print TODAY'S order report?\n\n` +
-        `Covers: ${displayFmt(start)}  →  ${displayFmt(end)}\n\n`
-    );
-    if (!confirmed) return;
+    const displayFmt = (dt) => dt.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
 
     const url = new URL(window.location.href);
     url.searchParams.set('date_from', fmt(start));
@@ -674,14 +784,13 @@ async function printTodayReport() {
         const match = html.match(/let\s+allOrdersData\s*=\s*(\[[\s\S]*?\]);/);
         if (!match) throw new Error('Could not find order data in response');
 
-        const todayOrdersData = JSON.parse(match[1]);
-        printReportFromData("TODAY'S ORDER REPORT (2AM - 2AM)", todayOrdersData);
+        const dayOrdersData = JSON.parse(match[1]);
+        printReportFromData(`ORDER REPORT — ${displayFmt(start)}`, dayOrdersData);
     } catch (err) {
         console.error(err);
-        alert("Couldn't load today's orders. Please try again.");
+        alert("Couldn't load orders for that date. Please try again.");
     }
 }
-
 
 </script>
 @endsection

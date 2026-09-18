@@ -3,7 +3,7 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Product Order Summary </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Order Summary </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
