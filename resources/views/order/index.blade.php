@@ -3,22 +3,23 @@
     <!-- Content -->
 
     @php
-        // Build a lightweight dataset of the CURRENTLY LOADED orders (i.e. whatever
-        // is on this page after the GET filter form was applied) for report printing.
-        // Voided orders are excluded from report totals.
         $reportOrders = $order->map(function ($row) {
             return [
                 'status'         => $row->status,
                 'payment_method' => $row->payment_method,
+                'created_at'     => optional($row->created_at)->format('Y-m-d H:i:s'),
+                'final_total'    => $row->final_total,
                 'items'          => $row->items->map(function ($item) {
                     return [
                         'name'        => $item->product->product_name ?? ($item->product_name ?? '-'),
                         'qty'         => $item->quantity,
                         'total_price' => $item->total_price,
+                        'category'    => $item->category->category_name
+                                        ?? ($item->product->category->category_name ?? ''),
                     ];
-                }),
+                })->values()->all(),
             ];
-        });
+        })->values()->all();
     @endphp
 
     <div class="container-xxl flex-grow-1 container-p-y">
@@ -454,15 +455,6 @@ function formatReceiptLines(text, tagWrap = true) {
         .join('\n\n');
 }
 
-// ════════════════════════════════════════════════
-// DISPLAY NAME HELPER — identical logic to counter.blade.php's
-// displayItemName()/splitZhEn(), so a reprinted receipt here matches
-// the one that printed at checkout. Folds addon names in front of the
-// product name, grouping the Chinese parts together and the English
-// parts together.
-// e.g. addon "招牌 Signature" + product "嘟嘟鸡煲 Sizzling Chicken Claypot"
-//      → "招牌 嘟嘟鸡煲 Signature Sizzling Chicken Claypot"
-// ════════════════════════════════════════════════
 function splitZhEn(text) {
     const idx = text.search(/[A-Za-z]/);
     if (idx === -1) return { zh: text.trim(), en: '' };
@@ -485,9 +477,6 @@ function displayItemName(item) {
     return [zhFull, enFull].filter(Boolean).join(' ');
 }
 
-// Groups duplicate product+addon combos into one line, same as
-// counter.blade.php's groupItems(). This dataset has no productId, so
-// the product name + sorted addon names stands in as the group key.
 function groupReceiptItems(items) {
     const groups = {};
     items.forEach(it => {
@@ -574,9 +563,6 @@ ${formatReceiptLines(receiptFooter || 'Thank You!', false)}
 \n\n\n
 `;
 
-    // Note: no [[OPEN_DRAWER]] prefix here, unlike counter.blade.php's
-    // printReceipt() — this is a historical reprint, not a live sale,
-    // so it should not trigger the cash drawer.
     AndroidPrinter.printBluetooth(receipt);
 
     if (typeof showToast === 'function') {
@@ -585,37 +571,29 @@ ${formatReceiptLines(receiptFooter || 'Thank You!', false)}
 }
 </script>
 
+<script type="application/json" id="reportOrdersJson">{!! json_encode($reportOrders, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!}</script>
+ 
 <script>
 // ════════════════════════════════════════════════
-// ORDER REPORT DATA
-// This is the set of orders CURRENTLY loaded on the page
-// (i.e. whatever the GET filter form above produced).
-// Voided orders are excluded from totals.
-// ════════════════════════════════════════════════
-let allOrdersData = @json($reportOrders);
-
-// ════════════════════════════════════════════════
-// REPORT DATE MODAL — lets the user pick which business day to print.
-// Uses the same Bootstrap modal pattern as the Void modal.
+// REPORT DATE MODAL
 // ════════════════════════════════════════════════
 let reportDateModalInstance = null;
-
+ 
 function openReportDateModal() {
     const input = document.getElementById('reportDateInput');
-
-    // Default to "today" in local time (YYYY-MM-DD)
+ 
     if (!input.value) {
         const now = new Date();
         const pad = (n) => String(n).padStart(2, '0');
         input.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     }
-
+ 
     if (!reportDateModalInstance) {
         reportDateModalInstance = new bootstrap.Modal(document.getElementById('reportDateModal'));
     }
     reportDateModalInstance.show();
 }
-
+ 
 document.getElementById('reportDatePrintBtn').addEventListener('click', function () {
     const dateStr = document.getElementById('reportDateInput').value;
     if (!dateStr) {
@@ -625,105 +603,136 @@ document.getElementById('reportDatePrintBtn').addEventListener('click', function
     reportDateModalInstance.hide();
     printReportForDate(dateStr);
 });
+ 
+ 
+// Category counts as "drink" if its name contains one of these.
+// Everything else (food, other categories, no category) is treated as food.
+const RPT_DRINK_REGEX = /drink|饮料|饮品/i;
+function rptIsDrink(categoryName) {
+    return RPT_DRINK_REGEX.test(categoryName || '');
+}
+ 
+function rptMoney(n) {
+    return 'RM ' + (Number(n) || 0).toFixed(2);
+}
+ 
+function rptQty(n) {
+    n = Number(n) || 0;
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+ 
+// Same as formatReceiptLines() but joins with a single newline (no blank lines between)
+function compactReceiptLines(text) {
+    if (!text) return '';
+    return text
+        .replace(/\r/g, '')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => `[C]${line}`)
+        .join('\n');
+}
 
-// ════════════════════════════════════════════════
-// REPORT AGGREGATION
-// ════════════════════════════════════════════════
 function computeReportTotals(orders) {
-    let totalQty = 0, totalPrice = 0;
-    let qrQty = 0, qrPrice = 0;
-    let cashQty = 0, cashPrice = 0;
-    let productMap = {}; // name -> { qty, total }
-
+    const t = {
+        qty: 0, price: 0,
+        cashQty: 0, cashPrice: 0,
+        qrQty: 0, qrPrice: 0,
+        foodQty: 0, foodPrice: 0,
+        drinkQty: 0, drinkPrice: 0,
+        itemsGross: 0,
+    };
+    const products = {}; // name -> { name, qty, total, drink }
+ 
     (orders || []).forEach(o => {
         if ((o.status || '').toLowerCase() === 'voided') return;
-
+ 
         const pm = (o.payment_method || '').trim().toLowerCase();
-
+        let orderGross = 0;
+ 
         (o.items || []).forEach(item => {
-            const qty = parseFloat(item.qty) || 0;
+            const qty   = parseFloat(item.qty) || 0;
             const price = parseFloat(item.total_price) || 0;
-
-            totalQty += qty;
-            totalPrice += price;
-
-            if (pm === 'qr') {
-                qrQty += qty;
-                qrPrice += price;
-            } else if (pm === 'cash') {
-                cashQty += qty;
-                cashPrice += price;
-            }
-
+            const drink = rptIsDrink(item.category);
+ 
+            orderGross += price;
+ 
+            if (drink) { t.drinkQty += qty; t.drinkPrice += price; }
+            else       { t.foodQty  += qty; t.foodPrice  += price; }
+ 
             const name = item.name || '-';
-            if (!productMap[name]) {
-                productMap[name] = { qty: 0, total: 0 };
-            }
-            productMap[name].qty += qty;
-            productMap[name].total += price;
+            if (!products[name]) products[name] = { name, qty: 0, total: 0, drink };
+            products[name].qty   += qty;
+            products[name].total += price;
         });
+ 
+        // Net amount actually charged for this order (falls back to item sum if missing)
+        let net = parseFloat(o.final_total);
+        if (isNaN(net)) net = orderGross;
+ 
+        t.qty        += 1;          // 1 order
+        t.price      += net;
+        t.itemsGross += orderGross;
+ 
+        if (pm === 'cash') { t.cashQty += 1; t.cashPrice += net; }
+        else if (pm === 'qr') { t.qrQty += 1; t.qrPrice += net; }
     });
-
-    return { totalQty, totalPrice, qrQty, qrPrice, cashQty, cashPrice, productMap };
+ 
+    const byPriceDesc = (a, b) => (b.total - a.total) || (b.qty - a.qty) || a.name.localeCompare(b.name);
+    const list = Object.values(products);
+ 
+    t.foodList  = list.filter(p => !p.drink).sort(byPriceDesc);
+    t.drinkList = list.filter(p =>  p.drink).sort(byPriceDesc);
+    return t;
 }
-
+ 
 // ════════════════════════════════════════════════
-// BUILD REPORT RECEIPT TEXT (same tag format as printOrderReceipt)
+// BUILD REPORT RECEIPT TEXT (compact: no blank lines, label + value on one line)
 // ════════════════════════════════════════════════
 function buildReportReceipt(title, orders) {
-    const { totalQty, totalPrice, qrQty, qrPrice, cashQty, cashPrice, productMap } = computeReportTotals(orders);
-
+    const t   = computeReportTotals(orders);
     const now = new Date().toLocaleString('en-MY');
-
-    let receipt = `
-${formatReceiptLines(receiptHeader)}
-
-[C]${title}
-
-[C]${now}
-
-[C]================================
-`;
-
-    receipt += `\n[L]Total Qty\n[R]${totalQty}\n`;
-    receipt += `[L]Total Price\n[R]RM ${totalPrice.toFixed(2)}\n`;
-
-    receipt += `
-[C]--------------------------------
-`;
-    receipt += `\n[L]QR Qty\n[R]${qrQty}\n`;
-    receipt += `[L]QR Price\n[R]RM ${qrPrice.toFixed(2)}\n`;
-
-    receipt += `
-[C]--------------------------------
-`;
-    receipt += `\n[L]Cash Qty\n[R]${cashQty}\n`;
-    receipt += `[L]Cash Price\n[R]RM ${cashPrice.toFixed(2)}\n`;
-
-    receipt += `
-[C]================================
-[C]Product Breakdown
-[C]================================
-`;
-
-    Object.keys(productMap).sort().forEach(name => {
-        const p = productMap[name];
-        receipt += `\n[L]${name}\n`;
-        receipt += `[L]  Qty: ${p.qty}\n`;
-        receipt += `[R]RM ${p.total.toFixed(2)}\n`;
-    });
-
-    receipt += `
-[C]================================
-
-${formatReceiptLines(receiptFooter || 'Thank You!', false)}
-
-\n\n\n
-`;
-
-    return receipt;
+ 
+    const row = (label, qty, price) =>
+        `[L]${label}  Qty ${rptQty(qty)}[R]${rptMoney(price)}`;
+ 
+    const L = [];
+    L.push(compactReceiptLines(receiptHeader));
+    L.push(`[C]${title}`);
+    L.push(`[C]Printed ${now}`);
+    L.push('[C]================================');
+ 
+    L.push(row('TOTAL', t.qty,      t.price));
+    L.push(row('CASH',  t.cashQty,  t.cashPrice));
+    L.push(row('QR',    t.qrQty,    t.qrPrice));
+    L.push(row('FOOD',  t.foodQty,  t.foodPrice));
+    L.push(row('DRINK', t.drinkQty, t.drinkPrice));
+ 
+    // so FOOD + DRINK + this line = TOTAL.
+    const adj = t.price - t.itemsGross;
+    if (Math.abs(adj) >= 0.005) {
+        L.push(`[L]Discount/Adj[R]${adj < 0 ? '-' : ''}${rptMoney(Math.abs(adj))}`);
+    }
+ 
+    const section = (heading, list) => {
+        if (!list.length) return;
+        L.push(`[C]--- ${heading} ---`);
+        list.forEach(p => {
+            L.push(`[L]${p.name}`);
+            L.push(`[R]Qty ${rptQty(p.qty)}   ${rptMoney(p.total)}`);
+        });
+    };
+ 
+    L.push('[C]================================');
+    section('FOOD', t.foodList);    // highest price first
+    section('DRINK', t.drinkList);  // highest price first, always last
+ 
+    L.push('[C]================================');
+    L.push(compactReceiptLines(receiptFooter || 'Thank You!'));
+ 
+    return L.filter(Boolean).join('\n') + '\n\n\n';
 }
-
+ 
 // ════════════════════════════════════════════════
 // PRINT REPORT — shared entry point
 // ════════════════════════════════════════════════
@@ -732,65 +741,65 @@ function printReportFromData(title, orders) {
         alert('Printer only works inside Android APK');
         return;
     }
-    if (!orders || !orders.length) {
-        alert('No orders found for this report');
+ 
+    const hasActive = (orders || []).some(o => (o.status || '').toLowerCase() !== 'voided');
+    if (!hasActive) {
+        alert('No orders found for this date');
         return;
     }
-
-    const receipt = buildReportReceipt(title, orders);
-    AndroidPrinter.printBluetooth(receipt);
-
+ 
+    AndroidPrinter.printBluetooth(buildReportReceipt(title, orders));
+ 
     if (typeof showToast === 'function') {
         showToast('🖨 Printing report...', '');
     }
 }
 
-// ════════════════════════════════════════════════
-// PRINT REPORT FOR A CHOSEN DATE
-//
-// Covers that date's business day: 2:00 AM -> 2:00 AM the next day.
-// Does NOT reload/navigate the page — it fetches the same page in the
-// background with date_from/date_to set to that window, pulls the
-// "allOrdersData" that page would have embedded, and prints from that.
-// Uses the same AndroidPrinter.printBluetooth() call already proven to
-// work in printOrderReceipt() / printReportFromData() above.
-// ════════════════════════════════════════════════
 async function printReportForDate(dateStr) {
-    // dateStr is "YYYY-MM-DD" from the <input type="date">
     const [y, m, d] = dateStr.split('-').map(Number);
-
-    let start = new Date(y, m - 1, d, 2, 0, 0, 0); // that date, 2:00 AM
-    let end   = new Date(start);
-    end.setDate(end.getDate() + 1);                // next day, 2:00 AM
-
-    const fmt = (dt) => {
-        const pad = (n) => String(n).padStart(2, '0');
-        return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-    };
-    const displayFmt = (dt) => dt.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' });
-
+    const pad = (n) => String(n).padStart(2, '0');
+ 
+    const start = new Date(y, m - 1, d,     2, 0, 0, 0);   // that date 2:00 AM
+    const end   = new Date(y, m - 1, d + 1, 2, 0, 0, 0);   // next day 2:00 AM
+ 
+    // "YYYY-MM-DD HH:mm:ss" — same format/timezone as the server's created_at string
+    const toDb = (dt) =>
+        `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())} ` +
+        `${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+    const toInput = (dt) => toDb(dt).replace(' ', 'T').slice(0, 16); // datetime-local format
+ 
+    const startStr = toDb(start);
+    const endStr   = toDb(end);
+ 
     const url = new URL(window.location.href);
-    url.searchParams.set('date_from', fmt(start));
-    url.searchParams.set('date_to', fmt(end));
-
+    url.searchParams.set('date_from', toInput(new Date(y, m - 1, d,     0, 0)));
+    url.searchParams.set('date_to',   toInput(new Date(y, m - 1, d + 1, 23, 59)));
+ 
+    const title = 'ORDER REPORT ' + start.toLocaleDateString('en-MY', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    });
+ 
     try {
-        const res = await fetch(url.toString(), {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-        });
+        const res = await fetch(url.toString(), { credentials: 'same-origin' });
         if (!res.ok) throw new Error('Request failed: ' + res.status);
-
+ 
         const html = await res.text();
-        const match = html.match(/let\s+allOrdersData\s*=\s*(\[[\s\S]*?\]);/);
-        if (!match) throw new Error('Could not find order data in response');
-
-        const dayOrdersData = JSON.parse(match[1]);
-        printReportFromData(`ORDER REPORT — ${displayFmt(start)}`, dayOrdersData);
+        const doc  = new DOMParser().parseFromString(html, 'text/html');
+        const el   = doc.getElementById('reportOrdersJson');
+        if (!el) throw new Error('Could not find order data in response');
+ 
+        const all = JSON.parse(el.textContent);
+ 
+        // Exact business-day window (string compare works on YYYY-MM-DD HH:mm:ss)
+        const dayOrders = all.filter(o =>
+            o.created_at && o.created_at >= startStr && o.created_at < endStr
+        );
+ 
+        printReportFromData(title, dayOrders);
     } catch (err) {
         console.error(err);
         alert("Couldn't load orders for that date. Please try again.");
     }
 }
-
 </script>
 @endsection
