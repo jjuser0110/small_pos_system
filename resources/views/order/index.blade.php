@@ -692,44 +692,45 @@ function computeReportTotals(orders) {
 function buildReportReceipt(title, orders) {
     const t   = computeReportTotals(orders);
     const now = new Date().toLocaleString('en-MY');
- 
+
     const row = (label, qty, price) =>
         `[L]${label}  Qty ${rptQty(qty)}[R]${rptMoney(price)}`;
- 
+
     const L = [];
     L.push(compactReceiptLines(receiptHeader));
     L.push(`[C]${title}`);
     L.push(`[C]Printed ${now}`);
     L.push('[C]================================');
- 
-    L.push(row('TOTAL', t.qty,      t.price));
-    L.push(row('CASH',  t.cashQty,  t.cashPrice));
-    L.push(row('QR',    t.qrQty,    t.qrPrice));
-    L.push(row('FOOD',  t.foodQty,  t.foodPrice));
-    L.push(row('DRINK', t.drinkQty, t.drinkPrice));
- 
-    // so FOOD + DRINK + this line = TOTAL.
-    const adj = t.price - t.itemsGross;
-    if (Math.abs(adj) >= 0.005) {
-        L.push(`[L]Discount/Adj[R]${adj < 0 ? '-' : ''}${rptMoney(Math.abs(adj))}`);
-    }
- 
-    const section = (heading, list) => {
-        if (!list.length) return;
+
+    L.push(row('TOTAL', t.qty,     t.price));
+    L.push(row('CASH',  t.cashQty, t.cashPrice));
+    L.push(row('QR',    t.qrQty,   t.qrPrice));
+
+    // one block per category: products (highest price first) + a subtotal line
+    const section = (heading, list, qty, price) => {
+        if (!list.length) return;          // skip the whole block if there are none
+        L.push('[C]================================');
         L.push(`[C]--- ${heading} ---`);
         list.forEach(p => {
             L.push(`[L]${p.name}`);
             L.push(`[R]Qty ${rptQty(p.qty)}   ${rptMoney(p.total)}`);
         });
+        L.push('[C]--------------------------------');
+        L.push(row(heading + ' TOTAL', qty, price));
     };
- 
-    L.push('[C]================================');
-    section('FOOD', t.foodList);    // highest price first
-    section('DRINK', t.drinkList);  // highest price first, always last
- 
+    section('FOOD',  t.foodList,  t.foodQty,  t.foodPrice);
+    section('DRINK', t.drinkList, t.drinkQty, t.drinkPrice);   // always last
+
+    // FOOD TOTAL + DRINK TOTAL + this line = TOTAL
+    const adj = t.price - t.itemsGross;
+    if (Math.abs(adj) >= 0.005) {
+        L.push('[C]--------------------------------');
+        L.push(`[L]Discount/Adj[R]${adj < 0 ? '-' : ''}${rptMoney(Math.abs(adj))}`);
+    }
+
     L.push('[C]================================');
     L.push(compactReceiptLines(receiptFooter || 'Thank You!'));
- 
+
     return L.filter(Boolean).join('\n') + '\n\n\n';
 }
  
