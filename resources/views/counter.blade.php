@@ -155,14 +155,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .addon-product-name{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;margin-bottom:2px;}
 .addon-product-price{font-size:0.78rem;color:var(--accent);font-weight:700;margin-bottom:16px;}
 .addon-section-label{font-size:0.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.addon-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
-.addon-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
+.addon-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.addon-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;user-select:none;}
 .addon-item:hover{border-color:var(--accent);background:var(--card-hover);}
 .addon-item.selected{border-color:var(--accent);background:rgba(232,98,42,0.08);}
-.addon-checkbox{width:16px;height:16px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0.65rem;}
+.addon-checkbox{width:13px;height:13px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0.55rem;}
 .addon-item.selected .addon-checkbox{background:var(--accent);border-color:var(--accent);color:#fff;}
-.addon-item-name{flex:1;font-size:0.8rem;font-weight:500;color:var(--text);}
-.addon-item-price{font-size:0.78rem;font-weight:700;color:var(--accent);}
+.addon-item-name{flex:1;font-size:0.72rem;font-weight:500;color:var(--text);}
+.addon-item-price{font-size:0.7rem;font-weight:700;color:var(--accent);}
 .addon-subtotal{background:var(--card);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .addon-subtotal-label{font-size:0.78rem;color:var(--muted);}
 .addon-subtotal-val{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--accent);}
