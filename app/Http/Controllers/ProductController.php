@@ -25,13 +25,18 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $login_user = Auth::user();
-        if($login_user->role_id == 3){
-            $product = Product::where('branch_id',$login_user->branch_id)->get();
-            $companies = Company::where('branch_id', $login_user->branch_id)->get();
-        }else if($login_user->role_id == 4){
-            $product = Product::where('company_id',$login_user->company_id)->get();
-            $companies = Company::where('id', $login_user->company_id)->get();
-        }else{
+
+        if ($login_user->role_id == 3) {
+            $product = Product::where('branch_id', $login_user->branch_id)
+                ->orWhere('created_at', '>=', now()->subDay())
+                ->get();
+            $companies = Company::all(); // needs to list all companies to transfer to
+        } elseif ($login_user->role_id == 4) {
+            $product = Product::where('company_id', $login_user->company_id)
+                ->orWhere('created_at', '>=', now()->subDay())
+                ->get();
+            $companies = Company::all();
+        } else {
             $product = Product::all();
             $companies = Company::all();
         }
@@ -241,5 +246,21 @@ class ProductController extends Controller
         Excel::import(new ProductImport($company->branch_id, $company->id), $request->file('file'));
 
         return back()->with('success', 'Products imported successfully');
+    }
+
+    public function transferCompany(Request $request, Product $product)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+
+        $product->company_id = $company->id;
+        $product->branch_id  = $company->branch_id;
+        $product->created_at = now();
+        $product->save();
+
+        return redirect()->route('product.index')->withSuccess('Product transferred to ' . $company->company_name);
     }
 }

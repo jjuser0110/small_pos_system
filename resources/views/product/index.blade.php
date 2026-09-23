@@ -74,6 +74,10 @@
                             {{-- <td>{{$row->arrangement??""}}</td> --}}
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>
+                                <a style="color:blue;cursor:pointer"
+                                onclick="openTransferModal('{{ $row->id }}', '{{ addslashes($row->product_name) }}')">
+                                    <i class="fa-solid fa-truck-arrow-right"></i>
+                                </a>
                                 @if($row->connected_product_quantity > 0)
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to convert this product to smaller unit?')){window.location.href='{{ route('product.convert',$row) }}'}"><i class="fa-solid fa-exchange-alt"></i></a>
                                 @endif
@@ -134,18 +138,52 @@
         </div>
     </div>
 
+    <div class="modal fade" id="transferProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transfer Product: <span id="transferProductName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="transferProductForm" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">New Company</label>
+                            <select name="company_id" class="form-select" required>
+                                @foreach(\App\Models\Company::all() as $company)
+                                    <option value="{{ $company->id }}">{{ $company->company_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Transfer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @endsection
     @section('page-js')
     @endsection
     @section('scripts')
-      <script>
+    <script>
     $(function(){
-      var table = $('#mytable').DataTable({
-        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-        pageLength: 10,
-        displayLength: 5,
-        lengthMenu: [5, 10, 25, 50, 75, 100],
-      });
+        var table = $('#mytable').DataTable({
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+            pageLength: 10,
+            displayLength: 5,
+            lengthMenu: [5, 10, 25, 50, 75, 100],
+        });
+
+        window.openTransferModal = function(productId, productName){
+            $('#transferProductName').text(productName);
+            $('#transferProductForm').attr('action', "{{ url('product') }}/" + productId + "/transfer-company");
+            $('#transferProductModal').modal('show');
+        };
     });
-  </script>
+    </script>
     @endsection

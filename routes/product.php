@@ -18,4 +18,5 @@ Route::prefix('/product')->as('product.')->middleware(['auth'])->group(function(
     Route::get('/convert/{product}', 'ProductController@convert')->name('convert');
     Route::get('/download-template', 'ProductController@downloadTemplate')->name('downloadTemplate');
     Route::post('/import', 'ProductController@import')->name('import');
+    Route::post('/{product}/transfer-company', 'ProductController@transferCompany')->name('transferCompany');
 });
