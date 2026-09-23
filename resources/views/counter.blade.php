@@ -834,11 +834,42 @@ async function loadCart(tableId) {
 }
 
 // ════════════════════════════════════════════════
-// DISPLAY NAME HELPER (prepend addon names in front of product name,
-// grouping the Chinese parts together and the English parts together)
-// e.g. addon "招牌 Signature" + product "嘟嘟鸡煲 Sizzling Chicken Claypot"
-//      → "招牌 嘟嘟鸡煲 Signature Sizzling Chicken Claypot"
+// DISPLAY NAME HELPER
+// Two kinds of add-ons are treated differently:
+//  - "Front" add-ons (e.g. 招牌 Signature) describe a variant of the dish
+//    itself, so they're merged into the front of the product name, same
+//    as before: "Signature Sizzling Chicken Claypot".
+//  - Everything else (Spicy, No Spicy, Add Glass Noodles, etc.) is a
+//    normal modifier/note, so it's listed underneath the item instead:
+//      Signature Sizzling Chicken Claypot
+//        + Spicy
+//        + Add Glass Noodles
 // ════════════════════════════════════════════════
+
+// Add-on names that should be listed BELOW the item as a normal note
+// (everything else merges into the front of the dish name instead).
+// Add more keywords here (lowercase) if you introduce other "below-list"
+// style add-ons in future.
+const BELOW_ADDON_KEYWORDS = ['spicy', '辣', 'glass noodle', '粉丝', '冬粉'];
+
+function isBelowAddon(addon) {
+    const name = (addon.name || '').toLowerCase();
+    return BELOW_ADDON_KEYWORDS.some(kw => name.includes(kw));
+}
+
+function isFrontAddon(addon) {
+    return !isBelowAddon(addon);
+}
+
+// Add-ons that get merged into the product name (e.g. Signature)
+function frontAddons(item) {
+    return (item.addons || []).filter(isFrontAddon);
+}
+
+// Add-ons that get listed below the item (e.g. Spicy, No Spicy, Add Glass Noodles)
+function belowAddons(item) {
+    return (item.addons || []).filter(a => !isFrontAddon(a));
+}
 
 // Splits a "中文 English" style name into its Chinese part and English part,
 // based on where the first English letter appears.
@@ -850,9 +881,10 @@ function splitZhEn(text) {
 }
 
 function displayItemName(item) {
-    if (!item.addons || !item.addons.length) return item.name;
+    const front = frontAddons(item);
+    if (!front.length) return item.name;
 
-    const addonParts  = item.addons.map(a => splitZhEn(a.name));
+    const addonParts  = front.map(a => splitZhEn(a.name));
     const productPart = splitZhEn(item.name);
 
     const addonZh = addonParts.map(a => a.zh).filter(Boolean).join(' + ');
@@ -862,6 +894,15 @@ function displayItemName(item) {
     const enFull = [addonEn, productPart.en].filter(Boolean).join(' ');
 
     return [zhFull, enFull].filter(Boolean).join(' ');
+}
+
+// Renders an item's non-front addons as a row of small tags (used in the cart list)
+function addonTagsHTML(item) {
+    const below = belowAddons(item);
+    if (!below.length) return '';
+    return `<div class="cart-addon-tags">${
+        below.map(a => `<span class="cart-addon-tag">${a.name}</span>`).join('')
+    }</div>`;
 }
 
 // ════════════════════════════════════════════════
@@ -1188,6 +1229,7 @@ function renderCart() {
 
         row.innerHTML = `
             <div class="cart-item-name">${displayName}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
+            ${addonTagsHTML(it)}
             <div class="cart-ctrl">
                 <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
                 <span class="qty-num">${it.qty}</span>
@@ -1382,7 +1424,8 @@ function openPayment() {
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
     document.getElementById('paySub').textContent = label;
 
-    // Build summary lines (addons folded into item name), ordered by category arrangement
+    // Build summary lines (product name on its own line, addons listed
+    // underneath as their own indented lines), ordered by category arrangement
     const linesEl = document.getElementById('paySummaryLines');
     linesEl.innerHTML = '';
 
@@ -1394,6 +1437,13 @@ function openPayment() {
         line.className = 'pay-line';
         line.innerHTML = `<span class="pay-line-name">${displayItemName(it)} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
         linesEl.appendChild(line);
+
+        belowAddons(it).forEach(a => {
+            const addonLine = document.createElement('div');
+            addonLine.className = 'pay-line-addon';
+            addonLine.innerHTML = `<span class="pay-line-name">+ ${a.name}</span><span class="pay-line-price"></span>`;
+            linesEl.appendChild(addonLine);
+        });
     });
 
     const totalLine = document.createElement('div');
@@ -1691,6 +1741,9 @@ ${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
 
     items.forEach(item => {
         receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
+        belowAddons(item).forEach(a => {
+            receipt += `[L]<font size='big'>   + ${a.name}</font>\n`;
+        });
     });
 
     receipt += `
@@ -1836,6 +1889,9 @@ ${formatReceiptLines(receiptHeader)}
 
     sortedItems.forEach(item => {
         receipt += `\n[L]${item.qty} x ${displayItemName(item)}\n`;
+        belowAddons(item).forEach(a => {
+            receipt += `[L]   + ${a.name}\n`;
+        });
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
     });
 
