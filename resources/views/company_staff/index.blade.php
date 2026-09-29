@@ -31,6 +31,7 @@
                             <th>Username</th>
                             <th>Name</th>
                             <th>Role</th>
+                            <th>Shift</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -44,6 +45,7 @@
                             <td>{{$row->username??""}}</td>
                             <td>{{$row->name??""}}</td>
                             <td>{{$row->role->title??""}}</td>
+                            <td>{{$row->shift??""}}</td>
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>
                                 <a href="{{ route('company_staff.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>

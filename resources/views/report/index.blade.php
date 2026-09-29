@@ -48,6 +48,9 @@
 
                         <div class="col-md-12 text-end mt-2">
                             <button class="btn btn-primary">Filter</button>
+                            <a href="{{ route('report.print', request()->query()) }}" target="_blank" class="btn btn-secondary">
+                                <i class="bx bx-printer me-1"></i> Print Report
+                            </a>
                         </div>
 
                     </div>

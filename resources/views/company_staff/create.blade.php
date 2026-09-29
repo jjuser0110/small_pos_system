@@ -34,6 +34,17 @@
                     </select>
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label" for="shift">Shift</label>
+                    <select name="shift" id="shift" class="form-select" required>
+                        <option value="" disabled {{ old('shift', $company_staff->shift ?? '') == '' ? 'selected' : '' }}>Select shift</option>
+                        <option value="AM" {{ old('shift', $company_staff->shift ?? '') == 'AM' ? 'selected' : '' }}>AM</option>
+                        <option value="PM" {{ old('shift', $company_staff->shift ?? '') == 'PM' ? 'selected' : '' }}>PM</option>
+                    </select>
+                    @error('shift')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+                <div class="col-md-6">
                     <label class="form-label" for="username">Username</label>
                     <input
                     type="text"

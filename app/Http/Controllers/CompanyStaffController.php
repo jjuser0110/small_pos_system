@@ -45,6 +45,7 @@ class CompanyStaffController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'username' => 'required|unique:users,username,NULL,id,deleted_at,NULL',
+            'shift'    => 'required|in:AM,PM',
         ]);
         if ($validator->fails()) {
             return redirect()->back()
@@ -72,6 +73,10 @@ class CompanyStaffController extends Controller
 
     public function update(Request $request, User $company_staff)
     {
+        $request->validate([
+            'shift' => 'required|in:AM,PM',
+        ]);
+
         if($request->password !=null){
             $request->merge(['password' => Hash::make($request->password)]);
         }else{
