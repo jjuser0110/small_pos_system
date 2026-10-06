@@ -4,35 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>LAO YANG KOPITIAM</title>
+<title>LaoYang Kopitiam</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0d0f14;--surface:#161a22;--card:#1e2330;--card-hover:#252b3b;
-  --border:#2a3045;--accent:#f5a623;--accent2:#e8623a;
-  --green:#3ecf8e;--red:#e05252;--purple:#a78bfa;
-  --text:#e8ecf4;--muted:#6b7794;--tag:#2a3045;
-  --radius:12px;--shadow:0 6px 24px rgba(0,0,0,0.45);
+  --bg:#fbf4e2;--surface:#ffffff;--card:#fffdf5;--card-hover:#fbebc8;
+  --border:#ecd8a0;--accent:#c0111a;--accent2:#8f0d14;
+  --green:#22c55e;--red:#dc2626;--purple:#9b59b6;
+  --text:#2b1210;--muted:#8a6f55;--tag:#f7e8bf;
+  --gold:#c9962b;--gold-light:#e9c46a;
+  --radius:12px;--shadow:0 6px 20px rgba(140,30,20,0.15);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
-header{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;}
-.brand{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;letter-spacing:-0.5px;}
-.brand span{color:var(--accent);}
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background:var(--surface);border-bottom:3px solid var(--accent);box-shadow:0 2px 0 var(--gold-light);flex-shrink:0;gap:10px;}
+.brand{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;letter-spacing:-0.5px;}
+.brand a{display:flex;align-items:center;gap:10px;color:var(--accent);text-decoration:none;}
+.brand img{height:42px;width:42px;object-fit:contain;}
+.brand span{color:var(--gold);margin-left:6px;}
 .legend{display:flex;gap:12px;align-items:center;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:var(--muted);font-weight:500;}
 .dot{width:7px;height:7px;border-radius:50%;}
 .dot.available{background:var(--green);}
 .dot.occupied{background:var(--accent2);}
 .dot.dabao{background:var(--purple);}
-.time-badge{font-size:0.75rem;color:var(--muted);background:var(--tag);padding:4px 11px;border-radius:20px;font-weight:500;}
+.time-badge{font-size:0.75rem;color:var(--accent2);background:var(--card-hover);border:1px solid var(--gold-light);padding:4px 11px;border-radius:20px;font-weight:600;}
 .app-body{display:flex;flex:1;overflow:hidden;}
 .left-panel{width:420px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;}
 .left-scroll{flex:1;overflow-y:auto;padding:14px 14px 0;}
 .left-scroll::-webkit-scrollbar{width:4px;}
 .left-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-.section-label{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.section-label{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid var(--gold-light);}
 .floor-map{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
 .table-card-empty{flex:1;min-width:0; padding: 20px 10px 20px;}
 .table-row{display:flex;gap:8px;}
@@ -40,7 +43,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 10px 20px;cursor:pointer;transition:transform .15s,box-shadow .15s,background .15s,border-color .15s;position:relative;overflow:hidden;user-select:none;}
 .table-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0;background:var(--green);}
 .table-card.occupied::before{background:var(--accent2);}
-.table-card.selected{border-color:var(--accent);background:var(--card-hover);}
+.table-card.selected{border-color:var(--accent);background:var(--card-hover);box-shadow:0 0 0 2px var(--gold-light);}
 .table-card.selected.occupied{border-color:var(--accent2);}
 .table-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);background:var(--card-hover);}
 .table-card.available:hover{border-color:var(--green);}
@@ -48,8 +51,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .t-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
 .t-num{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;line-height:1;}
 .s-pill{font-size:0.55rem;font-weight:700;padding:2px 6px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;}
-.s-pill.available{background:rgba(62,207,142,0.15);color:var(--green);}
-.s-pill.occupied{background:rgba(232,98,58,0.15);color:var(--accent2);}
+.s-pill.available{background:rgba(34,197,94,0.15);color:var(--green);}
+.s-pill.occupied{background:rgba(143,13,20,0.15);color:var(--accent2);}
 .t-total{font-size:0.62rem;color:var(--accent);font-weight:600;margin-top:2px;}
 .dabao-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .dabao-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;transition:transform .15s,background .15s,border-color .15s;position:relative;overflow:hidden;user-select:none;}
@@ -58,7 +61,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .dabao-card.selected{border-color:var(--purple);background:var(--card-hover);}
 .d-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
 .d-num{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;}
-.d-tag{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(167,139,250,0.15);color:var(--purple);text-transform:uppercase;letter-spacing:0.4px;}
+.d-tag{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(155,89,182,0.15);color:var(--purple);text-transform:uppercase;letter-spacing:0.4px;}
 .d-remove{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:0.72rem;padding:2px 5px;border-radius:5px;transition:background .15s,color .15s;}
 .d-remove:hover{background:var(--red);color:#fff;}
 .d-meta{font-size:0.65rem;color:var(--muted);}
@@ -67,12 +70,12 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .d-total{font-size:0.7rem;font-weight:700;color:var(--accent);margin-top:3px;}
 .empty-dabao{font-size:0.75rem;color:var(--muted);text-align:center;padding:12px 0;opacity:.6;}
 .add-dabao-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s;width:100%;margin-bottom:14px;}
-.add-dabao-btn:hover{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,0.05);}
+.add-dabao-btn:hover{border-color:var(--purple);color:var(--purple);background:rgba(155,89,182,0.06);}
 .right-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
-.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);opacity:.5;}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);opacity:.6;}
 .empty-state .icon{font-size:3rem;}
 .empty-state p{font-size:0.85rem;}
-.ctx-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.ctx-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);border-left:4px solid var(--accent);flex-shrink:0;}
 .ctx-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
 .ctx-sub{font-size:0.7rem;color:var(--muted);margin-top:1px;}
 .ctx-actions{display:flex;gap:8px;}
@@ -99,15 +102,19 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .search-clear:hover{color:var(--text);}
 .no-results{padding:24px 12px;text-align:center;color:var(--muted);font-size:0.8rem;opacity:.6;width:100%;}
 .order-body{display:flex;flex:1;overflow:hidden;}
-.menu-area{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;align-content:start;}
+.menu-area{flex:1;overflow-y:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;align-content:start;}
 .menu-area::-webkit-scrollbar{width:4px;}
 .menu-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-.menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:3px;}
+.menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:row;align-items:stretch;gap:8px;position:relative;}
+.item-index-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.item-index{font-family:'Syne',sans-serif;font-weight:800;font-size:0.85rem;color:var(--gold);min-width:14px;text-align:center;}
+.item-divider{width:1px;align-self:stretch;background:var(--border);}
+.item-content{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
 .menu-item:hover{border-color:var(--accent);background:var(--card-hover);transform:scale(1.03);}
 .menu-item.dp:hover{border-color:var(--purple);}
 .menu-item.out-of-stock{opacity:.4;cursor:not-allowed;}
 .menu-item.out-of-stock:hover{transform:none;border-color:var(--border);}
-.menu-item.has-addon::after{content:'+ Add-ons';font-size:0.55rem;color:var(--accent);font-weight:700;letter-spacing:0.3px;opacity:.8;}
+.item-addon-tag{font-size:0.55rem;color:var(--accent);font-weight:700;letter-spacing:0.3px;opacity:.9;}
 .item-emoji{font-size:1.4rem;}
 .item-name{font-size:0.75rem;font-weight:600;color:var(--text);line-height:1.2;}
 .item-price{font-size:0.73rem;color:var(--accent);font-weight:700;}
@@ -115,11 +122,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .item-stock{font-size:0.58rem;color:var(--muted);margin-top:1px;}
 .item-stock.low{color:var(--red);}
 .cart-area{width:320px;flex-shrink:0;border-left:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);}
-.cart-header{padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.cart-header{padding:10px 14px;border-bottom:2px solid var(--gold-light);font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent2);}
 .cart-items{flex:1;overflow-y:auto;padding:8px 10px;}
 .cart-items::-webkit-scrollbar{width:3px;}
 .cart-items::-webkit-scrollbar-thumb{background:var(--border);}
-.cart-empty{text-align:center;color:var(--muted);font-size:0.75rem;padding:20px 0;opacity:.5;}
+.cart-empty{text-align:center;color:var(--muted);font-size:0.75rem;padding:20px 0;opacity:.6;}
 .cart-row{display:flex;flex-direction:column;gap:4px;padding:7px 0;border-bottom:1px solid var(--border);}
 .cart-row:last-child{border-bottom:none;}
 .cart-item-name{font-size:0.73rem;color:var(--text);font-weight:500;}
@@ -128,66 +135,65 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .qty-btn:hover{background:var(--border);}
 .qty-num{font-weight:700;font-size:0.8rem;min-width:18px;text-align:center;}
 .cart-item-price{font-size:0.72rem;color:var(--accent);font-weight:700;}
-/* Add-on tags in cart */
 .cart-addon-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
-.cart-addon-tag{font-size:0.6rem;background:rgba(245,166,35,0.15);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:600;}
+.cart-addon-tag{font-size:0.6rem;background:rgba(192,17,26,0.12);color:var(--accent);border-radius:4px;padding:1px 6px;font-weight:600;}
 .cart-footer{border-top:1px solid var(--border);padding:10px 14px;}
 .cart-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .cart-total-label{font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;}
 .cart-total-val{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:var(--accent);}
-.checkout-btn{width:100%;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
-.checkout-btn:hover{background:#ffc04d;transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,0.35);}
+.checkout-btn{width:100%;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.checkout-btn:hover{background:#d9242d;transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,17,26,0.35);}
 .checkout-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
 .checkout-btn.dp{background:var(--purple);color:#fff;}
-.checkout-btn.dp:hover{background:#c4b5fd;box-shadow:0 4px 16px rgba(167,139,250,0.35);}
+.checkout-btn.dp:hover{background:#ac71c4;box-shadow:0 4px 16px rgba(155,89,182,0.35);}
 .clear-btn{width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;margin-top:6px;transition:all .2s;}
 .clear-btn:hover{border-color:var(--red);color:var(--red);}
 
-/* ─── ADDON MODAL ─── */
-.addon-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:350;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.addon-overlay{display:none;position:fixed;inset:0;background:rgba(43,18,16,0.55);z-index:350;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .addon-overlay.open{display:flex;}
-.addon-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;padding:24px;animation:popIn .22s ease;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+.addon-modal{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;padding:24px;animation:popIn .22s ease;box-shadow:0 20px 60px rgba(140,30,20,0.25);}
 .addon-modal::-webkit-scrollbar{width:4px;}
 .addon-modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .addon-modal-title{font-family:'Syne',sans-serif;font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
 .addon-product-name{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;margin-bottom:2px;}
 .addon-product-price{font-size:0.78rem;color:var(--accent);font-weight:700;margin-bottom:16px;}
 .addon-section-label{font-size:0.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-.addon-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
-.addon-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;}
+.addon-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.addon-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;user-select:none;}
 .addon-item:hover{border-color:var(--accent);background:var(--card-hover);}
-.addon-item.selected{border-color:var(--accent);background:rgba(245,166,35,0.08);}
-.addon-checkbox{width:16px;height:16px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0.65rem;}
-.addon-item.selected .addon-checkbox{background:var(--accent);border-color:var(--accent);color:#000;}
-.addon-item-name{flex:1;font-size:0.8rem;font-weight:500;color:var(--text);}
-.addon-item-price{font-size:0.78rem;font-weight:700;color:var(--accent);}
+.addon-item.selected{border-color:var(--accent);background:rgba(192,17,26,0.08);}
+.addon-checkbox{width:13px;height:13px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:0.55rem;}
+.addon-item.selected .addon-checkbox{background:var(--accent);border-color:var(--accent);color:#fff;}
+.addon-item-name{flex:1;font-size:0.72rem;font-weight:500;color:var(--text);}
+.addon-item-price{font-size:0.7rem;font-weight:700;color:var(--accent);}
 .addon-subtotal{background:var(--card);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .addon-subtotal-label{font-size:0.78rem;color:var(--muted);}
 .addon-subtotal-val{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--accent);}
 .addon-actions{display:flex;gap:10px;}
 .addon-cancel{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
 .addon-cancel:hover{border-color:var(--text);color:var(--text);}
-.addon-confirm{flex:2;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#000;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;}
-.addon-confirm:hover{background:#ffc04d;transform:translateY(-1px);box-shadow:0 4px 16px rgba(245,166,35,0.3);}
+.addon-confirm{flex:2;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.addon-confirm:hover{background:#d9242d;transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,17,26,0.3);}
 .addon-confirm.dp{background:var(--purple);color:#fff;}
-.addon-confirm.dp:hover{background:#c4b5fd;box-shadow:0 4px 16px rgba(167,139,250,0.3);}
+.addon-confirm.dp:hover{background:#ac71c4;box-shadow:0 4px 16px rgba(155,89,182,0.3);}
 @media(max-width:700px){
   .addon-modal{max-width:100%;margin:0;border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:88vh;}
   .addon-overlay.open{align-items:flex-end;}
 }
-/* ─── END ADDON MODAL ─── */
 
-.pay-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.pay-overlay{display:none;position:fixed;inset:0;background:rgba(43,18,16,0.55);z-index:300;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .pay-overlay.open{display:flex;}
-.pay-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto;padding:28px;animation:popIn .25s ease;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+.pay-modal{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:20px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto;padding:28px;animation:popIn .25s ease;box-shadow:0 20px 60px rgba(140,30,20,0.25);}
 .pay-modal::-webkit-scrollbar{width:4px;}
 .pay-modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 @keyframes popIn{from{transform:scale(.92);opacity:0;}to{transform:scale(1);opacity:1;}}
 .pay-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:4px;}
-.pay-sub{font-size:0.75rem;color:var(--muted);margin-bottom:20px;}
+.pay-sub{font-size:1.05rem;color:var(--text);font-weight:800;font-family:'Syne',sans-serif;margin-bottom:20px;}
 .pay-summary{background:var(--card);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
-.pay-line{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);padding:3px 0;}
-.pay-line-addon{font-size:0.7rem;color:var(--muted);padding:1px 0 1px 12px;opacity:.8;}
+.pay-line{display:flex;justify-content:space-between;align-items:flex-start;font-size:0.78rem;color:var(--muted);padding:3px 0;gap:10px;}
+.pay-line-name{flex:1;min-width:0;}
+.pay-line-price{flex-shrink:0;white-space:nowrap;text-align:right;}
+.pay-line-addon{display:flex;justify-content:space-between;align-items:flex-start;font-size:0.7rem;color:var(--muted);padding:1px 0 1px 12px;opacity:.8;gap:10px;}
 .pay-total-line{display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:8px;border-top:1px solid var(--border);}
 .pay-total-label{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;}
 .pay-total-val{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--accent);}
@@ -195,37 +201,36 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .pay-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;outline:none;transition:border-color .2s;margin-bottom:12px;}
 .pay-input:focus{border-color:var(--accent);}
 .pay-input::placeholder{color:var(--border);}
-.quick-amounts{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.quick-amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
 .quick-btn{padding:7px 13px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s;}
 .quick-btn:hover{border-color:var(--accent);color:var(--accent);}
-.change-box{background:rgba(62,207,142,0.1);border:1px solid rgba(62,207,142,0.3);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
-.change-label{font-size:0.78rem;color:var(--green);font-weight:600;}
-.change-val{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--green);}
-.change-box.insufficient{background:rgba(224,82,82,0.1);border-color:rgba(224,82,82,0.3);}
+.quick-btn.active{border-color:var(--accent);background:rgba(192,17,26,0.12);color:var(--accent);font-weight:800;}
+.change-box{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.change-label{font-size:0.78rem;color:#188a45;font-weight:600;}
+.change-val{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:#188a45;}
+.change-box.insufficient{background:rgba(220,38,38,0.08);border-color:rgba(220,38,38,0.3);}
 .change-box.insufficient .change-label,.change-box.insufficient .change-val{color:var(--red);}
 .pay-actions{display:flex;gap:10px;}
 .pay-cancel{flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all .2s;}
 .pay-cancel:hover{border-color:var(--text);color:var(--text);}
-.pay-confirm{flex:2;padding:12px;border-radius:10px;border:none;background:var(--green);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
-.pay-confirm:hover{background:#5fdfaa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(62,207,142,0.35);}
+.pay-confirm{flex:2;padding:12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.pay-confirm:hover{background:#3fd975;transform:translateY(-1px);box-shadow:0 4px 16px rgba(34,197,94,0.35);}
 .pay-confirm:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none;}
-.pay-method-label{font-size:0.75rem;color:var(--muted);font-weight:600;margin-bottom:10px;}
-.pay-method-btns{display:flex;gap:10px;margin-bottom:18px;}
-.pay-method-btn{flex:1;padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.pay-method-btns{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.pay-method-btn{flex:1;min-width:80px;padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--card);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;}
 .pay-method-btn .pm-icon{font-size:1.6rem;}
 .pay-method-btn:hover{border-color:var(--muted);background:var(--card-hover);}
-.pay-method-btn.selected-cash{border-color:var(--accent);background:rgba(245,166,35,0.1);color:var(--accent);}
-.pay-method-btn.selected-qr{border-color:var(--green);background:rgba(62,207,142,0.1);color:var(--green);}
+.pay-method-btn.selected-qr{border-color:var(--green);background:rgba(34,197,94,0.1);color:#188a45;}
 .pay-detail-section{display:none;}
 .pay-detail-section.visible{display:block;}
 .qr-panel{text-align:center;margin-bottom:18px;}
-.qr-box{background:#fff;border-radius:14px;padding:16px;display:inline-block;margin-bottom:12px;}
+.qr-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;display:inline-block;margin-bottom:12px;}
 .qr-hint{font-size:0.75rem;color:var(--muted);margin-bottom:4px;}
-.qr-amount{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--green);margin-bottom:14px;}
-.qr-done-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--green);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
-.qr-done-btn:hover{background:#5fdfaa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(62,207,142,0.35);}
+.qr-amount{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:#188a45;margin-bottom:14px;}
+.qr-done-btn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.qr-done-btn:hover{background:#3fd975;transform:translateY(-1px);box-shadow:0 4px 16px rgba(34,197,94,0.35);}
 .loading-tab{color:var(--muted);font-size:0.75rem;padding:9px 14px;}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);padding:9px 20px;border-radius:30px;font-weight:700;font-size:0.8rem;z-index:999;transition:transform .3s ease;white-space:nowrap;background:var(--green);color:#000;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);padding:9px 20px;border-radius:30px;font-weight:700;font-size:0.8rem;z-index:999;transition:transform .3s ease;white-space:nowrap;background:var(--green);color:#fff;}
 .toast.dp{background:var(--purple);color:#fff;}
 .toast.err{background:var(--red);color:#fff;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -248,9 +253,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   .pay-overlay.open{align-items:flex-end;}
   .confirm-modal{max-width:100%;margin:0 12px;}
 }
-.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(43,18,16,0.55);z-index:400;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .confirm-overlay.open{display:flex;}
-.confirm-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:320px;padding:28px 24px;animation:popIn .2s ease;box-shadow:0 20px 60px rgba(0,0,0,0.6);text-align:center;}
+.confirm-modal{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:20px;width:100%;max-width:320px;padding:28px 24px;animation:popIn .2s ease;box-shadow:0 20px 60px rgba(140,30,20,0.25);text-align:center;}
 .confirm-icon{font-size:2.5rem;margin-bottom:10px;}
 .confirm-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px;}
 .confirm-sub{font-size:0.8rem;color:var(--muted);margin-bottom:16px;}
@@ -263,12 +268,12 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .confirm-actions{display:flex;gap:10px;}
 .confirm-cancel{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all .2s;}
 .confirm-cancel:hover{border-color:var(--text);color:var(--text);}
-.confirm-ok{flex:2;padding:11px;border-radius:10px;border:none;background:var(--green);color:#000;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
-.confirm-ok:hover{background:#5fdfaa;transform:translateY(-1px);box-shadow:0 4px 16px rgba(62,207,142,0.35);}
+.confirm-ok{flex:2;padding:11px;border-radius:10px;border:none;background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.confirm-ok:hover{background:#3fd975;transform:translateY(-1px);box-shadow:0 4px 16px rgba(34,197,94,0.35);}
 .confirm-ok-noreceipt{flex:2;padding:11px;border-radius:10px;border:none;background:#4d8fff;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
 .confirm-ok-noreceipt:hover{background:#6ba0ff;transform:translateY(-1px);box-shadow:0 4px 16px rgba(77,143,255,0.35);}
 .print-btn{width:100%;padding:10px;border-radius:10px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:800;cursor:pointer;transition:all .2s;margin-top:6px;margin-bottom:4px;}
-.print-btn:hover{background:rgba(245,166,35,0.12);}
+.print-btn:hover{background:rgba(192,17,26,0.1);}
 .print-btn:disabled{opacity:.35;cursor:not-allowed;}
 
 .pay-actions-stacked,
@@ -281,16 +286,31 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .confirm-actions-stacked button {
   width: 100%;
 }
+
+.action-confirm-overlay{display:none;position:fixed;inset:0;background:rgba(43,18,16,0.55);z-index:450;backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.action-confirm-overlay.open{display:flex;}
+.action-confirm-modal{background:var(--surface);border:1px solid var(--border);border-top:4px solid var(--accent);border-radius:20px;width:100%;max-width:300px;padding:26px 22px;animation:popIn .2s ease;box-shadow:0 20px 60px rgba(140,30,20,0.25);text-align:center;}
+.action-confirm-icon{font-size:2.2rem;margin-bottom:8px;}
+.action-confirm-title{font-family:'Syne',sans-serif;font-size:1.02rem;font-weight:800;margin-bottom:6px;}
+.action-confirm-sub{font-size:0.78rem;color:var(--muted);margin-bottom:18px;}
+.action-confirm-actions{display:flex;flex-direction:column;gap:10px;}
+.action-confirm-actions button{width:100%;padding:11px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.action-confirm-yes{border:none;background:var(--accent);color:#fff;}
+.action-confirm-yes:hover{background:#d9242d;transform:translateY(-1px);}
+.action-confirm-yes.danger{background:var(--red);}
+.action-confirm-yes.danger:hover{background:#ef4444;}
+.action-confirm-no{border:1px solid var(--border);background:transparent;color:var(--muted);}
+.action-confirm-no:hover{border-color:var(--text);color:var(--text);}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand"><a href="{{ route('home') }}">Meja<span>POS</span></a></div>
+  <div class="brand"><a href="{{ route('home') }}">LaoYang<span>Kopitiam</span></a></div>
   <div class="legend">
-    <div class="legend-item"><div class="dot available"></div>Available</div>
-    <div class="legend-item"><div class="dot occupied"></div>Occupied</div>
-    <div class="legend-item"><div class="dot dabao"></div>Dabao</div>
+    <div class="legend-item"><div class="dot available"></div>可用 Available</div>
+    <div class="legend-item"><div class="dot occupied"></div>占据 Occupied</div>
+    <div class="legend-item"><div class="dot dabao"></div>打包 Dabao</div>
   </div>
   <div class="time-badge" id="clock">--:--</div>
 </header>
@@ -298,20 +318,20 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <div class="app-body">
   <div class="left-panel">
     <div class="left-scroll">
-      <div class="section-label">Main Hall</div>
+      <div class="section-label">大厅 Main Hall</div>
       <div class="floor-map" id="floorMap">
-        <div style="color:var(--muted);font-size:0.75rem;padding:8px 0;opacity:.6;">Loading tables…</div>
+        <div style="color:var(--muted);font-size:0.75rem;padding:8px 0;opacity:.6;">加载座位 Loading tables…</div>
       </div>
-      <div class="section-label">🥡 Dabao (Takeaway)</div>
+      <div class="section-label">🥡 打包 Dabao (Takeaway)</div>
       <div class="dabao-list" id="dabaoList"></div>
-      <button class="add-dabao-btn" onclick="newDabao()">＋ New Dabao Order</button>
+      <button class="add-dabao-btn" onclick="newDabao()">＋ 新外送订单 New Dabao Order</button>
     </div>
   </div>
 
   <div class="right-panel" id="rightPanel">
     <div class="empty-state" id="emptyState">
       <div class="icon">👆</div>
-      <p>Select a table or dabao to start ordering</p>
+      <p>选择座位开始 Select a table or dabao to start ordering</p>
     </div>
 
     <div id="activeOrder" style="display:none;flex-direction:column;height:100%;">
@@ -321,7 +341,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
           <div class="ctx-sub"   id="ctxSub"></div>
         </div>
         <div class="ctx-actions">
-          <button class="ctx-btn" onclick="deselect()">✕ Close</button>
+          <button class="ctx-btn" onclick="deselect()">✕ 关闭 Close</button>
         </div>
       </div>
 
@@ -332,14 +352,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
       </div>
 
       <div class="menu-tabs" id="menuTabsEl">
-        <div class="loading-tab">Loading menu…</div>
+        <div class="loading-tab">加载菜单 Loading menu…</div>
       </div>
 
       <div class="search-bar-row">
         <div class="search-wrap">
           <span class="search-icon">🔎</span>
           <input class="search-input" id="searchInput" type="text"
-                 placeholder="Search menu items…" oninput="onSearch(this.value)">
+                 placeholder="搜索菜单项 Search menu items…" oninput="onSearch(this.value)">
           <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
         </div>
       </div>
@@ -347,18 +367,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
       <div class="order-body">
         <div class="menu-area" id="menuArea"></div>
         <div class="cart-area">
-          <div class="cart-header">Order</div>
+          <div class="cart-header">订单 Order</div>
           <div class="cart-items" id="cartItems">
-            <div class="cart-empty">No items yet</div>
+            <div class="cart-empty">没有订单 No items yet</div>
           </div>
           <div class="cart-footer">
             <div class="cart-total-row">
-              <span class="cart-total-label">Total</span>
+              <span class="cart-total-label">总共 Total</span>
               <span class="cart-total-val" id="cartTotal">RM 0.00</span>
             </div>
-            <button class="print-btn" onclick="printOrder()" id="printBtn" disabled>🖨 Print Order</button>
-            <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" disabled>Checkout →</button>
-            <button class="clear-btn" onclick="clearOrder()">Clear order</button>
+            <button class="print-btn" onclick="confirmPrintOrder()" id="printBtn" disabled>🖨 打印订单 Print Order</button>
+            <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" disabled>付款 Checkout →</button>
+            <button class="clear-btn" onclick="confirmClearOrder()">清除 Clear order</button>
           </div>
         </div>
       </div>
@@ -369,18 +389,18 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <!-- ════ ADDON MODAL ════ -->
 <div class="addon-overlay" id="addonOverlay" onclick="closeAddonOnBg(event)">
   <div class="addon-modal">
-    <div class="addon-modal-title">Customise Order</div>
+    <div class="addon-modal-title">客制化订单 Customise Order</div>
     <div class="addon-product-name" id="addonProductName"></div>
     <div class="addon-product-price" id="addonProductPrice"></div>
-    <div class="addon-section-label">Add-ons</div>
+    <div class="addon-section-label">添加 Add-ons</div>
     <div class="addon-list" id="addonList"></div>
     <div class="addon-subtotal">
-      <span class="addon-subtotal-label">Item total</span>
+      <span class="addon-subtotal-label">总数 Item total</span>
       <span class="addon-subtotal-val" id="addonSubtotal">RM 0.00</span>
     </div>
     <div class="addon-actions">
-      <button class="addon-cancel" onclick="closeAddonModal()">Cancel</button>
-      <button class="addon-confirm" id="addonConfirmBtn" onclick="confirmAddon()">Add to Order</button>
+      <button class="addon-cancel" onclick="closeAddonModal()">取消 Cancel</button>
+      <button class="addon-confirm" id="addonConfirmBtn" onclick="confirmAddon()">添加订单 Add to Order</button>
     </div>
   </div>
 </div>
@@ -389,26 +409,25 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <!-- PAYMENT MODAL -->
 <div class="pay-overlay" id="payOverlay" onclick="closePayOnBg(event)">
   <div class="pay-modal">
-    <div class="pay-title">💳 Payment</div>
+    <div class="pay-title">💳 支付 Payment</div>
     <div class="pay-sub" id="paySub"></div>
 
     <div class="pay-summary" id="paySummaryLines"></div>
 
-    <div class="pay-method-label">Select Payment Method</div>
     <div class="pay-method-btns" id="payMethodBtns"></div>
 
     <div class="pay-detail-section" id="cashSection">
-      <div class="pay-input-label">Amount Received (RM)</div>
+      <div class="pay-input-label">收款 Amount Received (RM)</div>
       <input class="pay-input" id="payInput" type="number" inputmode="decimal"
-             placeholder="0.00" oninput="calcChange()">
+             placeholder="0.00" oninput="document.getElementById('quickAmounts').querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active'));calcChange()">
       <div class="quick-amounts" id="quickAmounts"></div>
       <div class="change-box" id="changeBox" style="display:none">
-        <span class="change-label" id="changeLabel">Change</span>
+        <span class="change-label" id="changeLabel">找零 Change</span>
         <span class="change-val"   id="changeVal">RM 0.00</span>
       </div>
       <div class="pay-actions pay-actions-stacked">
-        <button class="pay-confirm" id="payConfirmBtn" onclick="confirmPayment()" disabled>Confirm Payment</button>
-        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
+        <button class="pay-confirm" id="payConfirmBtn" onclick="confirmPayment()" disabled>确认 Confirm Payment</button>
+        <button class="pay-cancel" onclick="closePayment()">取消 Cancel</button>
       </div>
     </div>
 
@@ -419,8 +438,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
         <div class="qr-amount" id="qrAmount">RM 0.00</div>
       </div>
       <div class="pay-actions pay-actions-stacked">
-        <button class="qr-done-btn" onclick="confirmPayment()">✓ Payment Received</button>
-        <button class="pay-cancel" onclick="closePayment()">Cancel</button>
+        <button class="qr-done-btn" onclick="confirmPayment()">确认 Confirm Payment</button>
+        <button class="pay-cancel" onclick="closePayment()">取消 Cancel</button>
       </div>
     </div>
   </div>
@@ -430,16 +449,30 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-modal">
     <div class="confirm-icon">🧾</div>
-    <div class="confirm-title">Confirm Payment?</div>
+    <div class="confirm-title">确认付款 Confirm Payment?</div>
     <div class="confirm-sub" id="confirmSub"></div>
     <div class="confirm-details" id="confirmDetails"></div>
     <div class="confirm-actions confirm-actions-stacked">
-      <button class="confirm-ok" id="confirmOkBtn">Yes, with Receipt</button>
-      <button class="confirm-ok-noreceipt" id="confirmOkNoReceiptBtn">Yes, No Receipt</button>
-      <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-ok" id="confirmOkBtn">有收据 Yes, with Receipt</button>
+      <button class="confirm-ok-noreceipt" id="confirmOkNoReceiptBtn">没有收据 Yes, No Receipt</button>
+      <button class="confirm-cancel" onclick="closeConfirm()">取消 Cancel</button>
     </div>
   </div>
 </div>
+
+<!-- ════ SMALL ACTION-CONFIRM MODAL (print / clear / done) ════ -->
+<div class="action-confirm-overlay" id="actionConfirmOverlay">
+  <div class="action-confirm-modal">
+    <div class="action-confirm-icon" id="actionConfirmIcon">⚠️</div>
+    <div class="action-confirm-title" id="actionConfirmTitle">确定 Are you sure?</div>
+    <div class="action-confirm-sub" id="actionConfirmSub"></div>
+    <div class="action-confirm-actions">
+      <button class="action-confirm-yes" id="actionConfirmYesBtn">是 Yes</button>
+      <button class="action-confirm-no" onclick="closeActionConfirm()">取消 Cancel</button>
+    </div>
+  </div>
+</div>
+<!-- ════ END SMALL ACTION-CONFIRM MODAL ════ -->
 
 <div class="toast" id="toast"></div>
 
@@ -457,9 +490,7 @@ let tables       = [];
 let dabaoSlots   = [];
 let categories   = [];
 let allProducts  = [];
-let paymentMethods    = [];
-let selectedMethodObj = null;
-let receiptHeader = 'LAO YANG';
+let receiptHeader = 'LAOYANG KOPITIAM';
 let receiptFooter = 'THANK YOU';
 
 let currentMode  = null;
@@ -472,7 +503,7 @@ let order = {};
 
 let searchQuery       = '';
 let payTotal          = 0;
-let selectedPayMethod = null;
+let selectedPayMethod = null; // 'cash' | 'qr'
 let dabaoNameTimer    = null;
 
 // ── Addon modal state ──
@@ -495,6 +526,7 @@ updateClock();
 function apiFetch(url, options = {}) {
     return fetch(API + url, {
         ...options,
+        cache: 'no-store',   // ← add this line: never serve a cached response
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
@@ -528,11 +560,7 @@ function apiFetch(url, options = {}) {
 // BOOT
 // ════════════════════════════════════════════════
 async function boot() {
-    await Promise.all([loadTables(), loadDabao(), loadMenu(), loadPaymentMethods(), loadReceiptSettings()]);
-}
-
-async function loadPaymentMethods() {
-    paymentMethods = await apiFetch('/payment-methods');
+    await Promise.all([loadTables(), loadDabao(), loadMenu(), loadReceiptSettings()]);
 }
 
 async function loadReceiptSettings() {
@@ -560,10 +588,11 @@ async function loadTables() {
 }
 
 const FLOOR_LAYOUT = [
-    [8, 9, 10],
-    [5, 6, 7],
-    [null, 3, 4],
-    [null, 1, 2],
+    [13, 14, 15],
+    [10, 11, 12],
+    [7, 8, 9],
+    [4, 5, 6],
+    [1, 2, 3],
 ];
 
 function chunkBy(arr, sizes) {
@@ -642,7 +671,7 @@ function renderDabao() {
                     <div class="d-num">D${slot.id}</div>
                     <span class="d-tag">Takeaway</span>
                 </div>
-                <button class="d-remove" onclick="removeDabao(${slot.id}, event)">✕ Done</button>
+                <button class="d-remove" onclick="confirmRemoveDabao(${slot.id}, event)">✕ 完成 Done</button>
             </div>
             ${slot.name
                 ? `<div class="d-meta">👤 <strong>${slot.name}</strong></div>`
@@ -663,8 +692,19 @@ async function newDabao() {
     selectDabao(data.id);
 }
 
-async function removeDabao(id, e) {
+function confirmRemoveDabao(id, e) {
     e.stopPropagation();
+    openActionConfirm({
+        icon: '🥡',
+        title: '关闭打包订单 Close this Dabao order?',
+        sub: `打包D${id}将会被移除 Dabao D${id} will be marked as done and removed from the list.`,
+        yesLabel: '是 Yes',
+        danger: true,
+        onYes: () => removeDabao(id),
+    });
+}
+
+async function removeDabao(id) {
     await apiFetch(`/dabao/${id}/pay`, { method: 'PUT' });
     if (currentDabao?.id === id) deselect();
     dabaoSlots = dabaoSlots.filter(s => s.id !== id);
@@ -790,9 +830,82 @@ async function loadCart(tableId) {
             qty:         item.quantity,
             total_price: parseFloat(item.total_price),
             addons:      addons,
+            printed:     !!item.print_order,
         };
     });
     renderCart();
+}
+
+// ════════════════════════════════════════════════
+// DISPLAY NAME HELPER
+// Two kinds of add-ons are treated differently:
+//  - "Front" add-ons (e.g. 招牌 Signature) describe a variant of the dish
+//    itself, so they're merged into the front of the product name, same
+//    as before: "Signature Sizzling Chicken Claypot".
+//  - Everything else (Spicy, No Spicy, Add Glass Noodles, etc.) is a
+//    normal modifier/note, so it's listed underneath the item instead:
+//      Signature Sizzling Chicken Claypot
+//        + Spicy
+//        + Add Glass Noodles
+// ════════════════════════════════════════════════
+
+// Add-on names that should be listed BELOW the item as a normal note
+// (everything else merges into the front of the dish name instead).
+// Add more keywords here (lowercase) if you introduce other "below-list"
+// style add-ons in future.
+const BELOW_ADDON_KEYWORDS = ['spicy', '辣', 'glass noodle', '粉丝', '冬粉'];
+
+function isBelowAddon(addon) {
+    const name = (addon.name || '').toLowerCase();
+    return BELOW_ADDON_KEYWORDS.some(kw => name.includes(kw));
+}
+
+function isFrontAddon(addon) {
+    return !isBelowAddon(addon);
+}
+
+// Add-ons that get merged into the product name (e.g. Signature)
+function frontAddons(item) {
+    return (item.addons || []).filter(isFrontAddon);
+}
+
+// Add-ons that get listed below the item (e.g. Spicy, No Spicy, Add Glass Noodles)
+function belowAddons(item) {
+    return (item.addons || []).filter(a => !isFrontAddon(a));
+}
+
+// Splits a "中文 English" style name into its Chinese part and English part,
+// based on where the first English letter appears.
+function splitZhEn(text) {
+    const idx = text.search(/[A-Za-z]/);
+    if (idx === -1) return { zh: text.trim(), en: '' };   // no English letters at all
+    if (idx === 0)  return { zh: '', en: text.trim() };   // no Chinese part at all
+    return { zh: text.slice(0, idx).trim(), en: text.slice(idx).trim() };
+}
+
+function displayItemName(item) {
+    const front = frontAddons(item);
+    if (!front.length) return item.name;
+
+    const addonParts  = front.map(a => splitZhEn(a.name));
+    const productPart = splitZhEn(item.name);
+
+    const addonZh = addonParts.map(a => a.zh).filter(Boolean).join(' + ');
+    const addonEn = addonParts.map(a => a.en).filter(Boolean).join(' + ');
+
+    const zhFull = [addonZh, productPart.zh].filter(Boolean).join(' ');
+    const enFull = [addonEn, productPart.en].filter(Boolean).join(' ');
+
+    return [zhFull, enFull].filter(Boolean).join(' ');
+}
+
+// Renders an item's non-front addons as a row of small tags (used in the cart list)
+function addonTagsHTML(item) {
+    const below = belowAddons(item);
+    if (!below.length) return '';
+    return `<div class="cart-addon-tags">${
+        below.map(a => `<span class="cart-addon-tag">${a.name}</span>`).join('')
+    }</div>`;
 }
 
 // ════════════════════════════════════════════════
@@ -823,7 +936,7 @@ function openAddonModal(product, addons) {
     const isDabao = currentMode === 'dabao';
 
     document.getElementById('addonProductName').textContent  = product.product_name;
-    document.getElementById('addonProductPrice').textContent = `Base price: RM ${parseFloat(product.selling_price).toFixed(2)}`;
+    document.getElementById('addonProductPrice').textContent = `原价 Base price: RM ${parseFloat(product.selling_price).toFixed(2)}`;
 
     // Style confirm button for dabao
     const confirmBtn = document.getElementById('addonConfirmBtn');
@@ -923,6 +1036,7 @@ async function addItem(product, addons = []) {
         qty:         qty,
         total_price: unitPrice * qty,
         addons:      addonsMapped,
+        printed:     false,
     };
     syncLocalTotal(tableId);
     renderCart();
@@ -936,19 +1050,109 @@ async function changeQty(cartId, delta) {
     const item = order[cartId];
     if (!item) return;
 
-    const newQty  = item.qty + delta;
     const tableId = currentMode === 'table' ? currentTable.id : currentDabao.id;
 
-    if (newQty <= 0) {
-        await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
-        delete order[cartId];
+    const addonsKey = (it) => JSON.stringify((it.addons || []).map(a => a.id).sort());
+
+    function findSibling(printedState, excludeCartId) {
+        const key = addonsKey(item);
+        return Object.values(order).find(o =>
+            o.cartId !== excludeCartId &&
+            o.productId === item.productId &&
+            addonsKey(o) === key &&
+            !!o.printed === printedState
+        );
+    }
+
+    if (delta > 0) {
+        if (item.printed) {
+            // Printed row is locked — route the +1 to the unprinted sibling (or create one)
+            const sibling = findSibling(false, cartId);
+            if (sibling) {
+                const newQty = sibling.qty + 1;
+                await apiFetch(`/cart/${sibling.cartId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: newQty }),
+                });
+                sibling.qty         = newQty;
+                sibling.total_price = newQty * sibling.price;
+            } else {
+                const data = await apiFetch('/cart', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        table_id:   tableId,
+                        product_id: item.productId,
+                        quantity:   1,
+                        addons:     item.addons,
+                        unit_price: item.price,
+                    }),
+                });
+                order[data.id] = {
+                    cartId:      data.id,
+                    productId:   data.product_id,
+                    name:        item.name,
+                    price:       item.price,
+                    qty:         data.quantity ?? 1,
+                    total_price: item.price * (data.quantity ?? 1),
+                    addons:      item.addons,
+                    printed:     false,
+                };
+            }
+        } else {
+            const newQty = item.qty + 1;
+            await apiFetch(`/cart/${cartId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ quantity: newQty }),
+            });
+            item.qty         = newQty;
+            item.total_price = newQty * item.price;
+        }
     } else {
-        await apiFetch(`/cart/${cartId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ quantity: newQty }),
-        });
-        item.qty         = newQty;
-        item.total_price = newQty * item.price;
+        if (item.printed) {
+            // Try to remove from the unprinted sibling first
+            const sibling = findSibling(false, cartId);
+            if (sibling) {
+                const newQty = sibling.qty - 1;
+                if (newQty <= 0) {
+                    await apiFetch(`/cart/${sibling.cartId}`, { method: 'DELETE' });
+                    delete order[sibling.cartId];
+                } else {
+                    await apiFetch(`/cart/${sibling.cartId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ quantity: newQty }),
+                    });
+                    sibling.qty         = newQty;
+                    sibling.total_price = newQty * sibling.price;
+                }
+            } else {
+                // No unprinted units left — this reduces the printed (already-cooked) row itself
+                const newQty = item.qty - 1;
+                if (newQty <= 0) {
+                    await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
+                    delete order[cartId];
+                } else {
+                    await apiFetch(`/cart/${cartId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ quantity: newQty }),
+                    });
+                    item.qty         = newQty;
+                    item.total_price = newQty * item.price;
+                }
+            }
+        } else {
+            const newQty = item.qty - 1;
+            if (newQty <= 0) {
+                await apiFetch(`/cart/${cartId}`, { method: 'DELETE' });
+                delete order[cartId];
+            } else {
+                await apiFetch(`/cart/${cartId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: newQty }),
+                });
+                item.qty         = newQty;
+                item.total_price = newQty * item.price;
+            }
+        }
     }
 
     syncLocalTotal(tableId);
@@ -970,14 +1174,27 @@ function syncLocalTotal(tableId) {
     renderTables();
 }
 
+function confirmClearOrder() {
+    const items = Object.values(order);
+    if (!items.length) return;
+    openActionConfirm({
+        icon: '🗑️',
+        title: '清除订单 Clear this order?',
+        sub: '所有订单将被清除 All items in the current order will be removed. This cannot be undone.',
+        yesLabel: '清除 Clear It',
+        danger: true,
+        onYes: () => clearOrder(),
+    });
+}
+
 async function clearOrder() {
     const tableId = currentMode === 'table' ? currentTable?.id : currentDabao?.id;
     if (!tableId) return;
 
     const deletes = Object.keys(order).map(cartId =>
-        apiFetch(`/cart/${cartId}`, { method: 'DELETE' })
+        apiFetch(`/cart/${cartId}`, { method: 'DELETE' }).catch(() => null)
     );
-    await Promise.all(deletes);
+    await Promise.allSettled(deletes);
 
     order = {};
     syncLocalTotal(tableId);
@@ -1011,18 +1228,11 @@ function renderCart() {
         const row = document.createElement('div');
         row.className = 'cart-row';
 
-        // Build addon tags HTML
-        let addonTagsHtml = '';
-        if (it.addons && it.addons.length > 0) {
-            const tags = it.addons.map(ao =>
-                `<span class="cart-addon-tag">+ ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})</span>`
-            ).join('');
-            addonTagsHtml = `<div class="cart-addon-tags">${tags}</div>`;
-        }
+        const displayName = displayItemName(it);
 
         row.innerHTML = `
-            <div class="cart-item-name">${it.name}</div>
-            ${addonTagsHtml}
+            <div class="cart-item-name">${displayName}${it.printed ? ' <span style="font-size:0.6rem;color:var(--muted);font-weight:600;">🖨 sent</span>' : ''}</div>
+            ${addonTagsHTML(it)}
             <div class="cart-ctrl">
                 <button class="qty-btn" onclick="changeQty(${it.cartId}, -1)">−</button>
                 <span class="qty-num">${it.qty}</span>
@@ -1105,6 +1315,7 @@ function renderMenu() {
     area.innerHTML = '';
 
     let products;
+    let categoryName = '';
     if (searchQuery) {
         products = allProducts.filter(p =>
             p.product_name.toLowerCase().includes(searchQuery) ||
@@ -1112,7 +1323,8 @@ function renderMenu() {
         );
     } else {
         const cat = categories.find(c => c.id === currentCatId);
-        products  = cat ? cat.products : [];
+        products     = cat ? cat.products : [];
+        categoryName = cat ? cat.category_name : '';
     }
 
     if (!products.length) {
@@ -1120,10 +1332,12 @@ function renderMenu() {
         return;
     }
 
-    products.forEach(product => {
+    // Detect drink category (case-insensitive match on the name)
+    const isDrinkCategory = categoryName.toLowerCase().includes('drink');
+
+    products.forEach((product, index) => {
         const stockEnforced = product.has_stock == 1;
         const outOfStock    = stockEnforced && product.stock_quantity !== null && product.stock_quantity <= 0;
-        // addons already loaded via getMenu() → with(["addons"])
         const hasAddons = Array.isArray(product.addons) && product.addons.some(a => a.is_active != 0);
 
         const div = document.createElement('div');
@@ -1131,22 +1345,45 @@ function renderMenu() {
 
         const stockLabel = stockEnforced && product.stock_quantity !== null
             ? `<div class="item-stock${product.stock_quantity <= 5 ? ' low' : ''}">
-                 Stock: ${product.stock_quantity}
-               </div>`
+                Stock: ${product.stock_quantity}
+            </div>`
             : '';
 
         const showCat = !!searchQuery;
 
+        // Letter index for drinks, number index otherwise
+        const indexLabel = (isDrinkCategory && !searchQuery)
+            ? getLetterIndex(index)
+            : index + 1;
+
         div.innerHTML = `
-            <div class="item-name">${highlightMatch(product.product_name, searchQuery)}</div>
-            <div class="item-price">RM ${parseFloat(product.selling_price).toFixed(2)}</div>
-            ${showCat ? `<div class="item-cat-tag">${product.category_name}</div>` : ''}
-            ${stockLabel}
-            ${outOfStock ? `<div class="item-stock low">Out of stock</div>` : ''}`;
+            <div class="item-index-wrap">
+                <div class="item-index">${indexLabel}</div>
+                <div class="item-divider"></div>
+            </div>
+            <div class="item-content">
+                <div class="item-name">${highlightMatch(product.product_name, searchQuery)}</div>
+                <div class="item-price">RM ${parseFloat(product.selling_price).toFixed(2)}</div>
+                ${hasAddons ? `<div class="item-addon-tag">+ Add-ons</div>` : ''}
+                ${showCat ? `<div class="item-cat-tag">${product.category_name}</div>` : ''}
+                ${stockLabel}
+                ${outOfStock ? `<div class="item-stock low">Out of stock</div>` : ''}
+            </div>`;
 
         if (!outOfStock) div.onclick = () => handleMenuItemClick(product);
         area.appendChild(div);
     });
+}
+
+// Converts 0→A, 1→B ... 25→Z, 26→AA, 27→AB, etc. (handles more than 26 drinks)
+function getLetterIndex(index) {
+    let n = index;
+    let label = '';
+    do {
+        label = String.fromCharCode(65 + (n % 26)) + label;
+        n = Math.floor(n / 26) - 1;
+    } while (n >= 0);
+    return label;
 }
 
 function highlightMatch(text, query) {
@@ -1161,63 +1398,79 @@ function highlightMatch(text, query) {
 // ════════════════════════════════════════════════
 // PAYMENT
 // ════════════════════════════════════════════════
+function groupItems(items) {
+    const groups = {};
+
+    items.forEach(it => {
+        const addonIds = (it.addons || []).map(a => a.id).sort().join(',');
+        const key = it.productId + '|' + addonIds;
+
+        if (!groups[key]) {
+            groups[key] = { ...it, qty: 0, total_price: 0 };
+        }
+        groups[key].qty         += it.qty;
+        groups[key].total_price += it.total_price;
+    });
+
+    return Object.values(groups);
+}
+
 function openPayment() {
     const items = Object.values(order);
     if (!items.length) return;
 
     payTotal          = items.reduce((a, i) => a + i.total_price, 0);
-    selectedMethodObj = null;
+    selectedPayMethod = null;
 
     const label = currentMode === 'table'
         ? currentTable.label
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
     document.getElementById('paySub').textContent = label;
 
-    // Build summary lines (include addons)
+    // Build summary lines (product name on its own line, addons listed
+    // underneath as their own indented lines), ordered by category arrangement
     const linesEl = document.getElementById('paySummaryLines');
     linesEl.innerHTML = '';
-    items.forEach(it => {
+
+    const grouped = groupItems(items);
+    const sortedGrouped = sortByCategoryOrder(grouped);
+
+    sortedGrouped.forEach(it => {
         const line = document.createElement('div');
         line.className = 'pay-line';
-        line.innerHTML = `<span>${it.name} × ${it.qty}</span><span>RM ${it.total_price.toFixed(2)}</span>`;
+        line.innerHTML = `<span class="pay-line-name">${displayItemName(it)} × ${it.qty}</span><span class="pay-line-price">RM ${it.total_price.toFixed(2)}</span>`;
         linesEl.appendChild(line);
-        // Show addon breakdown under each item
-        if (it.addons && it.addons.length > 0) {
-            it.addons.forEach(ao => {
-                const addonLine = document.createElement('div');
-                addonLine.className = 'pay-line-addon';
-                addonLine.innerHTML = `<span>↳ + ${ao.name}</span><span> (RM ${parseFloat(ao.price).toFixed(2)})</span>`;
-                linesEl.appendChild(addonLine);
-            });
-        }
+
+        belowAddons(it).forEach(a => {
+            const addonLine = document.createElement('div');
+            addonLine.className = 'pay-line-addon';
+            addonLine.innerHTML = `<span class="pay-line-name">+ ${a.name}</span><span class="pay-line-price"></span>`;
+            linesEl.appendChild(addonLine);
+        });
     });
+
     const totalLine = document.createElement('div');
     totalLine.className = 'pay-total-line';
     totalLine.innerHTML = `<span class="pay-total-label">Total</span><span class="pay-total-val">RM ${payTotal.toFixed(2)}</span>`;
     linesEl.appendChild(totalLine);
 
-    // Build payment method buttons
+    // ── Build the two payment method buttons: Cash / QR ──
     const btnsEl = document.getElementById('payMethodBtns');
     btnsEl.innerHTML = '';
-    paymentMethods.forEach(pm => {
-        const btn = document.createElement('button');
-        btn.className  = 'pay-method-btn';
-        btn.dataset.id = pm.id;
 
-        const icon = pm.image_full_url
-            ? `<img src="${pm.image_full_url}"
-                    onerror="this.style.display='none'"
-                    style="width:36px;height:36px;object-fit:contain;border-radius:6px;">`
-            : `<span class="pm-icon"
-                    style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-                        font-size:1.4rem;background:var(--tag);border-radius:6px;">
-                ${pm.payment_method_name.charAt(0)}
-            </span>`;
+    const cashBtn = document.createElement('button');
+    cashBtn.className  = 'pay-method-btn';
+    cashBtn.dataset.method = 'cash';
+    cashBtn.innerHTML  = `<span class="pm-icon">💵</span><span>现金 Cash</span>`;
+    cashBtn.onclick    = () => selectPayMethod('cash', cashBtn);
+    btnsEl.appendChild(cashBtn);
 
-        btn.innerHTML = `${icon}<span>${pm.payment_method_name}</span>`;
-        btn.onclick   = () => selectPayMethod(pm);
-        btnsEl.appendChild(btn);
-    });
+    const qrBtn = document.createElement('button');
+    qrBtn.className  = 'pay-method-btn';
+    qrBtn.dataset.method = 'qr';
+    qrBtn.innerHTML  = `<span class="pm-icon">📱</span><span>QR 支付</span>`;
+    qrBtn.onclick    = () => selectPayMethod('qr', qrBtn);
+    btnsEl.appendChild(qrBtn);
 
     document.getElementById('cashSection').classList.remove('visible');
     document.getElementById('qrSection').classList.remove('visible');
@@ -1226,20 +1479,20 @@ function openPayment() {
     document.getElementById('payConfirmBtn').disabled  = true;
 
     document.getElementById('payOverlay').classList.add('open');
+
+    // Default to Cash selected
+    selectPayMethod('cash', cashBtn);
+
     pushState({ page: 'payment' });
 }
 
-function selectPayMethod(pm) {
-    selectedMethodObj = pm;
+function selectPayMethod(method, btnEl) {
+    selectedPayMethod = method; // 'cash' or 'qr'
 
-    document.querySelectorAll('.pay-method-btn').forEach(b => {
-        b.classList.remove('selected-cash', 'selected-qr');
-        if (parseInt(b.dataset.id) === pm.id) {
-            b.classList.add(pm.payment_method_name.toLowerCase() === 'cash' ? 'selected-cash' : 'selected-qr');
-        }
-    });
+    document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('selected-qr'));
+    if (btnEl) btnEl.classList.add('selected-qr');
 
-    const isCash = pm.payment_method_name.toLowerCase() === 'cash';
+    const isCash = method === 'cash';
 
     if (isCash) {
         document.getElementById('cashSection').classList.add('visible');
@@ -1247,33 +1500,43 @@ function selectPayMethod(pm) {
 
         const quickEl = document.getElementById('quickAmounts');
         quickEl.innerHTML = '';
-        const rounded = Math.ceil(payTotal / 5) * 5;
-        [rounded, rounded + 5, rounded + 10, rounded + 20].forEach(amt => {
+
+        const selectQuickAmount = (btn, amount) => {
+            quickEl.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('payInput').value = amount.toFixed(2);
+            calcChange();
+        };
+
+        // "Exact amount" auto-fill button
+        const exactBtn       = document.createElement('button');
+        exactBtn.className   = 'quick-btn';
+        exactBtn.innerHTML = `Auto<br>(RM ${payTotal.toFixed(2)})`
+        exactBtn.onclick     = () => selectQuickAmount(exactBtn, payTotal);
+        quickEl.appendChild(exactBtn);
+
+        // Fixed common cash denominations
+        [30, 50, 100, 200, 300].forEach(amt => {
             const btn       = document.createElement('button');
             btn.className   = 'quick-btn';
-            btn.textContent = `RM ${amt.toFixed(0)}`;
-            btn.onclick     = () => { document.getElementById('payInput').value = amt.toFixed(2); calcChange(); };
+            btn.textContent = `RM ${amt}`;
+            btn.onclick     = () => selectQuickAmount(btn, amt);
             quickEl.appendChild(btn);
         });
     } else {
+        // QR
         document.getElementById('qrSection').classList.add('visible');
         document.getElementById('cashSection').classList.remove('visible');
         document.getElementById('qrAmount').textContent = `RM ${payTotal.toFixed(2)}`;
+        document.getElementById('payConfirmBtn').disabled = false; // not used in qr view, harmless
 
         const qrBox = document.querySelector('.qr-box');
-        if (pm.image_full_url) {
-            qrBox.innerHTML = `
-                <img src="${pm.image_full_url}"
-                     onerror="this.src=''; this.alt='No image';"
-                     style="width:240px;object-fit:contain;border-radius:8px;display:block;">`;
-        } else {
-            qrBox.innerHTML = `
-                <div style="width:240px;display:flex;align-items:center;justify-content:center;
-                            font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;
-                            color:#333;text-align:center;padding:8px;">
-                    ${pm.payment_method_name}
-                </div>`;
-        }
+        qrBox.innerHTML = `
+            <div style="width:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+                        font-family:'Syne',sans-serif;font-weight:700;color:#333;text-align:center;padding:8px;">
+                <span style="font-size:2.4rem;">📱</span>
+                <span style="font-size:0.9rem;">Scan with your banking / e-wallet app</span>
+            </div>`;
     }
 }
 
@@ -1284,7 +1547,7 @@ function calcChange() {
     const changeLabel = document.getElementById('changeLabel');
     const confirmBtn  = document.getElementById('payConfirmBtn');
     if (received <= 0) { changeBox.style.display = 'none'; confirmBtn.disabled = true; return; }
-    const change = received - payTotal;
+    const change = Math.round((received - payTotal) * 100) / 100;
     changeBox.style.display = 'flex';
     if (change >= 0) {
         changeBox.className     = 'change-box';
@@ -1303,32 +1566,34 @@ function closePayment() { document.getElementById('payOverlay').classList.remove
 function closePayOnBg(e) { if (e.target === document.getElementById('payOverlay')) closePayment(); }
 
 function confirmPayment() {
-    if (!selectedMethodObj) { showToast('Please select a payment method', 'err'); return; }
+    if (!selectedPayMethod) { showToast('Please select a payment method', 'err'); return; }
 
-    const isCash   = selectedMethodObj.payment_method_name.toLowerCase() === 'cash';
+    const isCash   = selectedPayMethod === 'cash';
     const received = isCash
-        ? parseFloat(document.getElementById('payInput').value) || payTotal
+        ? (parseFloat(document.getElementById('payInput').value) || payTotal)
         : payTotal;
     const change   = Math.max(0, received - payTotal);
 
+    // payment_method is saved exactly as 'cash' or 'qr'
     const payload = {
-        payment_method_id: selectedMethodObj.id,
-        payment_method:    selectedMethodObj.payment_method_name,
-        amount_received:   received,
-        change:            change,
-        tax_amount:        0,
-        final_total:       payTotal,
+        payment_method:   selectedPayMethod, // 'cash' | 'qr'
+        amount_received:  received,
+        change:           change,
+        tax_amount:       0,
+        final_total:      payTotal,
     };
 
     const label = currentMode === 'table'
         ? currentTable.label
         : `Dabao D${currentDabao.id}${currentDabao.name ? ' · ' + currentDabao.name : ''}`;
 
+    const methodLabel = isCash ? 'Cash' : 'QR';
+
     document.getElementById('confirmSub').textContent = label;
     document.getElementById('confirmDetails').innerHTML = `
         <div class="confirm-detail-row">
             <span class="label">Payment method</span>
-            <span>${selectedMethodObj.payment_method_name}</span>
+            <span>${methodLabel}</span>
         </div>
         ${isCash ? `
         <div class="confirm-detail-row">
@@ -1355,33 +1620,133 @@ function confirmPayment() {
     document.getElementById('confirmOverlay').classList.add('open');
 }
 
-function printOrder() {
-    const items = Object.values(order);
-    if (!items.length) return;
+// ════════════════════════════════════════════════
+// SMALL ACTION-CONFIRM MODAL (print / clear / done)
+// ════════════════════════════════════════════════
+// Returns the index of this item's category within the `categories` array
+// (i.e. its position in your category arrangement/order)
+function getCategoryOrder(item) {
+    const idx = categories.findIndex(cat =>
+        Array.isArray(cat.products) && cat.products.some(p => p.id === item.productId)
+    );
+    return idx === -1 ? categories.length : idx; // unknown category goes last
+}
 
-    const label = currentMode === 'table'
-        ? currentTable.label
-        : `Dabao D${currentDabao.id}`;
+// Sorts items by category arrangement order (category 1 first, 2 next, etc.)
+// Stable sort — items within the same category keep their original order.
+function sortByCategoryOrder(items) {
+    return [...items].sort((a, b) => getCategoryOrder(a) - getCategoryOrder(b));
+}
 
-    const now = new Date().toLocaleString('en-MY');
+let actionConfirmYesHandler = null;
 
+function openActionConfirm({icon, title, sub, yesLabel, danger, onYes}) {
+    document.getElementById('actionConfirmIcon').textContent  = icon || '⚠️';
+    document.getElementById('actionConfirmTitle').textContent = title || 'Are you sure?';
+    document.getElementById('actionConfirmSub').textContent   = sub || '';
+
+    const yesBtn = document.getElementById('actionConfirmYesBtn');
+    yesBtn.textContent = yesLabel || 'Yes';
+    yesBtn.className   = `action-confirm-yes${danger ? ' danger' : ''}`;
+
+    actionConfirmYesHandler = onYes;
+    yesBtn.onclick = () => {
+        const handler = actionConfirmYesHandler;
+        closeActionConfirm();
+        if (typeof handler === 'function') handler();
+    };
+
+    document.getElementById('actionConfirmOverlay').classList.add('open');
+}
+
+function closeActionConfirm() {
+    document.getElementById('actionConfirmOverlay').classList.remove('open');
+    actionConfirmYesHandler = null;
+}
+
+function confirmPrintOrder() {
+    const items = Object.values(order).filter(it => !it.printed);
+    // if (!items.length) {
+    //     showToast('没有新订单 Nothing new to print', 'err');
+    //     return;
+    // }
+    openActionConfirm({
+        icon: '🖨️',
+        title: '打印订单 Print this order?',
+        sub: '厨房订单将送往打印机 A kitchen order slip will be sent to the printer.',
+        yesLabel: '打印 Print',
+        danger: false,
+        onYes: () => printOrder(),
+    });
+}
+
+// ════════════════════════════════════════════════
+// SEQUENTIAL BLE PRINT QUEUE
+// The BLE printer can only hold one connection at a time. Each
+// AndroidPrinter.printBluetooth() call does a full async
+// connect → write → disconnect cycle on the Android side, and reports back
+// via window.onPrintResult(success, message) when it's done. We wait for
+// that callback before starting the next print job, so multi-paper prints
+// (e.g. food slip + drinks slip) never race on the same connection.
+// ════════════════════════════════════════════════
+let _printResultResolver = null;
+
+window.onPrintResult = function (success, message) {
+    if (_printResultResolver) {
+        const resolve = _printResultResolver;
+        _printResultResolver = null;
+        resolve({ success, message });
+    }
+};
+
+function printAndWait(receiptText, timeoutMs = 20000) {
+    return new Promise((resolve) => {
+        let settled = false;
+        _printResultResolver = (result) => {
+            if (settled) return;
+            settled = true;
+            resolve(result);
+        };
+        // Safety net: if the Android side never calls back (older app build,
+        // or something goes wrong before it can report), don't hang forever —
+        // move on after a timeout so the rest of the order can still print.
+        setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            _printResultResolver = null;
+            resolve({ success: false, message: 'Timed out waiting for print result' });
+        }, timeoutMs);
+
+        AndroidPrinter.printBluetooth(receiptText);
+    });
+}
+
+// Whether a cart item's product belongs to a "drink" category
+// (same match rule as the drink lettering in renderMenu — case-insensitive "drink" in category name)
+function isDrinkItem(item) {
+    const cat = categories.find(c =>
+        Array.isArray(c.products) && c.products.some(p => p.id === item.productId)
+    );
+    return !!cat && cat.category_name.toLowerCase().includes('drink');
+}
+
+// Builds one kitchen/bar slip's receipt text for a subset of items
+function buildKitchenSlipText(items, label, now, sectionTitle) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
 [C]<font size='big'><b>${label}</b></font>
 
 [C]${now}
-
+${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
 [C]================================
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
-        if (item.addons && item.addons.length > 0) {
-            item.addons.forEach(ao => {
-                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
-            });
-        }
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
+        belowAddons(item).forEach(a => {
+            receipt += `[L]<font size='big'>   + ${a.name}</font>\n`;
+        });
     });
 
     receipt += `
@@ -1391,13 +1756,68 @@ ${formatReceiptLines(receiptHeader)}
 
 \n\n\n
 `;
+    return receipt;
+}
+
+async function printOrder() {
+    const allItems = Object.values(order);
+    const allPrinted = allItems.every(it => it.printed);
+    const items = allPrinted
+        ? allItems
+        : allItems.filter(it => !it.printed);
+
+    if (!items.length) return;
+
+    const label = currentMode === 'table'
+        ? currentTable.label
+        : `Dabao D${currentDabao.id}`;
+
+    const now = new Date().toLocaleString('en-MY');
+
+    const sortedItems = sortByCategoryOrder(items);
+
+    // Only split food/drink on a fresh print. On a reprint (everything
+    // already printed), send one combined slip instead.
+    const isReprint  = allPrinted;
+    const drinkItems = isReprint ? [] : sortedItems.filter(it => isDrinkItem(it));
+    const foodItems  = isReprint ? sortedItems : sortedItems.filter(it => !isDrinkItem(it));
+    const needsSplit = !isReprint && drinkItems.length > 0 && foodItems.length > 0;
+
+    // Ask the server first — it's the only thing both devices share
+    let res;
+    try {
+        res = await apiFetch('/cart/mark-printed', {
+            method: 'PUT',
+            body: JSON.stringify({ cart_ids: items.map(it => it.cartId) }),
+        });
+    } catch (err) {
+        console.error('Failed to mark items as printed', err);
+        return;
+    }
+
+    if (res.blocked) {
+        showToast('🖨 打印机使用中 Printer in use, try again shortly', 'err');
+        return;
+    }
 
     if (window.AndroidPrinter) {
-        AndroidPrinter.printBluetooth(receipt);
         showToast('🖨 Printing order...', '');
+        if (foodItems.length) {
+            await printAndWait(
+                buildKitchenSlipText(foodItems, label, now, needsSplit ? '食物 FOOD' : null)
+            );
+        }
+        if (drinkItems.length) {
+            await printAndWait(
+                buildKitchenSlipText(drinkItems, label, now, needsSplit ? '饮料 DRINKS' : null)
+            );
+        }
     } else {
         alert('Printer only works inside Android APK');
     }
+
+    items.forEach(it => { order[it.cartId].printed = true; });
+    renderCart();
 }
 
 async function processPayment(payload) {
@@ -1449,7 +1869,7 @@ function printReceipt(payload, withReceipt = true) {
         return;
     }
 
-    const items = Object.values(order);
+    const items = groupItems(Object.values(order));
     if (!items.length) return;
 
     const label = currentMode === 'table'
@@ -1461,32 +1881,32 @@ function printReceipt(payload, withReceipt = true) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<font size='big'><b>${label}</b></font>
+[C]${label}
 
 [C]${now}
 
 [C]================================
 `;
 
-    items.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${item.name}</b></font>\n`;
+    const sortedItems = sortByCategoryOrder(items);
+
+    sortedItems.forEach(item => {
+        receipt += `\n[L]${item.qty} x ${displayItemName(item)}\n`;
+        belowAddons(item).forEach(a => {
+            receipt += `[L]   + ${a.name}\n`;
+        });
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
-        if (item.addons && item.addons.length > 0) {
-            item.addons.forEach(ao => {
-                receipt += `[L]  + ${ao.name} (RM ${parseFloat(ao.price).toFixed(2)})\n`;
-            });
-        }
     });
 
     receipt += `
 [C]--------------------------------
-[L]<b>Total</b>
-[R]<b>RM ${payload.final_total.toFixed(2)}</b>
+[L]Total
+[R]RM ${payload.final_total.toFixed(2)}
 [L]Payment
-[R]${payload.payment_method}
+[R]${payload.payment_method === 'cash' ? 'Cash' : 'QR'}
 `;
 
-    if (payload.payment_method.toLowerCase() === 'cash') {
+    if (payload.payment_method === 'cash') {
         receipt += `[L]Received
 [R]RM ${payload.amount_received.toFixed(2)}
 [L]Change
@@ -1526,13 +1946,11 @@ function showToast(msg, cls) {
 function formatReceiptLines(text, tagWrap = true) {
     if (!text) return '';
     return text
-        .replace(/\r/g, '')      // strip stray carriage returns
+        .replace(/\r/g, '')
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0)
-        .map(line => tagWrap
-            ? `[C]<font size='big'><b>${line}</b></font>`
-            : `[C]${line}`)
+        .map(line => `[C]${line}`)
         .join('\n\n');
 }
 
@@ -1551,6 +1969,27 @@ function pushState(state) {
 })();
 
 boot();
+
+// ════════════════════════════════════════════════
+// AUTO REFRESH — keep floor/dabao status AND the product menu current.
+//
+// Refreshes Tables, Dabao, and the Menu every 1 minute in the background.
+// Deliberately does NOT do a full page reload — a hard reload would wipe
+// whatever the cashier is mid-typing (Amount Received, Dabao name) and
+// force-close any open modal (Payment, Addon, Confirm).
+// ════════════════════════════════════════════════
+setInterval(() => {
+    loadTables();
+    loadDabao();
+    loadMenu().then(() => {
+        // loadMenu() only updates the categories/allProducts variables in
+        // memory — it doesn't redraw anything by itself. If the cashier is
+        // currently looking at the menu, re-render it so updated prices/
+        // stock/new products show up immediately instead of silently
+        // sitting in memory until they switch tabs.
+        if (currentMode) renderMenu();
+    });
+}, 60000); // 60,000ms = 1 minute
 </script>
 </body>
 </html>
