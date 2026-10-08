@@ -1,10 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    #mytable th,
+    #mytable td {
+        padding: 10px;
+    }
+</style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
         <a class="text-muted fw-light" href="{{ route('product.index') }}">Product /</a> Stock Adjustment
     </h4>
+
+    @if($errors->any())
+        <div class="alert alert-danger">{{ $errors->first() }}</div>
+    @endif
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -18,17 +28,26 @@
                 </select>
             </form>
         </div>
-        <div class="card-body table-responsive">
-            <table class="table table-bordered">
+        <div class="card-datatable text-nowrap">
+            <table class="dt-column-search table table-bordered" id="mytable">
                 <thead>
                     <tr>
-                        <th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>From</th><th>To</th>
-                        <th>Reason</th><th>Requested By</th><th>Status</th><th>Processed By</th><th>Processed At</th>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th>Qty</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Reason</th>
+                        <th>Requested By</th>
+                        <th>Status</th>
+                        <th>Processed By</th>
+                        <th>Processed At</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($adjustments as $a)
+                    @foreach($adjustments as $a)
                     <tr>
                         <td>{{ $a->created_at }}</td>
                         <td>{{ $a->product->product_name ?? '' }}</td>
@@ -39,9 +58,9 @@
                         <td>{{ $a->reason }}</td>
                         <td>{{ $a->requester->name ?? '' }}</td>
                         <td>
-                            @if($a->status == 'pending') <span class="badge bg-warning">Pending</span>
-                            @elseif($a->status == 'approved') <span class="badge bg-success">Approved</span>
-                            @else <span class="badge bg-danger">Rejected</span>
+                            @if($a->status == 'pending') <span style="color:orange">Pending</span>
+                            @elseif($a->status == 'approved') <span style="color:green">Approved</span>
+                            @else <span style="color:red">Rejected</span>
                                 @if($a->reject_reason)<br><small>{{ $a->reject_reason }}</small>@endif
                             @endif
                         </td>
@@ -64,12 +83,24 @@
                             @endif
                         </td>
                     </tr>
-                    @empty
-                    <tr><td colspan="12" class="text-center">No records</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+$(function(){
+    $('#mytable').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50, 75, 100],
+        order: [[0, 'desc']],
+        columnDefs: [{ orderable: false, targets: -1 }],
+    });
+});
+</script>
 @endsection

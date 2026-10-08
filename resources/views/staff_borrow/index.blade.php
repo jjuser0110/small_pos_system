@@ -1,6 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    #mytable th,
+    #mytable td {
+        padding: 10px;
+    }
+</style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
         <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Staff Borrow
@@ -22,8 +28,8 @@
                 </select>
             </form>
         </div>
-        <div class="card-body table-responsive">
-            <table class="table table-bordered">
+        <div class="card-datatable text-nowrap">
+            <table class="dt-column-search table table-bordered" id="mytable">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -37,16 +43,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($borrows as $b)
+                    @foreach($borrows as $b)
                     <tr>
                         <td>{{ $b->created_at }}</td>
                         <td>{{ $b->user->name ?? '' }} ({{ $b->user->username ?? '' }})</td>
                         <td>{{ number_format($b->amount, 2) }}</td>
                         <td>{{ $b->reason }}</td>
                         <td>
-                            @if($b->status == 'pending') <span class="badge bg-warning">Pending</span>
-                            @elseif($b->status == 'approved') <span class="badge bg-success">Approved</span>
-                            @else <span class="badge bg-danger">Rejected</span>
+                            @if($b->status == 'pending') <span style="color:orange">Pending</span>
+                            @elseif($b->status == 'approved') <span style="color:green">Approved</span>
+                            @else <span style="color:red">Rejected</span>
                                 @if($b->reject_reason)<br><small>{{ $b->reject_reason }}</small>@endif
                             @endif
                         </td>
@@ -70,12 +76,26 @@
                         </td>
                         @endif
                     </tr>
-                    @empty
-                    <tr><td colspan="8" class="text-center">No records</td></tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+$(function(){
+    $('#mytable').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50, 75, 100],
+        order: [[0, 'desc']],
+        @if(in_array(Auth::user()->role_id, [1, 2, 3]))
+        columnDefs: [{ orderable: false, targets: -1 }],
+        @endif
+    });
+});
+</script>
 @endsection
