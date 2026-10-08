@@ -27,6 +27,8 @@ class User extends Authenticatable
         'branch_id',
         'company_id',
         'shift',
+        'shift_start',
+        'shift_end',
     ];
 
 
@@ -52,5 +54,21 @@ class User extends Authenticatable
     public function company()
     {
         return $this->belongsTo('App\Models\Company');
+    }
+
+    public function isWithinShift(): bool
+    {
+        if ($this->role_id != 5 || !$this->shift_start || !$this->shift_end) {
+            return true; // no restriction
+        }
+
+        $now   = Carbon::now()->format('H:i:s');
+        $start = Carbon::parse($this->shift_start)->format('H:i:s');
+        $end   = Carbon::parse($this->shift_end)->format('H:i:s');
+
+        if ($start <= $end) {
+            return $now >= $start && $now <= $end;
+        }
+        return $now >= $start || $now <= $end; // overnight
     }
 }

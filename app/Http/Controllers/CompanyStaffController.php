@@ -46,6 +46,8 @@ class CompanyStaffController extends Controller
         $validator = Validator::make($request->all(), [
             'username' => 'required|unique:users,username,NULL,id,deleted_at,NULL',
             'shift'    => 'required|in:AM,PM',
+            'shift_start' => 'required|date_format:H:i',
+            'shift_end'   => 'required|date_format:H:i|different:shift_start',
         ]);
         if ($validator->fails()) {
             return redirect()->back()
@@ -75,6 +77,8 @@ class CompanyStaffController extends Controller
     {
         $request->validate([
             'shift' => 'required|in:AM,PM',
+            'shift_start' => 'required|date_format:H:i',
+            'shift_end'   => 'required|date_format:H:i|different:shift_start',
         ]);
 
         if($request->password !=null){

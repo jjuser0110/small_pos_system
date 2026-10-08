@@ -7,6 +7,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\StaffAttendance;
 use App\User;
 use Socialite;
 use Auth;
@@ -51,17 +52,31 @@ class LoginController extends Controller
 
     public function authenticated(Request $request, $user)
     {
-        // dd($user);
         if ($user->is_active != 1) {
             Auth::logout();
-            
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
             return redirect()->route('login')->withErrors('Your account has been locked. Please contact your Boss!');
-        }else{
-            if($user->role_id == 5){
-                return redirect()->route('counter');
-            }else{
-                return redirect()->route('home')->withSuccess('Successfully Login');
-            }
         }
+
+        // staff can only log in during their shift time
+        if (!$user->isWithinShift()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors('You can only log in during your shift time.');
+        }
+
+        if ($user->role_id == 5) {
+            StaffAttendance::clockIn($user);
+        }
+
+        if ($user->role_id == 5) {
+            return redirect()->route('counter');
+        }
+
+        return redirect()->route('home')->withSuccess('Successfully Login');
     }
 }

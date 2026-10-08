@@ -30,8 +30,26 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">
-            <button class="btn btn-primary" style="float:right;" onclick="if(confirm('Are you sure you want to close your shift?')){showLoading();window.location.href='{{ route('shift_closing') }}'}">Closing</button>
+            <button class="btn btn-primary" style="float:right;" onclick="confirmClosing()">Closing</button>
+
+            @if(in_array(Auth::user()->role_id, [1, 2, 5]))
+                <button class="btn btn-warning" style="float:right;margin-right:10px" data-bs-toggle="modal" data-bs-target="#borrowModal">Borrow Money</button>
+            @endif
+
+            @if(in_array(Auth::user()->role_id, [3, 5]))
+                <a class="btn btn-info" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">
+                    {{ Auth::user()->role_id == 3 ? 'Borrow Approvals' : 'My Borrow Records' }}
+                    @if(Auth::user()->role_id == 3)
+                        @php $pending = \App\Models\StaffBorrow::where('branch_id', Auth::user()->branch_id)->where('status','pending')->count(); @endphp
+                        @if($pending > 0) <span class="badge bg-danger">{{ $pending }}</span> @endif
+                    @endif
+                </a>
+            @endif
         </div>
+
+            @if($errors->any())
+                <div class="col-12"><div class="alert alert-danger">{{ $errors->first() }}</div></div>
+            @endif
         <div class="col-sm-4 col-lg-4 mb-4">
             <div class="card card-border-shadow-primary h-100">
             <div class="card-body">
@@ -85,10 +103,55 @@
     </div>
     <!--/ Card Border Shadow -->
 </div>
-    <!-- / Content -->
+
+@if(in_array(Auth::user()->role_id, [1, 2, 5]))
+<div class="modal fade" id="borrowModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" action="{{ route('staff_borrow.store') }}" onsubmit="showLoading()">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Borrow Money</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Amount</label>
+                    <input type="number" step="0.01" min="0.01" name="amount" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reason</label>
+                    <textarea name="reason" class="form-control" rows="3" maxlength="500"></textarea>
+                </div>
+                <small class="text-muted">Your request will be pending until the branch manager approves it.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
+<!-- / Content -->
 
 @endsection
 @section('page-js')
 @endsection
 @section('scripts')
+<script>
+    function confirmClosing() {
+        if (!confirm('Are you sure you want to close your shift?')) return;
+
+        var now = new Date();
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+        var time = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' +
+                   pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+
+        if (confirm('Your shift will be recorded as closed : ' + time + '.\n\nAre you sure you want to end your shift?\n\nYOU WILL BE LOGGED OUT.')) {
+            showLoading();
+            window.location.href = '{{ route('shift_closing') }}';
+        }
+    }
+</script>
 @endsection

@@ -10,6 +10,9 @@
 
     <div class="container-xxl flex-grow-1 container-p-y">
         <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Product </span></h4>
+        @if($errors->any())
+            <div class="alert alert-danger">{{ $errors->first() }}</div>
+        @endif
 
         <!-- DataTable with Buttons -->
         <div class="card">
@@ -26,6 +29,7 @@
                         </a>
 
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadProductModal">
+
                             <span><i class="bx bx-upload me-sm-1"></i>
                                 <span class="d-none d-sm-inline-block">Import</span>
                             </span>
@@ -74,10 +78,12 @@
                             {{-- <td>{{$row->arrangement??""}}</td> --}}
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>
-                                <a style="color:blue;cursor:pointer"
-                                onclick="openTransferModal('{{ $row->id }}', '{{ addslashes($row->product_name) }}')">
-                                    <i class="fa-solid fa-truck-arrow-right"></i>
+                                @if(Auth::user()->role_id != 5)
+                                <a style="color:#f0ad00;cursor:pointer" title="Adjust Stock"
+                                onclick="openAdjustModal('{{ $row->id }}', '{{ addslashes($row->product_name) }}', '{{ $row->stock_quantity }}')">
+                                    <i class="fa-solid fa-boxes-stacked"></i>
                                 </a>
+                                @endif
                                 @if($row->connected_product_quantity > 0)
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to convert this product to smaller unit?')){window.location.href='{{ route('product.convert',$row) }}'}"><i class="fa-solid fa-exchange-alt"></i></a>
                                 @endif
@@ -166,6 +172,52 @@
         </div>
     </div>
 
+    <div class="modal fade" id="adjustStockModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" method="post" action="{{ route('stock_adjustment.store') }}" onsubmit="showLoading()">
+                @csrf
+                <input type="hidden" name="product_id" id="adjust_product_id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adjust Stock: <span id="adjustProductName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Current stock: <b id="adjustCurrentStock"></b></p>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select name="type" id="adjust_type" class="form-select" required>
+                            <option value="adjust_in">Adjust In (add stock)</option>
+                            <option value="adjust_out">Adjust Out (reduce stock)</option>
+                            <option value="transfer">Send to Other Company</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="adjust_target_wrap" style="display:none">
+                        <label class="form-label">Send To Company</label>
+                        <select name="target_company_id" id="adjust_target" class="form-select">
+                            <option value="">-- Select --</option>
+                            @foreach(\App\Models\Company::all() as $c)
+                                <option value="{{ $c->id }}">{{ $c->company_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" step="0.01" min="0.01" name="quantity" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <textarea name="reason" class="form-control" rows="3" maxlength="500" required></textarea>
+                    </div>
+                    <small class="text-muted">Stock only changes after a manager approves.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @endsection
     @section('page-js')
     @endsection
@@ -179,11 +231,19 @@
             lengthMenu: [5, 10, 25, 50, 75, 100],
         });
 
-        window.openTransferModal = function(productId, productName){
-            $('#transferProductName').text(productName);
-            $('#transferProductForm').attr('action', "{{ url('product') }}/" + productId + "/transfer-company");
-            $('#transferProductModal').modal('show');
+        window.openAdjustModal = function(id, name, stock){
+            $('#adjust_product_id').val(id);
+            $('#adjustProductName').text(name);
+            $('#adjustCurrentStock').text(stock);
+            $('#adjust_type').val('adjust_in').trigger('change');
+            $('#adjustStockModal').modal('show');
         };
+
+        $('#adjust_type').on('change', function(){
+            var isTransfer = $(this).val() === 'transfer';
+            $('#adjust_target_wrap').toggle(isTransfer);
+            $('#adjust_target').prop('required', isTransfer);
+        });
     });
     </script>
     @endsection

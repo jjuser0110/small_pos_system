@@ -247,20 +247,4 @@ class ProductController extends Controller
 
         return back()->with('success', 'Products imported successfully');
     }
-
-    public function transferCompany(Request $request, Product $product)
-    {
-        $request->validate([
-            'company_id' => 'required|exists:companies,id',
-        ]);
-
-        $company = Company::findOrFail($request->company_id);
-
-        $product->company_id = $company->id;
-        $product->branch_id  = $company->branch_id;
-        $product->created_at = now();
-        $product->save();
-
-        return redirect()->route('product.index')->withSuccess('Product transferred to ' . $company->company_name);
-    }
 }

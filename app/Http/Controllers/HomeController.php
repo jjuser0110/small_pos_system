@@ -17,6 +17,7 @@ use App\Models\OrderItem;
 use App\Models\OrderItemProfit;
 use App\Models\ReceiptSetting;
 use App\Models\ShiftClosing;
+use App\Models\StaffAttendance;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -123,13 +124,37 @@ class HomeController extends Controller
             ->whereNull('closing_time')
             ->first();
 
-        if(isset($shift)){
-            $shift->update([
-                'closing_time'=>Carbon::now()
-            ]);
-            return redirect()->back()->withInfo("Shift Closed");
-        }else{
+        $closed = false;
+
+        if (isset($shift)) {
+            $shift->update(['closing_time' => Carbon::now()]);
+
+            if ($user->role_id == 5) {
+                StaffAttendance::clockOut($user, $shift->created_at);
+            }
+            $closed = true;
+        } elseif ($user->role_id == 5) {
+            // no sales yet, but still record the attendance clock-out
+            $open = StaffAttendance::where('user_id', $user->id)
+                ->where('work_date', StaffAttendance::workDateFor($user))
+                ->whereNull('clock_out')
+                ->first();
+
+            if ($open) {
+                $open->update(['clock_out' => Carbon::now()]);
+                $closed = true;
+            }
+        }
+
+        if (!$closed) {
             return redirect()->back()->withInfo('Nothing To Close');
         }
+
+        // closed successfully: log out
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->withSuccess('Shift closed. You have been logged out.');
     }
 }

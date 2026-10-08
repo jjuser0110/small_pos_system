@@ -38,6 +38,45 @@ $currentRoute = request()->route()->getName();
                 <div>Shift Closing</div>
             </a>
         </li>
+        @php
+            $borrowPending = 0;
+            if (in_array(auth()->user()->role_id, [1, 2, 3])) {
+                $bq = \App\Models\StaffBorrow::where('status', 'pending');
+                if (auth()->user()->role_id == 3) {
+                    $bq->where('branch_id', auth()->user()->branch_id); // manager: own branch only
+                }
+                $borrowPending = $bq->count();
+            }
+        @endphp
+        <li class="menu-item {{ Str::contains($currentRoute, 'staff_borrow.index') ? 'active' : ''}}">
+            <a href="{{ route('staff_borrow.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Borrow Records</div>
+                @if($borrowPending > 0)
+                    <span class="badge bg-danger rounded-pill ms-auto">{{ $borrowPending }}</span>
+                @endif
+            </a>
+        </li>
+
+        @if(auth()->user()->role_id != 5)
+            @php
+                $stockPending = 0;
+                if (in_array(auth()->user()->role_id, [1, 2, 3])) {
+                    $sq = \App\Models\StockAdjustment::where('status', 'pending');
+                    if (auth()->user()->role_id == 3) { $sq->where('branch_id', auth()->user()->branch_id); }
+                    $stockPending = $sq->count();
+                }
+            @endphp
+            <li class="menu-item {{ Str::contains($currentRoute, 'stock_adjustment.index') ? 'active' : ''}}">
+                <a href="{{ route('stock_adjustment.index') }}" class="menu-link">
+                    <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                    <div>Stock Adjustment</div>
+                    @if($stockPending > 0)
+                        <span class="badge bg-danger rounded-pill ms-auto">{{ $stockPending }}</span>
+                    @endif
+                </a>
+            </li>
+        @endif
 
         @if(auth()->user()->role_id != 5 )
         <li class="menu-header small text-uppercase">
@@ -77,6 +116,12 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('report.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Report</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'staff_attendance.index') ? 'active' : ''}}">
+            <a href="{{ route('staff_attendance.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Staff Attendance</div>
             </a>
         </li>
         @endif

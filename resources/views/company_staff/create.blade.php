@@ -33,6 +33,24 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="shift_start">Shift Start</label>
+                    <input type="time" class="form-control" name="shift_start" id="shift_start"
+                        value="{{ old('shift_start', isset($company_staff->shift_start) ? \Carbon\Carbon::parse($company_staff->shift_start)->format('H:i') : '') }}"
+                        required />
+                    @error('shift_start')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="shift_end">Shift End</label>
+                    <input type="time" class="form-control" name="shift_end" id="shift_end"
+                        value="{{ old('shift_end', isset($company_staff->shift_end) ? \Carbon\Carbon::parse($company_staff->shift_end)->format('H:i') : '') }}"
+                        required />
+                    @error('shift_end')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
                 <div class="col-md-6">
                     <label class="form-label" for="shift">Shift</label>
                     <select name="shift" id="shift" class="form-select" required>
@@ -86,4 +104,17 @@
 @endsection
 
 @section('scripts')
+<script>
+    function syncShift() {
+        var start = document.getElementById('shift_start').value; // "HH:mm"
+        if (!start) return;
+
+        var hour = parseInt(start.split(':')[0], 10);
+        document.getElementById('shift').value = hour < 12 ? 'AM' : 'PM';
+    }
+
+    document.getElementById('shift_start').addEventListener('input', syncShift);
+    document.getElementById('shift_start').addEventListener('change', syncShift);
+    document.addEventListener('DOMContentLoaded', syncShift); // also runs on the edit page
+</script>
 @endsection
