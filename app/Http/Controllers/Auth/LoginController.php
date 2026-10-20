@@ -71,9 +71,6 @@ class LoginController extends Controller
 
         if ($user->role_id == 5) {
             StaffAttendance::clockIn($user);
-        }
-
-        if ($user->role_id == 5) {
             return redirect()->route('counter');
         }
 
