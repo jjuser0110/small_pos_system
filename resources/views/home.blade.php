@@ -49,7 +49,17 @@
             @endif
 
             @if(in_array(Auth::user()->role_id, [1, 2, 5]))
-                <button class="btn btn-warning" ...>Borrow Money</button>
+                <button class="btn btn-warning" style="float:right;margin-right:10px" data-bs-toggle="modal" data-bs-target="#borrowModal">Borrow Money</button>
+            @endif
+
+            @if(in_array(Auth::user()->role_id, [3, 5]))
+                <a class="btn btn-info" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">
+                    {{ Auth::user()->role_id == 3 ? 'Borrow Approvals' : 'My Borrow Records' }}
+                    @if(Auth::user()->role_id == 3)
+                        @php $pending = \App\Models\StaffBorrow::where('branch_id', Auth::user()->branch_id)->where('status','pending')->count(); @endphp
+                        @if($pending > 0) <span class="badge bg-danger">{{ $pending }}</span> @endif
+                    @endif
+                </a>
             @endif
         </div>
 
