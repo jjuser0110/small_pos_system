@@ -47,20 +47,26 @@ class ProductController extends Controller
     public function create()
     {
         $login_user = Auth::user();
-        if($login_user->role_id == 3){
-            $category = Category::where('branch_id',$login_user->branch_id)->get();
-            $product_link = Product::where('branch_id',$login_user->branch_id)->get();
-        }else if($login_user->role_id == 4){
-            $category = Category::where('company_id',$login_user->company_id)->get();
-            $product_link = Product::where('company_id',$login_user->company_id)->get();
-        }else{
-            $category = Category::all();
+
+        if ($login_user->role_id == 3) {
+            $category     = Category::where('branch_id', $login_user->branch_id)->get();
+            $product_link = Product::where('branch_id', $login_user->branch_id)->get();
+        } elseif ($login_user->role_id == 4) {
+            $category     = Category::where('company_id', $login_user->company_id)->get();
+            $product_link = Product::where('company_id', $login_user->company_id)->get();
+        } else {
+            $category     = Category::all();
             $product_link = Product::all();
-            $supplier = Supplier::all();
         }
 
-        $uom = Uom::all();
-        return view('product.create')->with('supplier',$supplier)->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
+        $supplier = Supplier::all();
+        $uom      = Uom::all();
+
+        return view('product.create')
+            ->with('supplier', $supplier)
+            ->with('category', $category)
+            ->with('uom', $uom)
+            ->with('product_link', $product_link);
     }
 
     public function store(Request $request)
@@ -95,19 +101,27 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $login_user = Auth::user();
-        if($login_user->role_id == 3){
-            $category = Category::where('branch_id',$login_user->branch_id)->get();
-            $product_link = Product::where('branch_id',$login_user->branch_id)->where('id','!=',$product->id)->get();
-        }else if($login_user->role_id == 4){
-            $category = Category::where('company_id',$login_user->company_id)->where('id','!=',$product->id)->get();
-            $product_link = Product::where('company_id',$login_user->company_id)->where('id','!=',$product->id)->get();
-        }else{
-            $category = Category::all();
-            $product_link = Product::where('id','!=',$product->id)->get();
-            $supplier = Supplier::all();
+
+        if ($login_user->role_id == 3) {
+            $category     = Category::where('branch_id', $login_user->branch_id)->get();
+            $product_link = Product::where('branch_id', $login_user->branch_id)->where('id', '!=', $product->id)->get();
+        } elseif ($login_user->role_id == 4) {
+            $category     = Category::where('company_id', $login_user->company_id)->get();
+            $product_link = Product::where('company_id', $login_user->company_id)->where('id', '!=', $product->id)->get();
+        } else {
+            $category     = Category::all();
+            $product_link = Product::where('id', '!=', $product->id)->get();
         }
-        $uom = Uom::all();
-        return view('product.create')->with('supplier',$supplier)->with('product',$product)->with('category',$category)->with('uom',$uom)->with('product_link',$product_link);
+
+        $supplier = Supplier::all();
+        $uom      = Uom::all();
+
+        return view('product.create')
+            ->with('supplier', $supplier)
+            ->with('product', $product)
+            ->with('category', $category)
+            ->with('uom', $uom)
+            ->with('product_link', $product_link);
     }
 
     public function update(Request $request, Product $product)

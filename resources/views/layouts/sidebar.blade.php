@@ -124,6 +124,12 @@ $currentRoute = request()->route()->getName();
                 <div>Staff Attendance</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'supplier.index') ? 'active' : ''}}">
+            <a href="{{ route('supplier.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Supplier</div>
+            </a>
+        </li>
         @endif
 
         @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
@@ -155,12 +161,6 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('branch.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Branch</div>
-            </a>
-        </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'supplier.index') ? 'active' : ''}}">
-            <a href="{{ route('supplier.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Supplier</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'uom.index') ? 'active' : ''}}">
