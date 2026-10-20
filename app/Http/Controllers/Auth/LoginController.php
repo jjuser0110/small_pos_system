@@ -70,9 +70,11 @@ class LoginController extends Controller
         }
 
         if ($user->role_id == 5) {
-            return StaffAttendance::currentFor($user)
-                ? redirect()->route('counter')
-                : redirect()->route('home')->withSuccess('Press Check In to start your shift');
+            StaffAttendance::clockIn($user);
+        }
+
+        if ($user->role_id == 5) {
+            return redirect()->route('counter');
         }
 
         return redirect()->route('home')->withSuccess('Successfully Login');

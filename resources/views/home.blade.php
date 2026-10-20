@@ -30,37 +30,20 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">
-            
+            <button class="btn btn-primary" style="float:right;" onclick="confirmClosing()">Closing</button>
+
             @if(in_array(Auth::user()->role_id, [1, 2, 5]))
-                <button class="btn btn-warning" style="float:left;margin-right:10px" data-bs-toggle="modal" data-bs-target="#borrowModal">Borrow Money</button>
+                <button class="btn btn-warning" style="float:right;margin-right:10px" data-bs-toggle="modal" data-bs-target="#borrowModal">Borrow Money</button>
             @endif
 
             @if(in_array(Auth::user()->role_id, [3, 5]))
-                <a class="btn btn-info" style="float:left;margin-right:10px" href="{{ route('staff_borrow.index') }}">
+                <a class="btn btn-info" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">
                     {{ Auth::user()->role_id == 3 ? 'Borrow Approvals' : 'My Borrow Records' }}
                     @if(Auth::user()->role_id == 3)
                         @php $pending = \App\Models\StaffBorrow::where('branch_id', Auth::user()->branch_id)->where('status','pending')->count(); @endphp
                         @if($pending > 0) <span class="badge bg-danger">{{ $pending }}</span> @endif
                     @endif
                 </a>
-            @endif
-
-            {{-- Right side --}}
-            <button class="btn btn-primary" style="float:right;" onclick="confirmClosing()">Closing</button>
-
-            @if(Auth::user()->role_id == 5)
-                @php $todayAttendance = \App\Models\StaffAttendance::currentFor(Auth::user()); @endphp
-
-                @if(!$todayAttendance)
-                    <form method="post" action="{{ route('staff_attendance.check_in') }}" style="float:right;margin-right:10px" onsubmit="showLoading()">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Check In</button>
-                    </form>
-                @else
-                    <span class="btn btn-outline-success disabled" style="float:right;margin-right:10px">
-                        Checked in: {{ \Carbon\Carbon::parse($todayAttendance->clock_in)->format('H:i') }}
-                    </span>
-                @endif
             @endif
         </div>
 

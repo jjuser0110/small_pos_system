@@ -35,8 +35,5 @@ Route::post('/cart/remove', [App\Http\Controllers\CartController::class, 'remove
 Route::post('/cart/convert-box', [App\Http\Controllers\CartController::class, 'convertBox']);
 Route::post('/cart/convert-bottle-to-box', [App\Http\Controllers\CartController::class, 'convertBottleToBox']);
 Route::post('/cart/placeorder', [App\Http\Controllers\CartController::class, 'place']);
-Route::post('/staff-attendance/check-in', [App\Http\Controllers\StaffAttendanceController::class, 'checkIn'])
-    ->middleware('auth')
-    ->name('staff_attendance.check_in');
 
 
