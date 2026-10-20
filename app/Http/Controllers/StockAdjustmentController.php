@@ -177,8 +177,7 @@ class StockAdjustmentController extends Controller
 
     private function canApprove(StockAdjustment $adj, $user)
     {
-        return in_array($user->role_id, [1, 2])
-            || ($user->role_id == 3 && $adj->branch_id == $user->branch_id);
+        return $user->role_id == 1;
     }
 
     /** Writes the stock log and updates the product stock. */

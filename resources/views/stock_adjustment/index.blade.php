@@ -67,8 +67,7 @@
                         <td>{{ $a->approver->name ?? '' }}</td>
                         <td>{{ $a->status_at }}</td>
                         <td style="white-space:nowrap">
-                            @if($a->status == 'pending'
-                                && (in_array(Auth::user()->role_id, [1, 2]) || (Auth::user()->role_id == 3 && $a->branch_id == Auth::user()->branch_id)))
+                            @if($a->status == 'pending' && Auth::user()->role_id == 1)
                                 <div class="d-flex gap-2">
                                     <form method="post" action="{{ route('stock_adjustment.approve', $a) }}" class="m-0" onsubmit="return confirm('Approve this request? Stock will be updated now.')">
                                         @csrf

@@ -73,4 +73,11 @@ class StaffAttendance extends Model
         $record->update(['clock_out' => Carbon::now()]);
         return $record;
     }
+
+    public static function currentFor($user)
+    {
+        return self::where('user_id', $user->id)
+            ->where('work_date', self::workDateFor($user))
+            ->first();
+    }
 }

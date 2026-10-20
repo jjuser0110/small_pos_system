@@ -60,4 +60,20 @@ class StaffAttendanceController extends Controller
         $minutes = (int) $minutes;
         return floor($minutes / 60) . 'h ' . ($minutes % 60) . 'm';
     }
+
+    public function checkIn()
+    {
+        $user = Auth::user();
+        if ($user->role_id != 5) {
+            abort(403);
+        }
+
+        if (StaffAttendance::currentFor($user)) {
+            return redirect()->back()->withErrors('You have already checked in.');
+        }
+
+        StaffAttendance::clockIn($user);
+
+        return redirect()->back()->withSuccess('Checked in at ' . now()->format('H:i:s'));
+    }
 }
