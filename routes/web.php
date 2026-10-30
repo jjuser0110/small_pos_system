@@ -38,28 +38,32 @@ Route::post('/cart/convert-bottle-to-box', [App\Http\Controllers\CartController:
 Route::post('/cart/placeorder', [App\Http\Controllers\CartController::class, 'place']);
 
 
-// routes/web.php
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'counter']);
+
     // Tables
-    Route::get('/pos/tables',           [PosController::class, 'getTables']);
-    Route::put('/pos/tables/{id}/pay',  [PosController::class, 'payTable']);
+    Route::get('/pos/tables',          [PosController::class, 'getTables']);
+    Route::put('/pos/tables/{id}/pay', [PosController::class, 'payTable'])->whereNumber('id');
 
     // Dabao
-    Route::get('/pos/dabao',            [PosController::class, 'getDabao']);
-    Route::post('/pos/dabao',           [PosController::class, 'createDabao']);
-    Route::put('/pos/dabao/{id}',       [PosController::class, 'updateDabao']);
-    Route::put('/pos/dabao/{id}/pay',   [PosController::class, 'payDabao']);
+    Route::get('/pos/dabao',           [PosController::class, 'getDabao']);
+    Route::post('/pos/dabao',          [PosController::class, 'createDabao']);
+    Route::put('/pos/dabao/{id}',      [PosController::class, 'updateDabao'])->whereNumber('id');
+    Route::put('/pos/dabao/{id}/pay',  [PosController::class, 'payDabao'])->whereNumber('id');
 
     // Menu
-    Route::get('/pos/menu',             [PosController::class, 'getMenu']);
+    Route::get('/pos/menu',            [PosController::class, 'getMenu']);
 
-    // Cart
-    Route::get('/pos/cart/{tableId}',   [PosController::class, 'getCart']);
-    Route::post('/pos/cart',            [PosController::class, 'addToCart']);
-    Route::put('/pos/cart/{cartId}',    [PosController::class, 'updateCart']);
-    Route::delete('/pos/cart/{cartId}', [PosController::class, 'removeFromCart']);
+    // Cart: static routes FIRST
+    Route::put('/pos/cart/mark-printed', [PosController::class, 'markPrinted']);
 
-    // Payment methods
-    Route::get('/pos/payment-methods',  [PosController::class, 'getPaymentMethods']);
+    // Cart: wildcard routes AFTER
+    Route::get('/pos/cart/{tableId}',    [PosController::class, 'getCart'])->whereNumber('tableId');
+    Route::post('/pos/cart',             [PosController::class, 'addToCart']);
+    Route::put('/pos/cart/{cartId}',     [PosController::class, 'updateCart'])->whereNumber('cartId');
+    Route::delete('/pos/cart/{cartId}',  [PosController::class, 'removeFromCart'])->whereNumber('cartId');
+
+    // Settings / misc
+    Route::get('/pos/receipt-settings',  [PosController::class, 'getReceiptSettings']);
+    Route::get('/pos/payment-methods',   [PosController::class, 'getPaymentMethods']);
 });
