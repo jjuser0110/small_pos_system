@@ -17,6 +17,7 @@ class Cart extends Model
         'single_price',
         'total_price',
         'addons',  
+        'print_order',
     ];
     protected $casts = [
         'addons' => 'array',
