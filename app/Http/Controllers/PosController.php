@@ -332,30 +332,32 @@ class PosController extends Controller
     }
 
     // PUT /pos/cart/mark-printed
-public function markPrinted(Request $request)
-{
-    $data = $request->validate([
-        'cart_ids'   => 'required|array|min:1',
-        'cart_ids.*' => 'integer',
-    ]);
+    public function markPrinted(Request $request)
+    {
+        $data = $request->validate([
+            'cart_ids'   => 'required|array|min:1',
+            'cart_ids.*' => 'integer',
+        ]);
 
-    // Block if another device started printing in the last 5 seconds
-    $lock = Cache::lock('pos-printer-lock', 5);
-    if (! $lock->get()) {
-        return response()->json(['blocked' => true]);
+        // Block if another device started printing in the last 5 seconds
+        $lock = Cache::lock('pos-printer-lock', 5);
+        if (! $lock->get()) {
+            return response()->json(['blocked' => true]);
+        }
+
+        Cart::whereIn('id', $data['cart_ids'])->update(['print_order' => 1]);
+
+        return response()->json(['blocked' => false, 'success' => true]);
     }
 
-    Cart::whereIn('id', $data['cart_ids'])->update(['print_order' => 1]);
+    // GET /pos/receipt-settings
+    public function getReceiptSettings()
+    {
+        $row = DB::table('receipt_settings')->first();
 
-    return response()->json(['blocked' => false, 'success' => true]);
-}
-
-// GET /pos/receipt-settings
-public function getReceiptSettings()
-{
-    return response()->json([
-        'header' => 'LAOYANG KOPITIAM',
-        'footer' => 'THANK YOU',
-    ]);
-}
+        return response()->json([
+            'header' => $row->header ?? 'LAOYANG KOPITIAM',
+            'footer' => $row->footer ?? 'THANK YOU',
+        ]);
+    }
 }
