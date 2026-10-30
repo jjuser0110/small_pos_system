@@ -1735,17 +1735,17 @@ function buildKitchenSlipText(items, label, now, sectionTitle) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<font size='big'><b>${label}</b></font>
+[C]<font size='normal'><b>${label}</b></font>
 
 [C]${now}
-${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
+${sectionTitle ? `\n[C]<font size='normal'><b>${sectionTitle}</b></font>\n` : ''}
 [C]================================
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
+        receipt += `\n[L]<font size='normal'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
         belowAddons(item).forEach(a => {
-            receipt += `[L]<font size='big'>   + ${a.name}</font>\n`;
+            receipt += `[L]<font size='normal'>   + ${a.name}</font>\n`;
         });
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
     });
@@ -1759,7 +1759,7 @@ ${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
 
 [C]================================
 
-[C]Please Prepare Order v2
+[C]Check your order
 
 \n\n\n
 `;
