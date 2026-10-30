@@ -1735,18 +1735,22 @@ function buildKitchenSlipText(items, label, now, sectionTitle) {
     let receipt = `
 ${formatReceiptLines(receiptHeader)}
 
-[C]<b>${label}</b></font>
+[C]<b>${label}</b>
 
 [C]${now}
-${sectionTitle ? `\n[C]<b>${sectionTitle}</b></font>\n` : ''}
+${sectionTitle ? `\n[C]<b>${sectionTitle}</b>\n` : ''}
 [C]================================
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
-        belowAddons(item).forEach(a => {
-            receipt += `[L]   + ${a.name}</font>\n`;
+        // Product name only, no add-ons merged in front
+        receipt += `\n[L]<b>${item.qty} x ${item.name}</b>\n`;
+
+        // ALL add-ons listed below
+        (item.addons || []).forEach(a => {
+            receipt += `[L]   + ${a.name}\n`;
         });
+
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
     });
 
@@ -1898,8 +1902,8 @@ ${formatReceiptLines(receiptHeader)}
     const sortedItems = sortByCategoryOrder(items);
 
     sortedItems.forEach(item => {
-        receipt += `\n[L]${item.qty} x ${displayItemName(item)}\n`;
-        belowAddons(item).forEach(a => {
+        receipt += `\n[L]${item.qty} x ${item.name}\n`;
+        (item.addons || []).forEach(a => {
             receipt += `[L]   + ${a.name}\n`;
         });
         receipt += `[R]RM ${item.total_price.toFixed(2)}\n`;
