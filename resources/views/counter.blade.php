@@ -1743,13 +1743,19 @@ ${sectionTitle ? `\n[C]<font size='big'><b>${sectionTitle}</b></font>\n` : ''}
 `;
 
     items.forEach(item => {
-        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>\n`;
+        receipt += `\n[L]<font size='big'><b>${item.qty} x ${displayItemName(item)}</b></font>[R]<b>RM ${item.total_price.toFixed(2)}</b>\n`;
         belowAddons(item).forEach(a => {
             receipt += `[L]<font size='big'>   + ${a.name}</font>\n`;
         });
     });
 
+    // Total of the items on this slip
+    const slipTotal = items.reduce((sum, i) => sum + i.total_price, 0);
+
     receipt += `
+[C]--------------------------------
+[L]<font size='big'><b>Total</b></font>[R]<font size='big'><b>RM ${slipTotal.toFixed(2)}</b></font>
+
 [C]================================
 
 [C]Please Prepare Order
