@@ -35,7 +35,7 @@ $currentRoute = request()->route()->getName();
         <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
             <a href="{{ route('shift_closing.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Shift Closing</div>
+                <div>Shift Report</div>
             </a>
         </li>
         @php

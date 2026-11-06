@@ -63,6 +63,46 @@ class CompanyStaffController extends Controller
         return redirect()->route('company_staff.index')->withSuccess('Data saved');
     }
 
+    /** Staff details for a month: present days, hours, each shift's login/logout, advances. */
+    public function show(Request $request, User $company_staff)
+    {
+        $this->authorizeStaff($company_staff);
+
+        $month = preg_match('/^\d{4}-\d{2}$/', (string) $request->month) ? $request->month : now()->format('Y-m');
+        $from = \Carbon\Carbon::parse("$month-01")->startOfMonth();
+        $to = $from->copy()->endOfMonth();
+
+        \App\Models\StaffAttendance::closeStale($company_staff);
+
+        $attendance = \App\Models\StaffAttendance::where('user_id', $company_staff->id)
+            ->whereBetween('work_date', [$from->toDateString(), $to->toDateString()])
+            ->orderBy('work_date')
+            ->get();
+
+        $advances = \App\Models\StaffBorrow::with('approver')
+            ->where('user_id', $company_staff->id)
+            ->whereBetween('created_at', [$from, $to->copy()->endOfDay()])
+            ->orderBy('created_at')
+            ->get();
+
+        $shifts = \App\Models\ShiftClosing::where('user_id', $company_staff->id)
+            ->whereBetween('work_date', [$from->toDateString(), $to->toDateString()])
+            ->get();
+
+        return view('company_staff.show', [
+            'staff'          => $company_staff->load('company', 'branch'),
+            'month'          => $month,
+            'attendance'     => $attendance,
+            'presentDays'    => $attendance->count(),
+            'minutesWorked'  => $attendance->sum(fn ($a) => $a->minutesWorked() ?? 0),
+            'advances'       => $advances,
+            'advanceTotal'   => $advances->where('status', 'approved')->sum('amount'),
+            'advancePending' => $advances->where('status', 'pending')->sum('amount'),
+            'salesTotal'     => $shifts->sum('total_order_amount'),
+            'shiftsByDate'   => $shifts->groupBy(fn ($s) => (string) $s->work_date),
+        ]);
+    }
+
     public function edit(User $company_staff)
     {
         $this->authorizeStaff($company_staff);

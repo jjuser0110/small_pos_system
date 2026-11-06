@@ -43,7 +43,7 @@
                             <td>{{$row->branch->branch_code??""}}</td>
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->username??""}}</td>
-                            <td>{{$row->name??""}}</td>
+                            <td><a href="{{ route('company_staff.show', $row) }}">{{$row->name??""}}</a></td>
                             <td>{{$row->role->title??""}}</td>
                             <td>{{$row->shift??""}}</td>
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>

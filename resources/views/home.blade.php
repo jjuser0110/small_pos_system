@@ -47,55 +47,34 @@
             @if($errors->any())
                 <div class="col-12"><div class="alert alert-danger">{{ $errors->first() }}</div></div>
             @endif
-        <div class="col-sm-4 col-lg-4 mb-4">
-            <div class="card card-border-shadow-primary h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2 pb-1">
-                <h4 class="ms-1 mb-0">Total Order</h4>
-                </div>
-                <p class="mb-1" style="margin:10px;font-size:18px">{{$shift_data->total_order_count??0}}</p>
-                </p>
-            </div>
-            </div>
-        </div>
-        <div class="col-sm-4 col-lg-4 mb-4">
-            <div class="card card-border-shadow-primary h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2 pb-1">
-                <h4 class="ms-1 mb-0">Total Amount</h4>
-                </div>
-                <p class="mb-1" style="margin:10px;font-size:18px">{{number_format($shift_data->total_order_amount??0,2)}}</p>
-                </p>
-            </div>
-            </div>
-        </div>
-        <div class="col-sm-4 col-lg-4 mb-4">
-            <div class="card card-border-shadow-primary h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2 pb-1">
-                <h4 class="ms-1 mb-0">First Sale Time</h4>
-                </div>
-                <p class="mb-1" style="margin:10px;font-size:18px">{{$shift_data->first_sale_time??null}}</p>
-                </p>
-            </div>
-            </div>
-        </div>
         @if($shift_data)
-        @foreach($shift_data->items as $item)
-        
-        <div class="col-sm-4 col-lg-4 mb-4">
-            <div class="card card-border-shadow-primary h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2 pb-1">
-                <h4 class="ms-1 mb-0">{{strtoupper($item->payment_method??null)}}</h4>
-                </div>
-                <p class="mb-1" style="margin:10px;font-size:18px">{{number_format($item->amount??0,2)}}</p>
-                </p>
-            </div>
-            </div>
+        <div class="col-12 mb-2"><h5 class="mb-0">Current shift: {{ $shift_data->shift }} {{ $shift_data->work_date }}</h5></div>
+        @endif
+        @foreach([
+            ['Orders', $shift_data->total_order_count ?? 0, false],
+            ['Items Sold', $shift_data->total_item_count ?? 0, false],
+            ['Sales', $shift_data->total_order_amount ?? 0, true],
+            ['Refunds', $shift_data->refund_amount ?? 0, true],
+            ['Advances', $shift_data->advance_amount ?? 0, true],
+            ['Net', $shift_data ? $shift_data->netAmount() : 0, true],
+        ] as [$label, $value, $money])
+        <div class="col-6 col-md-2 mb-4">
+            <div class="card card-border-shadow-primary h-100"><div class="card-body p-3">
+                <small class="text-muted">{{ $label }}</small>
+                <div class="fs-5 fw-semibold">{{ $money ? 'RM ' . number_format($value, 2) : $value + 0 }}</div>
+            </div></div>
         </div>
-
         @endforeach
+        @if($shift_data)
+            @foreach($shift_data->items as $item)
+            <div class="col-6 col-md-2 mb-4">
+                <div class="card h-100"><div class="card-body p-3">
+                    <small class="text-muted">{{ strtoupper($item->payment_method ?? '') }}</small>
+                    <div class="fs-5 fw-semibold">RM {{ number_format($item->amount ?? 0, 2) }}</div>
+                </div></div>
+            </div>
+            @endforeach
+            <div class="col-12 text-muted mb-3">First sale: {{ $shift_data->first_sale_time ?? '-' }}</div>
         @endif
     </div>
     <!--/ Card Border Shadow -->
