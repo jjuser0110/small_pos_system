@@ -47,6 +47,13 @@
             @endif
         </div>
 
+            @foreach(\App\Http\Controllers\NotificationController::itemsFor(Auth::user()) as $note)
+                <div class="col-12"><div class="alert alert-warning d-flex justify-content-between align-items-center">
+                    <span><i class="bx bx-bell me-1"></i> {{ $note['text'] }}</span>
+                    <a href="{{ $note['url'] }}" class="btn btn-sm btn-warning">Open</a>
+                </div></div>
+            @endforeach
+
             @if($errors->any())
                 <div class="col-12"><div class="alert alert-danger">{{ $errors->first() }}</div></div>
             @endif

@@ -75,7 +75,7 @@
                             {{-- <td>{{$row->arrangement??""}}</td> --}}
                             <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
                             <td>
-                                @if(Auth::user()->role_id != 5)
+                                @if(Auth::user()->role_id == 1)
                                 <a style="color:#f0ad00;cursor:pointer" title="Adjust Stock"
                                 onclick="openAdjustModal('{{ $row->id }}', '{{ addslashes($row->product_name) }}', '{{ $row->stock_quantity }}')">
                                     <i class="fa-solid fa-boxes-stacked"></i>
@@ -141,34 +141,6 @@
         </div>
     </div>
 
-    <div class="modal fade" id="transferProductModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Transfer Product: <span id="transferProductName"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="transferProductForm" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">New Company</label>
-                            <select name="company_id" class="form-select" required>
-                                @foreach(\App\Models\Company::all() as $company)
-                                    <option value="{{ $company->id }}">{{ $company->company_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Transfer</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <div class="modal fade" id="adjustStockModal" tabindex="-1">
         <div class="modal-dialog">
             <form class="modal-content" method="post" action="{{ route('stock_adjustment.store') }}" onsubmit="showLoading()">
@@ -185,16 +157,6 @@
                         <select name="type" id="adjust_type" class="form-select" required>
                             <option value="adjust_in">Adjust In (add stock)</option>
                             <option value="adjust_out">Adjust Out (reduce stock)</option>
-                            <option value="transfer">Send to Other Company</option>
-                        </select>
-                    </div>
-                    <div class="mb-3" id="adjust_target_wrap" style="display:none">
-                        <label class="form-label">Send To Company</label>
-                        <select name="target_company_id" id="adjust_target" class="form-select">
-                            <option value="">-- Select --</option>
-                            @foreach(\App\Models\Company::all() as $c)
-                                <option value="{{ $c->id }}">{{ $c->company_name }}</option>
-                            @endforeach
                         </select>
                     </div>
                     <div class="mb-3">
@@ -205,7 +167,7 @@
                         <label class="form-label">Reason</label>
                         <textarea name="reason" class="form-control" rows="3" maxlength="500" required></textarea>
                     </div>
-                    <small class="text-muted">Stock only changes after a manager approves.</small>
+                    <small class="text-muted">Applied immediately and saved in the stock log.</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -235,12 +197,6 @@
             $('#adjust_type').val('adjust_in').trigger('change');
             $('#adjustStockModal').modal('show');
         };
-
-        $('#adjust_type').on('change', function(){
-            var isTransfer = $(this).val() === 'transfer';
-            $('#adjust_target_wrap').toggle(isTransfer);
-            $('#adjust_target').prop('required', isTransfer);
-        });
     });
     </script>
     @endsection

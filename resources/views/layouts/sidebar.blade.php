@@ -58,22 +58,22 @@ $currentRoute = request()->route()->getName();
             </a>
         </li>
 
+        @php $transferPending = \App\Models\StockTransfer::pendingFor(auth()->user())->count(); @endphp
+        <li class="menu-item {{ Str::contains($currentRoute, 'stock_transfer.index') ? 'active' : ''}}">
+            <a href="{{ route('stock_transfer.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-transfer"></i>
+                <div>Stock Transfer</div>
+                @if($transferPending > 0)
+                    <span class="badge bg-danger rounded-pill ms-auto">{{ $transferPending }}</span>
+                @endif
+            </a>
+        </li>
+
         @if(auth()->user()->role_id != 5)
-            @php
-                $stockPending = 0;
-                if (in_array(auth()->user()->role_id, [1, 2, 3])) {
-                    $sq = \App\Models\StockAdjustment::where('status', 'pending');
-                    if (auth()->user()->role_id == 3) { $sq->where('branch_id', auth()->user()->branch_id); }
-                    $stockPending = $sq->count();
-                }
-            @endphp
             <li class="menu-item {{ Str::contains($currentRoute, 'stock_adjustment.index') ? 'active' : ''}}">
                 <a href="{{ route('stock_adjustment.index') }}" class="menu-link">
                     <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                     <div>Stock Adjustment</div>
-                    @if($stockPending > 0)
-                        <span class="badge bg-danger rounded-pill ms-auto">{{ $stockPending }}</span>
-                    @endif
                 </a>
             </li>
         @endif

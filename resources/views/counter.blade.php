@@ -973,5 +973,6 @@ displayProducts(selectedCategory);
 loadCartFromServer();
 </script>
 @include('layouts.shift-timer')
+@include('layouts.counter-notifications')
 </body>
 </html>

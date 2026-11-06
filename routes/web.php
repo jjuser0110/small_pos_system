@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/convert-box', [App\Http\Controllers\CartController::class, 'convertBox']);
     Route::post('/cart/convert-bottle-to-box', [App\Http\Controllers\CartController::class, 'convertBottleToBox']);
     Route::post('/cart/placeorder', [App\Http\Controllers\CartController::class, 'place']);
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications');
 });
 
 

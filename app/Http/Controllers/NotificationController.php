@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\StockTransfer;
+use Illuminate\Support\Facades\Auth;
+
+/**
+ * Things waiting for the logged-in user to act on. Used for the counter
+ * banner (polled) and the Home page alerts.
+ */
+class NotificationController extends Controller
+{
+    public static function itemsFor($user): array
+    {
+        $items = [];
+
+        $transfers = StockTransfer::pendingFor($user)->count();
+        if ($transfers > 0) {
+            $items[] = [
+                'key'   => 'transfers',
+                'count' => $transfers,
+                'text'  => $transfers . ' stock transfer' . ($transfers > 1 ? 's' : '') . ' waiting for you to accept',
+                'url'   => route('stock_transfer.index', ['status' => 'pending']),
+            ];
+        }
+
+        return $items;
+    }
+
+    public function index()
+    {
+        return response()->json(['items' => self::itemsFor(Auth::user())]);
+    }
+}
