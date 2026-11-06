@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="110 20 740 260" width="740" height="260" role="img" aria-label="FsMart">
   <title>FsMart</title>
   <defs>
-    <!-- gold finish, matching the previous wordmark -->
+    <!-- green finish, matching the theme colour #16a34a -->
     <linearGradient id="gold" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0" stop-color="#e2c56b"/>
-      <stop offset="0.45" stop-color="#c9a13b"/>
-      <stop offset="0.7" stop-color="#b8902e"/>
-      <stop offset="1" stop-color="#d9b85a"/>
+      <stop offset="0" stop-color="#34c26a"/>
+      <stop offset="0.45" stop-color="#16a34a"/>
+      <stop offset="0.7" stop-color="#128a3e"/>
+      <stop offset="1" stop-color="#22b058"/>
     </linearGradient>
   </defs>
   <text x="480" y="215" text-anchor="middle"
         font-family="'Cormorant Garamond', 'Times New Roman', Georgia, serif"
         font-size="230" font-weight="400" letter-spacing="6"
-        fill="url(#gold)" stroke="#a8822a" stroke-width="1.2">FsMart</text>
+        fill="url(#gold)" stroke="#0f7a36" stroke-width="1.2">FsMart</text>
 </svg>
