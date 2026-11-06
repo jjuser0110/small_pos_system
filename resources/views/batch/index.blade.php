@@ -3,13 +3,13 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Stock Batch </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Stock </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Stock Batch Listing</h5>
+                    <h5 class="card-title mb-0">Stock Listing</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
                     <div class="dt-buttons">
@@ -28,8 +28,8 @@
                             <th>No</th>
                             <th>Branch</th>
                             <th>Company</th>
-                            <th>Batch No</th>
-                            <th>Batch Date</th>
+                            <th>Stock No</th>
+                            <th>Stock Date</th>
                             <th>Total Product</th>
                             <th>Total Item</th>
                             <th>Total Cost</th>

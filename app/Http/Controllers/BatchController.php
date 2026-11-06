@@ -146,38 +146,54 @@ class BatchController extends Controller
     {
         $this->authorizeRecord($batch);
 
+        // completing twice would add the stock twice
+        if ($batch->status !== 'Open') {
+            return redirect()->route('batch.index')->withErrors('This stock entry is already completed.');
+        }
+
         if($batch->batch_items->isEmpty()){
             return redirect()->back()->withErrors('No Batch Items to process');
         }
         $total_product = $batch->batch_items->count();
         $total_item = $batch->batch_items->sum('quantity');
         $total_cost = $batch->batch_items->sum('total_cost');
-        foreach($batch->batch_items as $item){
-            $product = Product::find($item->product_id);
-            $before_stock = $product->stock_quantity;
-            $quantity = $item->quantity;
-            $after_stock = $before_stock + $quantity;
-            $product->update(['stock_quantity'=>$after_stock]);
-            $item->stock_logs()->create([
-                'branch_id' => $item->branch_id,
-                'company_id' => $item->company_id,
-                'category_id' => $item->category_id,
-                'product_id' => $item->product_id,
-                'type' => 'stock_in',
-                'description' => $batch->batch_no??'',
-                'before_stock' => $before_stock,
-                'quantity' => $quantity,
-                'after_stock' => $after_stock,
+        // lock the batch so two clicks cannot both add the stock
+        $done = DB::transaction(function () use ($batch, $total_product, $total_item, $total_cost) {
+            $locked = Batch::lockForUpdate()->find($batch->id);
+            if ($locked->status !== 'Open') {
+                return false;
+            }
+            foreach($batch->batch_items as $item){
+                $product = Product::lockForUpdate()->find($item->product_id);
+                $before_stock = $product->stock_quantity;
+                $quantity = $item->quantity;
+                $after_stock = $before_stock + $quantity;
+                $product->update(['stock_quantity'=>$after_stock]);
+                $item->stock_logs()->create([
+                    'branch_id' => $item->branch_id,
+                    'company_id' => $item->company_id,
+                    'category_id' => $item->category_id,
+                    'product_id' => $item->product_id,
+                    'type' => 'stock_in',
+                    'description' => $batch->batch_no??'',
+                    'before_stock' => $before_stock,
+                    'quantity' => $quantity,
+                    'after_stock' => $after_stock,
+                ]);
+            }
+            $batch->update([
+                'total_product' => $total_product,
+                'total_item' => $total_item,
+                'total_cost' => $total_cost,
+                'status' => 'Completed',
             ]);
-        }
-        $batch->update([
-            'total_product' => $total_product,
-            'total_item' => $total_item,
-            'total_cost' => $total_cost,
-            'status' => 'Completed',
-        ]);
+            return true;
+        });
 
-        return redirect()->route('batch.index')->withSuccess('Data deleted');
+        if (!$done) {
+            return redirect()->route('batch.index')->withErrors('This stock entry is already completed.');
+        }
+        return redirect()->route('batch.index')->withSuccess('Stock added');
     }
 
     public function addBatchItem(Request $request, Batch $batch)

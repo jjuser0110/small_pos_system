@@ -20,13 +20,13 @@
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('batch.index')}}">Batch /</a>
+        <a class="text-muted fw-light" href="{{route('batch.index')}}">Stock /</a>
          @if (isset($batch)) Edit @else Create @endif
     </h4>
     <div class="row">
         <div class="col-12">
             <div class="card">
-            <h5 class="card-header">Batch Details</h5>
+            <h5 class="card-header">Stock Entry Details</h5>
             <div class="card-body">
                 <form class="row g-3" enctype="multipart/form-data" @if (isset($batch)) method="post" action="{{ route('batch.update',$batch) }}" @else method="post" action="{{ route('batch.store') }}" @endif onsubmit="showLoading()">
                 @csrf
@@ -41,7 +41,7 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="batch_no">Batch No</label>
+                    <label class="form-label" for="batch_no">Stock No</label>
                     <input
                     type="text"
                     class="form-control"
@@ -53,7 +53,7 @@
                 <input type="hidden" name="year" value="{{ $year ?? '' }}">
                 <input type="hidden" name="month" value="{{ $month ?? '' }}">
                 <div class="col-md-6">
-                    <label class="form-label" for="batch_date">Batch Date</label>
+                    <label class="form-label" for="batch_date">Stock Date</label>
                     <input
                     type="date"
                     class="form-control"
@@ -69,7 +69,7 @@
                     <div class="input-group">
                         <input type="text" class="form-control" value="{{ $batch->status ?? 'Open' }}" readonly>
                         @if($batch->status == 'Open')
-                        <a class="btn btn-outline-primary" onclick="if(confirm('Are you sure you want to complete this Batch?')){showLoading();window.location.href='{{ route('batch.complete',$batch) }}'}">Complete This Batch for Calculation</a>
+                        <a class="btn btn-outline-primary" onclick="if(confirm('Are you sure you want to complete this stock entry? The items will be added to stock.')){showLoading();window.location.href='{{ route('batch.complete',$batch) }}'}">Complete and Add to Stock</a>
                         @endif
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                 <div class="col-12" style="margin-top:30px">
                     <div class="flex-column flex-md-row" style="margin-bottom:10px">
                         <div class="head-label">
-                            <h5 class="card-title mb-0">Batch Items</h5>
+                            <h5 class="card-title mb-0">Items</h5>
                         </div>
                         <div class="dt-action-buttons text-end pt-3 pt-md-0">
                             <div class="dt-buttons">

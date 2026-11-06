@@ -6,7 +6,7 @@ $currentRoute = request()->route()->getName();
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
     <div class="app-brand demo" >
         <a href="{{ route('home') }}" class="app-brand-link">
-            <img src="{{ asset('assets/logo-fsmart.svg') }}" alt="Logo" width="120">
+            <img src="{{ asset('assets/logo-fsmart.svg') }}?v=2" alt="Logo" width="120">
         </a>
 
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
@@ -91,7 +91,7 @@ $currentRoute = request()->route()->getName();
         <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">
             <a href="{{ route('batch.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Stock Batches</div>
+                <div>Stock</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'product.index') ? 'active' : ''}}">
@@ -109,7 +109,7 @@ $currentRoute = request()->route()->getName();
         <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
             <a href="{{ route('company_staff.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Company Staff</div>
+                <div>Staff</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'report.index') ? 'active' : ''}}">
@@ -137,12 +137,6 @@ $currentRoute = request()->route()->getName();
             <a href="{{ route('company.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Company</div>
-            </a>
-        </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'company_manager.index') ? 'active' : ''}}">
-            <a href="{{ route('company_manager.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Company Manager</div>
             </a>
         </li>
         @endif

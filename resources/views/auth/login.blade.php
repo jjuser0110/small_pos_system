@@ -18,7 +18,7 @@
     <meta name="description" content="" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/logo-fsmart.svg') }}" />
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/logo-fsmart.svg') }}?v=2" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -68,7 +68,7 @@
               <!-- Logo -->
               <div class="app-brand justify-content-center">
                 <a href="{{route('home')}}" class="app-brand-link gap-2">
-                  <img src="{{ asset('assets/logo-fsmart.svg') }}" alt="Logo" style="width:80%; display:block; margin:0 auto;" />
+                  <img src="{{ asset('assets/logo-fsmart.svg') }}?v=2" alt="Logo" style="width:80%; display:block; margin:0 auto;" />
                 </a>
               </div>
               <!-- /Logo -->

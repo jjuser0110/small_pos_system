@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('/category')->as('category.')->middleware(['auth', 'role:1,2,3,4'])->group(function() {
+Route::prefix('/category')->as('category.')->middleware(['auth', 'role:1,2,3'])->group(function() {
     Route::get('/index', 'CategoryController@index')->name('index');
     Route::get('/create', 'CategoryController@create')->name('create');
     Route::post('/store', 'CategoryController@store')->name('store');

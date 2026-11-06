@@ -13,6 +13,7 @@ use App\Models\BatchItem;
 use App\Models\ShiftClosing;
 use App\Models\ShiftClosingDetail;
 use App\Models\ShiftMethodClosing;
+use App\Services\StockService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use DB;
@@ -399,9 +400,8 @@ class CartController extends Controller
 
     private function processItem($order, $cart)
     {
-        $product = Product::find($cart->product_id);
+        $product = Product::with('category')->findOrFail($cart->product_id);
 
-        // Create order item
         $item = OrderItem::create([
             'order_id' => $order->id,
             'branch_id' => $order->branch_id,
@@ -413,102 +413,40 @@ class CartController extends Controller
             'total_price' => $cart->total_price,
         ]);
 
-        // FIFO deduction logic (clean function)
-        if ($product->category->has_stock) {
-            $this->deductStockFIFO($product, $item, $cart->quantity);
+        if (!$product->category->has_stock) {
+            return;
         }
-    }
 
-    private function deductStockFIFO($product, $orderItem, $qty_needed)
-    {
-        DB::transaction(function () use ($product, $orderItem, $qty_needed) {
+        // FIFO out of completed batches; refuses to oversell
+        $slices = app(StockService::class)->stockOut($product, (float) $cart->quantity, 'stock_out', 'Order ' . $order->order_no, $item);
 
-            $totalDeducted = 0;
-
-            while ($qty_needed <> 0) {
-
-                $batchItem = BatchItem::where('product_id', $product->id)
-                    ->where('balance', '>', 0)
-                    ->orderBy('created_at', 'ASC')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$batchItem) {
-
-                    $take = $qty_needed;
-
-                    $before = $product->stock_quantity - $totalDeducted;
-                    $after  = $before - $take;
-
-                    // Stock log WITHOUT batch
-                    $product->stockLogs()->create([
-                        'branch_id'     => $orderItem->branch_id,
-                        'company_id'    => $orderItem->company_id,
-                        'category_id'   => $orderItem->category_id,
-                        'product_id'    => $product->id,
-                        'type'          => 'stock_out',
-                        'description'   => 'NO_BATCH',
-                        'before_stock'  => $before,
-                        'quantity'      => $take,
-                        'after_stock'   => $after,
-                    ]);
-
-                    $totalDeducted += $take;
-                    break;
-                }
-
-                $take = min($qty_needed, $batchItem->balance);
-
-                // Create order profit entry
-                $order_item_profit = $this->createProfitEntry($orderItem, $batchItem, $take);
-
-                // Update batch
-                $batchItem->decrement('balance', $take);
-
-                $totalDeducted += $take;
-                $qty_needed -= $take;
-
-                // Stock log
-                $order_item_profit->stock_logs()->create([
-                    'branch_id'     => $orderItem->branch_id,
-                    'company_id'    => $orderItem->company_id,
-                    'category_id'   => $orderItem->category_id,
-                    'product_id'    => $product->id,
-                    'type'          => 'stock_out',
-                    'description'   => $batchItem->batch->batch_no ?? '',
-                    'before_stock'  => $product->stock_quantity - $totalDeducted + $take,
-                    'quantity'      => $take,
-                    'after_stock'   => $product->stock_quantity - $totalDeducted,
-                ]);
+        // one profit row per batch slice (unbatched stock has no known cost, so no profit row)
+        foreach ($slices as $slice) {
+            if (!$slice['batch_item']) {
+                continue;
             }
+            $cost = $slice['cost_per_unit'];
+            $sell = (float) $item->single_price;
+            $qty  = $slice['quantity'];
 
-            $product->decrement('stock_quantity', $totalDeducted);
-        });
-
-    }
-
-    private function createProfitEntry($orderItem, $batch, $qty)
-    {
-        $cost = $batch->cost_per_unit;
-        $sell = $orderItem->single_price;
-
-        return OrderItemProfit::create([
-            'order_id' => $orderItem->order_id,
-            'branch_id' => $orderItem->branch_id,
-            'company_id' => $orderItem->company_id,
-            'order_item_id' => $orderItem->id,
-            'category_id' => $orderItem->category_id,
-            'product_id' => $orderItem->product_id,
-            'batch_id' => $batch->batch_id,
-            'batch_item_id' => $batch->id,
-            'cost_price' => $cost,
-            'selling_price' => $sell,
-            'earning' => round($sell - $cost, 2),
-            'quantity' => $qty,
-            'total_cost_price' => round($cost * $qty, 2),
-            'total_selling_price' => round($sell * $qty, 2),
-            'total_earning' => round(($sell - $cost) * $qty, 2),
-        ]);
+            OrderItemProfit::create([
+                'order_id' => $item->order_id,
+                'branch_id' => $item->branch_id,
+                'company_id' => $item->company_id,
+                'order_item_id' => $item->id,
+                'category_id' => $item->category_id,
+                'product_id' => $item->product_id,
+                'batch_id' => $slice['batch_item']->batch_id,
+                'batch_item_id' => $slice['batch_item']->id,
+                'cost_price' => $cost,
+                'selling_price' => $sell,
+                'earning' => round($sell - $cost, 2),
+                'quantity' => $qty,
+                'total_cost_price' => round($cost * $qty, 2),
+                'total_selling_price' => round($sell * $qty, 2),
+                'total_earning' => round(($sell - $cost) * $qty, 2),
+            ]);
+        }
     }
 
     private function finalizeOrder($order, $request)

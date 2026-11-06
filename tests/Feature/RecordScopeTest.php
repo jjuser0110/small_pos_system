@@ -59,8 +59,7 @@ class RecordScopeTest extends TestCase
             [3, 1, null, 1, 5, null, true],      // branch manager: own branch
             [3, 1, null, 2, 5, null, false],     //   other branch
             [3, null, null, null, 5, null, false], //   manager with no branch sees nothing
-            [4, 1, 5, 1, 5, null, true],         // company manager: own company
-            [4, 1, 5, 1, 6, null, false],        //   other company, same branch
+            [4, 1, 5, 1, 5, null, false],        // role 4 (removed) sees nothing
             [5, 1, 5, 1, 5, 100, true],          // staff: own record
             [5, 1, 5, 1, 5, 101, false],         //   someone else's, same company
             [5, 1, 5, 1, 5, null, false],        //   records with no owner
@@ -82,13 +81,6 @@ class RecordScopeTest extends TestCase
         $this->expect403(fn () => app(OrderController::class)->discount(Request::create('/', 'POST', ['discount' => 1]), $order));
     }
 
-    public function test_company_manager_cannot_open_order_of_other_company(): void
-    {
-        $this->login(4, ['branch_id' => 1, 'company_id' => 5]);
-
-        $this->expect403(fn () => app(OrderController::class)->view(new Order(['branch_id' => 1, 'company_id' => 6])));
-    }
-
     public function test_staff_cannot_open_someone_elses_shift(): void
     {
         $this->login(5, ['branch_id' => 1, 'company_id' => 5]);
@@ -97,11 +89,11 @@ class RecordScopeTest extends TestCase
         $this->expect403(fn () => app(ShiftClosingController::class)->view($shift));
     }
 
-    public function test_company_manager_cannot_touch_other_company_batches(): void
+    public function test_branch_manager_cannot_touch_other_branch_batches(): void
     {
-        $this->login(4, ['branch_id' => 1, 'company_id' => 5]);
-        $batch = new Batch(['branch_id' => 1, 'company_id' => 6]);
-        $item  = new BatchItem(['branch_id' => 1, 'company_id' => 6]);
+        $this->login(3, ['branch_id' => 1]);
+        $batch = new Batch(['branch_id' => 2, 'company_id' => 6]);
+        $item  = new BatchItem(['branch_id' => 2, 'company_id' => 6]);
         $c = app(BatchController::class);
 
         $this->expect403(fn () => $c->edit($batch));
@@ -128,10 +120,10 @@ class RecordScopeTest extends TestCase
         $this->expect403(fn () => $c->convert($product));
     }
 
-    public function test_company_manager_cannot_touch_other_company_categories(): void
+    public function test_branch_manager_cannot_touch_other_branch_categories(): void
     {
-        $this->login(4, ['branch_id' => 1, 'company_id' => 5]);
-        $category = new Category(['branch_id' => 1, 'company_id' => 6]);
+        $this->login(3, ['branch_id' => 1]);
+        $category = new Category(['branch_id' => 2, 'company_id' => 6]);
         $c = app(CategoryController::class);
 
         $this->expect403(fn () => $c->edit($category));

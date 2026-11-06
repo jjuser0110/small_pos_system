@@ -14,6 +14,7 @@ use App\Models\OrderItemProfit;
 use App\Models\Product;
 use App\Models\ShiftClosing;
 use App\Models\ShiftMethodClosing;
+use App\Services\StockService;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -183,70 +184,18 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['items.profit_items']);
+        $order->load(['items.profit_items', 'items.category']);
 
         DB::transaction(function () use ($order, $request) {
 
+            // put every sold item back into stock, onto the batches it came from
+            $stock = app(StockService::class);
             foreach ($order->items as $item) {
-                if ($item->profit_items->isEmpty()) {
-                    $product = Product::lockForUpdate()->find($item->product_id);
-                    if (!$product) {
-                        continue;
-                    }
-                    $before = $product->stock_quantity;
-                    $after  = $before + $item->quantity;
-
-                    $product->update([
-                        'stock_quantity' => $after
-                    ]);
-
-                    // Stock log
-                    $product->stockLogs()->create([
-                        'branch_id'     => $item->branch_id,
-                        'company_id'    => $item->company_id,
-                        'category_id'   => $item->category_id,
-                        'product_id'    => $item->product_id,
-                        'type'          => 'stock_in',
-                        'description'   => 'VOID ORDER ' . $order->order_no,
-                        'before_stock'  => $before,
-                        'quantity'      => $item->quantity,
-                        'after_stock'   => $after,
-                    ]);
-
+                $qty = (float) $item->quantity - (float) ($item->refunded_quantity ?? 0);
+                if ($qty <= 0 || !($item->category->has_stock ?? false)) {
                     continue;
                 }
-
-                foreach ($item->profit_items as $profit_item) {
-                    $product = Product::lockForUpdate()->find($profit_item->product_id);
-                    if (!$product) {
-                        continue;
-                    }
-                    $before = $product->stock_quantity;
-                    $after = $before + $profit_item->quantity;
-                    // Restore product stock
-                    $product->update([
-                        'stock_quantity' => $after
-                    ]);
-
-                    // Restore batch balance
-                    BatchItem::where('id', $profit_item->batch_item_id)
-                        ->increment('balance', $profit_item->quantity);
-
-                    // Stock log (reverse)
-                    $profit_item->stock_logs()->create([
-                        'branch_id'     => $profit_item->branch_id,
-                        'company_id'    => $profit_item->company_id,
-                        'category_id'   => $profit_item->category_id,
-                        'product_id'    => $profit_item->product_id,
-                        'type'          => 'stock_in',
-                        'description'   => 'VOID ORDER ' . $order->order_no,
-                        'before_stock'  => $before,
-                        'quantity'      => $profit_item->quantity,
-                        'after_stock'   => $after,
-                    ]);
-
-                    $profit_item->delete();
-                }
+                $stock->returnSale($item, $qty, 'stock_in', 'VOID ORDER ' . $order->order_no, $item);
             }
 
             // Reverse shift closing

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('/company_staff')->as('company_staff.')->middleware(['auth', 'role:1,2,3,4'])->group(function() {
+Route::prefix('/company_staff')->as('company_staff.')->middleware(['auth', 'role:1,2,3'])->group(function() {
     Route::get('/index', 'CompanyStaffController@index')->name('index');
     Route::get('/create', 'CompanyStaffController@create')->name('create');
     Route::post('/store', 'CompanyStaffController@store')->name('store');

@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\BranchManagerController;
-use App\Http\Controllers\CompanyManagerController;
 use App\Http\Controllers\CompanyStaffController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -39,13 +38,12 @@ class RoleAccessTest extends TestCase
             // master settings: only roles 1, 2
             'manager opens branch list'            => [3, 'get',  '/branch/index'],
             'manager creates branch manager'       => [3, 'post', '/branch_manager/store'],
-            'company manager opens uom'            => [4, 'get',  '/uom/index'],
+            'manager opens uom'                    => [3, 'get',  '/uom/index'],
             'staff edits receipt settings'         => [5, 'post', '/receipt_setting/store'],
             'manager opens payment methods'        => [3, 'get',  '/payment_method/index'],
-            'company manager opens bank list'      => [4, 'get',  '/bank/index'],
+            'staff opens bank list'                => [5, 'get',  '/bank/index'],
             // branch-level: only roles 1, 2, 3
-            'company manager opens companies'      => [4, 'get',  '/company/index'],
-            'company manager adds company manager' => [4, 'post', '/company_manager/store'],
+            'staff opens companies'                => [5, 'get',  '/company/index'],
             // back office: not staff
             'staff opens orders'                   => [5, 'get',  '/order/index'],
             'staff creates staff account'          => [5, 'post', '/company_staff/store'],
@@ -76,11 +74,10 @@ class RoleAccessTest extends TestCase
             'payment_method.index'   => 'role:1,2',
             'receipt_setting.store'  => 'role:1,2',
             'company.index'          => 'role:1,2,3',
-            'company_manager.update' => 'role:1,2,3',
-            'company_staff.update'   => 'role:1,2,3,4',
-            'order.index'            => 'role:1,2,3,4',
-            'product.index'          => 'role:1,2,3,4',
-            'stock_adjustment.store' => 'role:1,2,3,4',
+            'company_staff.update'   => 'role:1,2,3',
+            'order.index'            => 'role:1,2,3',
+            'product.index'          => 'role:1,2,3',
+            'batch.index'            => 'role:1,2,3',
         ];
 
         foreach ($expected as $name => $middleware) {
@@ -113,28 +110,25 @@ class RoleAccessTest extends TestCase
             ->discount(request(), new \App\Models\Order()));
     }
 
-    public function test_company_manager_cannot_edit_an_admin_through_staff_screen(): void
+    public function test_company_manager_routes_are_gone(): void
     {
-        $this->actingAs($this->userWithRole(4, ['company_id' => 1, 'branch_id' => 1]));
+        $this->assertNull(Route::getRoutes()->getByName('company_manager.index'));
+    }
+
+    public function test_branch_manager_cannot_edit_an_admin_through_staff_screen(): void
+    {
+        $this->actingAs($this->userWithRole(3, ['branch_id' => 1]));
         $admin = $this->userWithRole(1, ['company_id' => 1, 'branch_id' => 1]);
 
         $this->expectHttp403(fn () => app(CompanyStaffController::class)->edit($admin));
     }
 
-    public function test_company_manager_cannot_edit_staff_of_another_company(): void
-    {
-        $this->actingAs($this->userWithRole(4, ['company_id' => 1, 'branch_id' => 1]));
-        $other = $this->userWithRole(5, ['company_id' => 2, 'branch_id' => 1]);
-
-        $this->expectHttp403(fn () => app(CompanyStaffController::class)->destroy($other));
-    }
-
-    public function test_branch_manager_cannot_edit_manager_of_another_branch(): void
+    public function test_branch_manager_cannot_edit_staff_of_another_branch(): void
     {
         $this->actingAs($this->userWithRole(3, ['branch_id' => 1]));
-        $other = $this->userWithRole(4, ['company_id' => 5, 'branch_id' => 2]);
+        $other = $this->userWithRole(5, ['company_id' => 2, 'branch_id' => 2]);
 
-        $this->expectHttp403(fn () => app(CompanyManagerController::class)->destroy($other));
+        $this->expectHttp403(fn () => app(CompanyStaffController::class)->destroy($other));
     }
 
     public function test_branch_manager_screen_cannot_touch_admins(): void

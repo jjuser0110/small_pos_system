@@ -3,18 +3,18 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('company_staff.index')}}">Company Staff /</a>
+        <a class="text-muted fw-light" href="{{route('company_staff.index')}}">Staff /</a>
          @if (isset($company_staff)) Edit @else Create @endif
     </h4>
     <div class="row">
         <div class="col-12">
             <div class="card">
-            <h5 class="card-header">Company Staff Details</h5>
+            <h5 class="card-header">Staff Details</h5>
             <div class="card-body">
                 <form class="row g-3" enctype="multipart/form-data" @if (isset($company_staff)) method="post" action="{{ route('company_staff.update',$company_staff) }}" @else method="post" action="{{ route('company_staff.store') }}" @endif onsubmit="showLoading()">
                 @csrf
                 <div class="col-md-6">
-                    <label class="form-label" for="name">Company Staff Name</label>
+                    <label class="form-label" for="name">Staff Name</label>
                     <input
                     type="text"
                     class="form-control"

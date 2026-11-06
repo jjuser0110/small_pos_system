@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
  *
  *   1, 2 (admins)       : every record
  *   3 (branch manager)  : records in their branch
- *   4 (company manager) : records in their company
  *   5 (staff)           : only records they own (e.g. their own orders/shifts)
  */
 trait AuthorizesScope
@@ -27,7 +26,6 @@ trait AuthorizesScope
         return match ((int) $user->role_id) {
             1, 2    => true,
             3       => $branchId !== null && $user->branch_id !== null && $branchId == $user->branch_id,
-            4       => $companyId !== null && $user->company_id !== null && $companyId == $user->company_id,
             5       => $ownerId !== null && $ownerId == $user->id,
             default => false,
         };
@@ -55,7 +53,6 @@ trait AuthorizesScope
         return match ((int) $user->role_id) {
             1, 2    => Company::all(),
             3       => Company::where('branch_id', $user->branch_id)->get(),
-            4       => Company::where('id', $user->company_id)->get(),
             default => collect(),
         };
     }
