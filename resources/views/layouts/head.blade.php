@@ -8,4 +8,4 @@
 <meta name="description" content="" />
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<link rel="icon" type="image/x-icon" href="{{ asset('assets/logo.png') }}" />
+<link rel="icon" type="image/svg+xml" href="{{ asset('assets/logo-fsmart.svg') }}" />

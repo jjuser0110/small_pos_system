@@ -18,7 +18,7 @@
     <meta name="description" content="" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo.png') }}" />
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/logo-fsmart.svg') }}" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -33,8 +33,8 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icons.css') }}" />
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core.css') }}" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core.css') }}?v=2" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default.css') }}?v=2" />
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
     <!-- Vendors CSS -->
@@ -45,7 +45,7 @@
 
     <!-- Page CSS -->
     <!-- Page -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/page-auth.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/page-auth.css') }}?v=2" />
     <script>
       var assetsPath = "{{ asset('assets/') }}/";
       var templateName = "frest";
@@ -68,7 +68,7 @@
               <!-- Logo -->
               <div class="app-brand justify-content-center">
                 <a href="{{route('home')}}" class="app-brand-link gap-2">
-                  <img src="{{ asset('assets/logo.png') }}" alt="Logo" style="width:80%; display:block; margin:0 auto;" />
+                  <img src="{{ asset('assets/logo-fsmart.svg') }}" alt="Logo" style="width:80%; display:block; margin:0 auto;" />
                 </a>
               </div>
               <!-- /Logo -->
