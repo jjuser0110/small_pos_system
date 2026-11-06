@@ -20,6 +20,14 @@ $currentRoute = request()->route()->getName();
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1" style="overflow-y:auto">
+        @php
+            $isStaff = auth()->user()->role_id == 5;
+            // badges = things waiting for this user to approve
+            $borrowPending   = \App\Models\StaffBorrow::pendingFor(auth()->user())->count();
+            $refundPending   = \App\Models\Refund::pendingFor(auth()->user())->count();
+            $damagePending   = \App\Models\Damage::pendingFor(auth()->user())->count();
+            $transferPending = \App\Models\StockTransfer::pendingFor(auth()->user())->count();
+        @endphp
         <li class="menu-item {{ Str::contains($currentRoute, 'home') ? 'active' : ''}}">
             <a href="{{ route('home') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
@@ -32,18 +40,37 @@ $currentRoute = request()->route()->getName();
                 <div>Go to Counter</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.index') ? 'active' : ''}}">
+        @if(!$isStaff)
+        <li class="menu-item {{ Str::contains($currentRoute, 'report.index') ? 'active' : ''}}">
+            <a href="{{ route('report.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Report</div>
+            </a>
+        </li>
+        @endif
+        <li class="menu-item {{ Str::contains($currentRoute, 'shift_closing.') ? 'active' : ''}}">
             <a href="{{ route('shift_closing.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Shift Report</div>
             </a>
         </li>
-        @php
-            // badges = things waiting for this user to approve
-            $borrowPending = \App\Models\StaffBorrow::pendingFor(auth()->user())->count();
-            $refundPending = \App\Models\Refund::pendingFor(auth()->user())->count();
-            $damagePending = \App\Models\Damage::pendingFor(auth()->user())->count();
-        @endphp
+        @if(!$isStaff)
+        <li class="menu-item {{ Str::contains($currentRoute, 'staff_attendance.') ? 'active' : ''}}">
+            <a href="{{ route('staff_attendance.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Staff Attendance</div>
+            </a>
+        </li>
+        @endif
+        <li class="menu-item {{ Str::contains($currentRoute, 'staff_borrow.') ? 'active' : ''}}">
+            <a href="{{ route('staff_borrow.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-wallet"></i>
+                <div>Advance</div>
+                @if($borrowPending > 0)
+                    <span class="badge bg-danger rounded-pill ms-auto">{{ $borrowPending }}</span>
+                @endif
+            </a>
+        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'refund.') ? 'active' : ''}}">
             <a href="{{ route('refund.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-undo"></i>
@@ -62,18 +89,7 @@ $currentRoute = request()->route()->getName();
                 @endif
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'staff_borrow.index') ? 'active' : ''}}">
-            <a href="{{ route('staff_borrow.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-wallet"></i>
-                <div>Advance</div>
-                @if($borrowPending > 0)
-                    <span class="badge bg-danger rounded-pill ms-auto">{{ $borrowPending }}</span>
-                @endif
-            </a>
-        </li>
-
-        @php $transferPending = \App\Models\StockTransfer::pendingFor(auth()->user())->count(); @endphp
-        <li class="menu-item {{ Str::contains($currentRoute, 'stock_transfer.index') ? 'active' : ''}}">
+        <li class="menu-item {{ Str::contains($currentRoute, 'stock_transfer.') ? 'active' : ''}}">
             <a href="{{ route('stock_transfer.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-transfer"></i>
                 <div>Stock Transfer</div>
@@ -82,60 +98,53 @@ $currentRoute = request()->route()->getName();
                 @endif
             </a>
         </li>
-
-        @if(auth()->user()->role_id != 5)
-            <li class="menu-item {{ Str::contains($currentRoute, 'stock_adjustment.index') ? 'active' : ''}}">
-                <a href="{{ route('stock_adjustment.index') }}" class="menu-link">
-                    <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                    <div>Stock Adjustment</div>
-                </a>
-            </li>
+        @if(!$isStaff)
+        <li class="menu-item {{ Str::contains($currentRoute, 'stock_adjustment.') ? 'active' : ''}}">
+            <a href="{{ route('stock_adjustment.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Stock Adjustment</div>
+            </a>
+        </li>
         @endif
 
-        @if(auth()->user()->role_id != 5 )
+        @if(!$isStaff)
         <li class="menu-header small text-uppercase">
-            <span class="menu-header-text" data-i18n="Company Setting">Company Setting</span>
+            <span class="menu-header-text" data-i18n="Company Settings">Company Settings</span>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'order.index') ? 'active' : ''}}">
+        <li class="menu-item {{ Str::contains($currentRoute, 'order.') ? 'active' : ''}}">
             <a href="{{ route('order.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Order</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'batch.index') ? 'active' : ''}}">
+        <li class="menu-item {{ Str::contains($currentRoute, 'batch.') ? 'active' : ''}}">
             <a href="{{ route('batch.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Stock</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'product.index') ? 'active' : ''}}">
+        <li class="menu-item {{ Str::contains($currentRoute, 'product.') ? 'active' : ''}}">
             <a href="{{ route('product.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Product</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'category.index') ? 'active' : ''}}">
+        <li class="menu-item {{ Str::contains($currentRoute, 'category.') ? 'active' : ''}}">
             <a href="{{ route('category.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Category</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
-            <a href="{{ route('company_staff.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Staff</div>
-            </a>
+        @endif
+
+        @if(in_array(auth()->user()->role_id, [1, 2, 3]))
+        <li class="menu-header small text-uppercase">
+            <span class="menu-header-text" data-i18n="Master Setting">Master Setting</span>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'report.index') ? 'active' : ''}}">
-            <a href="{{ route('report.index') }}" class="menu-link">
+        <li class="menu-item {{ Str::contains($currentRoute, 'company.index') ? 'active' : ''}}">
+            <a href="{{ route('company.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Report</div>
-            </a>
-        </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'staff_attendance.index') ? 'active' : ''}}">
-            <a href="{{ route('staff_attendance.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Staff Attendance</div>
+                <div>Company</div>
             </a>
         </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'supplier.index') ? 'active' : ''}}">
@@ -144,21 +153,15 @@ $currentRoute = request()->route()->getName();
                 <div>Supplier</div>
             </a>
         </li>
-        @endif
-
-        @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)
-        <li class="menu-item {{ Str::contains($currentRoute, 'company.index') ? 'active' : ''}}">
-            <a href="{{ route('company.index') }}" class="menu-link">
+        <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
+            <a href="{{ route('company_staff.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Company</div>
+                <div>Staff</div>
             </a>
         </li>
         @endif
 
         @if(auth()->user()->role_id == 1 || auth()->user()->role_id == 2)
-        <li class="menu-header small text-uppercase">
-            <span class="menu-header-text" data-i18n="Master Setting">Master Setting</span>
-        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'branch_manager.index') ? 'active' : ''}}">
             <a href="{{ route('branch_manager.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>

@@ -26,9 +26,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($product->stock_logs as $index => $row)
+                        @foreach($product->stock_logs()->orderByDesc('created_at')->orderByDesc('id')->get() as $index => $row)
                         <tr>
-                            <td>{{ $row->created_at }}</td>
+                            <td data-order="{{ optional($row->created_at)->format('YmdHis') }}{{ str_pad($row->id, 10, '0', STR_PAD_LEFT) }}">{{ $row->created_at }}</td>
                             <td>{{ ucfirst(str_replace('_', ' ', $row->type ?? '')) }}</td>
                             <td>{{$row->description??""}}</td>
                             <td>{{$row->before_stock??""}}</td>
@@ -55,6 +55,7 @@
         pageLength: 10,
         displayLength: 5,
         lengthMenu: [5, 10, 25, 50, 75, 100],
+        order: [[0, 'desc']],   // newest first
       });
     });
   </script>
