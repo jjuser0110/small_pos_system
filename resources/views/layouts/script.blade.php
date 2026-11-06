@@ -45,3 +45,4 @@
         hideLoading();
     });
 </script>
+@include('layouts.shift-timer')

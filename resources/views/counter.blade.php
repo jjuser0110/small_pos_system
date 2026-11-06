@@ -972,5 +972,6 @@ document.querySelectorAll('.category-btn').forEach(btn=>{
 displayProducts(selectedCategory);
 loadCartFromServer();
 </script>
+@include('layouts.shift-timer')
 </body>
 </html>

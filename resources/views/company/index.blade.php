@@ -29,6 +29,7 @@
                             <th>Branch</th>
                             <th>Company Name</th>
                             <th>Company Code</th>
+                            <th>Domain</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -39,6 +40,7 @@
                             <td>{{$row->branch->branch_code??""}}</td>
                             <td>{{$row->company_name??""}}</td>
                             <td>{{$row->company_code??""}}</td>
+                            <td>{{$row->domain??""}}</td>
                             <td>
                                 <a href="{{ route('company.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('company.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>

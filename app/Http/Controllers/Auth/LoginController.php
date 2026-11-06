@@ -3,30 +3,18 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShiftClosing;
+use App\Models\StaffAttendance;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\StaffAttendance;
-use App\User;
-use Socialite;
-use Auth;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
-    use AuthenticatesUsers;
+    use AuthenticatesUsers {
+        logout as protected traitLogout;
+    }
 
     /**
      * Where to redirect users after login.
@@ -35,16 +23,11 @@ class LoginController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
     }
-    
+
     public function username()
     {
         return 'username';
@@ -53,27 +36,40 @@ class LoginController extends Controller
     public function authenticated(Request $request, $user)
     {
         if ($user->is_active != 1) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return redirect()->route('login')->withErrors('Your account has been locked. Please contact your Boss!');
+            return $this->refuse($request, 'Your account has been locked. Please contact your Boss!');
         }
 
-        // staff can only log in during their shift time
-        if (!$user->isWithinShift()) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return redirect()->route('login')->withErrors('You can only log in during your shift time.');
+        // staff: only on their company's domain, only inside their shift window
+        if ($problem = $user->staffAccessProblem($request->getHost())) {
+            return $this->refuse($request, $problem);
         }
 
-        if ($user->role_id == 5) {
+        if ($user->isStaff()) {
             StaffAttendance::clockIn($user);
+            ShiftClosing::openOrStart($user);
             return redirect()->route('counter');
         }
 
         return redirect()->route('home')->withSuccess('Successfully Login');
+    }
+
+    /** Normal logout: staff attendance records when they left. */
+    public function logout(Request $request)
+    {
+        $user = Auth::user();
+        if ($user && $user->isStaff()) {
+            StaffAttendance::clockOut($user, 'logout');
+        }
+
+        return $this->traitLogout($request);
+    }
+
+    private function refuse(Request $request, string $message)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->withErrors($message);
     }
 }

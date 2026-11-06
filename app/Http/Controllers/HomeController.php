@@ -131,20 +131,17 @@ class HomeController extends Controller
 
         if (isset($shift)) {
             $shift->update(['closing_time' => Carbon::now()]);
-
-            if ($user->role_id == 5) {
-                StaffAttendance::clockOut($user, $shift->created_at);
-            }
             $closed = true;
-        } elseif ($user->role_id == 5) {
-            // no sales yet, but still record the attendance clock-out
+        }
+
+        if ($user->isStaff()) {
             $open = StaffAttendance::where('user_id', $user->id)
                 ->where('work_date', StaffAttendance::workDateFor($user))
                 ->whereNull('clock_out')
-                ->first();
+                ->exists();
 
-            if ($open) {
-                $open->update(['clock_out' => Carbon::now()]);
+            if ($open || $closed) {
+                StaffAttendance::clockOut($user, 'closing', $shift?->created_at);
                 $closed = true;
             }
         }

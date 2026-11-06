@@ -2,18 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Support\ShiftWindow;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * One row per staff member per shift day: first login (clock_in) and last
+ * logout (clock_out, with the reason: closing button, normal logout, or auto
+ * logout at shift end + grace).
+ */
 class StaffAttendance extends Model
 {
     protected $fillable = [
-        'user_id', 
-        'branch_id', 
-        'company_id', 
-        'work_date', 
-        'clock_in', 
+        'user_id',
+        'branch_id',
+        'company_id',
+        'work_date',
+        'shift',
+        'clock_in',
         'clock_out',
+        'clock_out_reason',
     ];
 
     public function user()
@@ -21,56 +29,77 @@ class StaffAttendance extends Model
         return $this->belongsTo('App\Models\User', 'user_id');
     }
 
-    /**
-     * Overnight shifts (e.g. 22:00-06:00): a login at 01:00 still belongs
-     * to the day the shift started.
-     */
-    public static function workDateFor($user)
+    /** The day the staff member's current shift started (PM after midnight = yesterday). */
+    public static function workDateFor($user): string
     {
-        $now = Carbon::now();
-
-        if ($user->shift_start && $user->shift_end) {
-            $start = Carbon::parse($user->shift_start)->format('H:i:s');
-            $end   = Carbon::parse($user->shift_end)->format('H:i:s');
-
-            if ($start > $end && $now->format('H:i:s') <= $end) {
-                return $now->copy()->subDay()->toDateString();
-            }
-        }
-
-        return $now->toDateString();
+        return $user->currentShiftWindow()?->workDate ?? Carbon::now()->toDateString();
     }
 
-    /** First login of the work day. Later logins the same day change nothing. */
+    /** Start (or resume) today's attendance at login. */
     public static function clockIn($user)
     {
-        return self::firstOrCreate(
+        self::closeStale($user);
+
+        $record = self::firstOrCreate(
             ['user_id' => $user->id, 'work_date' => self::workDateFor($user)],
             [
                 'branch_id'  => $user->branch_id,
                 'company_id' => $user->company_id,
+                'shift'      => $user->shift,
                 'clock_in'   => Carbon::now(),
             ]
         );
+
+        // logging in again during the same shift: still working
+        if ($record->clock_out) {
+            $record->update(['clock_out' => null, 'clock_out_reason' => null]);
+        }
+
+        return $record;
     }
 
     /**
-     * Closing button. If there is no record yet (e.g. logged in before this
-     * feature existed), create one using $fallbackClockIn.
-     * Closing twice in a day keeps the latest closing time.
+     * Record leaving. $reason: 'closing', 'logout' or 'auto'. The latest leave
+     * time of the day is kept. Creates the row if the login was never recorded.
      */
-    public static function clockOut($user, $fallbackClockIn = null)
+    public static function clockOut($user, string $reason = 'closing', $fallbackClockIn = null, ?Carbon $at = null)
     {
         $record = self::firstOrCreate(
             ['user_id' => $user->id, 'work_date' => self::workDateFor($user)],
             [
                 'branch_id'  => $user->branch_id,
                 'company_id' => $user->company_id,
+                'shift'      => $user->shift,
                 'clock_in'   => $fallbackClockIn ?? Carbon::now(),
             ]
         );
 
-        $record->update(['clock_out' => Carbon::now()]);
+        $record->update(['clock_out' => $at ?? Carbon::now(), 'clock_out_reason' => $reason]);
         return $record;
+    }
+
+    /**
+     * Rows left open after the shift window ended (browser closed, no logout)
+     * are closed at the shift's forced logout time.
+     */
+    public static function closeStale($user): void
+    {
+        $open = self::where('user_id', $user->id)->whereNull('clock_out')->get();
+
+        foreach ($open as $row) {
+            $window = ShiftWindow::forDate($row->shift ?? $user->shift ?? 'AM', Carbon::parse($row->work_date)->toDateString());
+            if ($window && Carbon::now()->greaterThanOrEqualTo($window->logoutAt)) {
+                $row->update(['clock_out' => $window->logoutAt, 'clock_out_reason' => 'auto']);
+            }
+        }
+    }
+
+    /** Minutes worked, or null if still open. */
+    public function minutesWorked(): ?int
+    {
+        if (!$this->clock_out) {
+            return null;
+        }
+        return (int) Carbon::parse($this->clock_in)->diffInMinutes(Carbon::parse($this->clock_out));
     }
 }

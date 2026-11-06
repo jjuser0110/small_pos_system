@@ -40,10 +40,14 @@ class CompanyController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['branch_id' => 'required|exists:branches,id']);
+        $request->merge(['domain' => Company::normalizeDomain($request->domain)]);
+        $request->validate([
+            'branch_id' => 'required|exists:branches,id',
+            'domain'    => $this->domainRules(),
+        ]);
         $this->authorizeBranchId($request->branch_id);
 
-        Company::create($request->only(['branch_id', 'company_name', 'company_code']));
+        Company::create($request->only(['branch_id', 'company_name', 'company_code', 'domain']));
 
         return redirect()->route('company.index')->withSuccess('Data saved');
     }
@@ -65,12 +69,16 @@ class CompanyController extends Controller
     public function update(Request $request, Company $company)
     {
         $this->authorizeCompany($company);
-        $request->validate(['branch_id' => 'sometimes|required|exists:branches,id']);
+        $request->merge(['domain' => Company::normalizeDomain($request->domain)]);
+        $request->validate([
+            'branch_id' => 'sometimes|required|exists:branches,id',
+            'domain'    => $this->domainRules($company),
+        ]);
         if ($request->has('branch_id')) {
             $this->authorizeBranchId($request->branch_id);
         }
 
-        $company->update($request->only(['branch_id', 'company_name', 'company_code']));
+        $company->update($request->only(['branch_id', 'company_name', 'company_code', 'domain']));
         return redirect()->route('company.index')->withSuccess('Data updated');
     }
 
@@ -99,5 +107,15 @@ class CompanyController extends Controller
         if (!$this->userCanAccess($branchId, null)) {
             abort(403, 'Access denied');
         }
+    }
+
+    private function domainRules(?Company $ignore = null): array
+    {
+        return [
+            'nullable', 'string', 'max:191',
+            // host names only (underscores allowed for local hosts like small_pos_system.test)
+            'regex:/^[a-z0-9]([a-z0-9_-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9_-]*[a-z0-9])?)+$/',
+            \Illuminate\Validation\Rule::unique('companies', 'domain')->ignore($ignore?->id)->whereNull('deleted_at'),
+        ];
     }
 }

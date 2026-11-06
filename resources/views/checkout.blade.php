@@ -643,5 +643,6 @@
             document.getElementById('amountReceived').focus();
         }, 500);
     </script>
+@include('layouts.shift-timer')
 </body>
 </html>

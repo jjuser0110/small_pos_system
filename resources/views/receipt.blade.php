@@ -267,5 +267,6 @@
             {!! $receipt_setting->footer !!}
         </div>
     </div>
+@include('layouts.shift-timer')
 </body>
 </html>

@@ -33,6 +33,20 @@
                     value="{{$company->company_code??''}}"
                     required/>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="domain">Domain</label>
+                    <input
+                    type="text"
+                    class="form-control"
+                    placeholder="shopa.com"
+                    name="domain"
+                    id="domain"
+                    value="{{ old('domain', $company->domain ?? '') }}"/>
+                    <small class="text-muted">The address this company's staff log in at. Staff of this company can only log in on this domain.</small>
+                    @error('domain')
+                        <small class="text-danger d-block">{{ $message }}</small>
+                    @enderror
+                </div>
                 <div class="col-md-6 mb-4">
                     <label for="select2Basic" class="form-label">Branch</label>
                     <select id="select2Basic" name="branch_id" class="select2 form-select" data-allow-clear="true">

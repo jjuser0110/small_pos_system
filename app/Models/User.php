@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use App\Support\ShiftWindow;
 
 class User extends Authenticatable
 {
@@ -56,19 +57,54 @@ class User extends Authenticatable
         return $this->belongsTo('App\Models\Company');
     }
 
-    public function isWithinShift(): bool
+    public const ROLE_STAFF = 5;
+
+    public function isStaff(): bool
     {
-        if ($this->role_id != 5 || !$this->shift_start || !$this->shift_end) {
-            return true; // no restriction
-        }
+        return (int) $this->role_id === self::ROLE_STAFF;
+    }
 
-        $now   = Carbon::now()->format('H:i:s');
-        $start = Carbon::parse($this->shift_start)->format('H:i:s');
-        $end   = Carbon::parse($this->shift_end)->format('H:i:s');
+    /** The shift occurrence this staff member may be logged in for right now. */
+    public function currentShiftWindow(?Carbon $now = null): ?ShiftWindow
+    {
+        return ShiftWindow::current($this->shift, $now);
+    }
 
-        if ($start <= $end) {
-            return $now >= $start && $now <= $end;
+    /** Staff may only be logged in during their shift (plus grace); others always. */
+    public function isWithinShift(?Carbon $now = null): bool
+    {
+        return !$this->isStaff() || $this->currentShiftWindow($now) !== null;
+    }
+
+    /** Staff may only use their own company's domain; others may use any. */
+    public function isOnAllowedDomain(?string $host): bool
+    {
+        if (!$this->isStaff()) {
+            return true;
         }
-        return $now >= $start || $now <= $end; // overnight
+        return $this->company !== null && $this->company->matchesHost($host);
+    }
+
+    /** Why a staff member may not be logged in here and now, or null if they may. */
+    public function staffAccessProblem(?string $host, ?Carbon $now = null): ?string
+    {
+        if (!$this->isStaff()) {
+            return null;
+        }
+        if (!$this->company || !$this->company->domain) {
+            return 'Your company has no domain set yet. Please contact your manager.';
+        }
+        if (!$this->isOnAllowedDomain($host)) {
+            return "Please log in at your company's address: " . $this->company->domain;
+        }
+        if (!in_array($this->shift, ShiftWindow::shifts(), true)) {
+            return 'You have no shift (AM / PM) assigned. Please contact your manager.';
+        }
+        if (!$this->isWithinShift($now)) {
+            $next = ShiftWindow::nextLoginFrom($this->shift, $now);
+            return 'You are outside your ' . $this->shift . ' shift time.'
+                . ($next ? ' You can log in from ' . $next->format('d M H:i') . '.' : '');
+        }
+        return null;
     }
 }

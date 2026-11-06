@@ -20,7 +20,9 @@ class RoleAccessTest extends TestCase
     {
         parent::setUp();
         config(['database.default' => 'no_database_in_these_tests']);
-        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        // these tests are about role limits only; the domain/shift check for staff
+        // needs a real company record and is covered by StaffShiftAccessTest
+        $this->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class, \App\Http\Middleware\CheckStaffAccess::class]);
     }
 
     private function userWithRole(int $role, array $extra = []): User
