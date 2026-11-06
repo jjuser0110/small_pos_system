@@ -6,7 +6,7 @@
  */
 :root,
 [data-bs-theme=light] {
-  --bs-blue: #5a8dee;
+  --bs-blue: #16a34a;
   --bs-indigo: #6610f2;
   --bs-purple: #6f42c1;
   --bs-pink: #e83e8c;
@@ -22,7 +22,7 @@
   --bs-gray-dark: rgba(38, 60, 85, 0.8);
   --bs-gray-25: rgba(38, 60, 85, 0.025);
   --bs-gray-50: rgba(38, 60, 85, 0.06);
-  --bs-primary: #5a8dee;
+  --bs-primary: #16a34a;
   --bs-secondary: #69809a;
   --bs-success: #39da8a;
   --bs-info: #00cfdd;
@@ -31,7 +31,7 @@
   --bs-light: #e5e9ed;
   --bs-dark: #495563;
   --bs-gray: rgba(38, 60, 85, 0.5);
-  --bs-primary-rgb: 90, 141, 238;
+  --bs-primary-rgb: 22, 163, 74;
   --bs-secondary-rgb: 105, 128, 154;
   --bs-success-rgb: 57, 218, 138;
   --bs-info-rgb: 0, 207, 221;
@@ -40,7 +40,7 @@
   --bs-light-rgb: 229, 233, 237;
   --bs-dark-rgb: 73, 85, 99;
   --bs-gray-rgb: 38, 60, 85;
-  --bs-primary-text-emphasis: rgb(36, 56.4, 95.2);
+  --bs-primary-text-emphasis: rgb(9, 65, 30);
   --bs-secondary-text-emphasis: rgb(42, 51.2, 61.6);
   --bs-success-text-emphasis: rgb(22.8, 87.2, 55.2);
   --bs-info-text-emphasis: rgb(0, 82.8, 88.4);
@@ -48,7 +48,7 @@
   --bs-danger-text-emphasis: rgb(102, 36.4, 36.8);
   --bs-light-text-emphasis: rgba(38, 60, 85, 0.7);
   --bs-dark-text-emphasis: rgba(38, 60, 85, 0.7);
-  --bs-primary-bg-subtle: rgb(222, 232.2, 251.6);
+  --bs-primary-bg-subtle: rgb(208, 237, 219);
   --bs-secondary-bg-subtle: rgb(225, 229.6, 234.8);
   --bs-success-bg-subtle: rgb(215.4, 247.6, 231.6);
   --bs-info-bg-subtle: rgb(204, 245.4, 248.2);
@@ -56,7 +56,7 @@
   --bs-danger-bg-subtle: rgb(255, 222.2, 222.4);
   --bs-light-bg-subtle: rgba(244.15, 245.25, 246.5, 0.55);
   --bs-dark-bg-subtle: rgba(38, 60, 85, 0.4);
-  --bs-primary-border-subtle: rgb(189, 209.4, 248.2);
+  --bs-primary-border-subtle: rgb(162, 218, 183);
   --bs-secondary-border-subtle: rgb(195, 204.2, 214.6);
   --bs-success-border-subtle: rgb(175.8, 240.2, 208.2);
   --bs-info-border-subtle: rgb(153, 235.8, 241.4);
@@ -89,10 +89,10 @@
   --bs-tertiary-bg: rgba(38, 60, 85, 0.1);
   --bs-tertiary-bg-rgb: 38, 60, 85;
   --bs-heading-color: rgb(81.4, 99, 119);
-  --bs-link-color: #5a8dee;
-  --bs-link-color-rgb: 90, 141, 238;
+  --bs-link-color: #16a34a;
+  --bs-link-color-rgb: 22, 163, 74;
   --bs-link-decoration: none;
-  --bs-link-hover-color: rgb(81, 126.9, 214.2);
+  --bs-link-hover-color: rgb(20, 147, 67);
   --bs-link-hover-color-rgb: 81, 127, 214;
   --bs-code-color: #e83e8c;
   --bs-highlight-color: rgb(103.1, 118.5, 136);
@@ -1875,7 +1875,7 @@ progress {
 
 .table-primary {
   --bs-table-color: #263c55;
-  --bs-table-bg: rgb(222, 232.2, 251.6);
+  --bs-table-bg: rgb(208, 237, 219);
   --bs-table-border-color: rgb(185.2, 197.76, 218.28);
   --bs-table-striped-bg: rgb(216.48, 227.034, 246.602);
   --bs-table-striped-color: #263c55;
@@ -2082,7 +2082,7 @@ progress {
 .form-control:focus {
   color: rgb(103.1, 118.5, 136);
   background-color: #fff;
-  border-color: rgba(245.2941176471, 248.2941176471, 254, 0.448);
+  border-color: rgba(241, 250, 244, 0.448);
   outline: 0;
   box-shadow: 0 0.0625rem 0.1875rem 0 rgba(38, 60, 85, 0.18);
 }
@@ -2227,7 +2227,7 @@ textarea.form-control-lg {
   }
 }
 .form-select:focus {
-  border-color: rgba(245.2941176471, 248.2941176471, 254, 0.448);
+  border-color: rgba(241, 250, 244, 0.448);
   outline: 0;
   box-shadow: 0 0.0625rem 0.1875rem 0 rgba(38, 60, 85, 0.18);
 }
@@ -2308,13 +2308,13 @@ textarea.form-control-lg {
   filter: brightness(90%);
 }
 .form-check-input:focus {
-  border-color: rgba(245.2941176471, 248.2941176471, 254, 0.448);
+  border-color: rgba(241, 250, 244, 0.448);
   outline: 0;
   box-shadow: 0 0 0 0.12rem rgba(146.5, 157.5, 170, 0.3);
 }
 .form-check-input:checked {
-  background-color: rgba(90, 141, 238, 0.08);
-  border-color: rgba(90, 141, 238, 0.08);
+  background-color: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.08);
 }
 .form-check-input:checked[type=checkbox] {
   --bs-form-check-bg-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
@@ -2323,8 +2323,8 @@ textarea.form-control-lg {
   --bs-form-check-bg-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='1.5' fill='%23fff'/%3e%3c/svg%3e");
 }
 .form-check-input[type=checkbox]:indeterminate {
-  background-color: rgba(90, 141, 238, 0.08);
-  border-color: rgba(90, 141, 238, 0.08);
+  background-color: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.08);
   --bs-form-check-bg-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 10h8'/%3e%3c/svg%3e");
 }
 .form-check-input:disabled {
@@ -2849,8 +2849,8 @@ textarea.form-control-lg {
   --bs-dropdown-link-color: rgb(103.1, 118.5, 136);
   --bs-dropdown-link-hover-color: rgb(103.1, 118.5, 136);
   --bs-dropdown-link-hover-bg: rgba(38, 60, 85, 0.06);
-  --bs-dropdown-link-active-color: #5a8dee;
-  --bs-dropdown-link-active-bg: rgba(90, 141, 238, 0.08);
+  --bs-dropdown-link-active-color: #16a34a;
+  --bs-dropdown-link-active-bg: rgba(22, 163, 74, 0.08);
   --bs-dropdown-link-disabled-color: rgb(189.9, 196.5, 204);
   --bs-dropdown-item-padding-x: 1rem;
   --bs-dropdown-item-padding-y: 0.5rem;
@@ -3117,8 +3117,8 @@ textarea.form-control-lg {
   --bs-dropdown-link-hover-color: #fff;
   --bs-dropdown-divider-bg: rgb(211.6, 216, 221);
   --bs-dropdown-link-hover-bg: rgba(255, 255, 255, 0.15);
-  --bs-dropdown-link-active-color: #5a8dee;
-  --bs-dropdown-link-active-bg: rgba(90, 141, 238, 0.08);
+  --bs-dropdown-link-active-color: #16a34a;
+  --bs-dropdown-link-active-bg: rgba(22, 163, 74, 0.08);
   --bs-dropdown-link-disabled-color: rgba(38, 60, 85, 0.5);
   --bs-dropdown-header-color: rgba(38, 60, 85, 0.5);
 }
@@ -4147,8 +4147,8 @@ textarea.form-control-lg {
   --bs-pagination-focus-bg: rgb(220.28, 223.8, 227.8);
   --bs-pagination-focus-box-shadow: none;
   --bs-pagination-active-color: #fff;
-  --bs-pagination-active-bg: rgba(90, 141, 238, 0.08);
-  --bs-pagination-active-border-color: rgba(90, 141, 238, 0.08);
+  --bs-pagination-active-bg: rgba(22, 163, 74, 0.08);
+  --bs-pagination-active-border-color: rgba(22, 163, 74, 0.08);
   --bs-pagination-disabled-color: rgba(38, 60, 85, 0.3);
   --bs-pagination-disabled-bg: rgb(237.64, 239.4, 241.4);
   --bs-pagination-disabled-border-color: var(--bs-border-color);
@@ -4366,7 +4366,7 @@ textarea.form-control-lg {
   --bs-progress-border-radius: 10rem;
   --bs-progress-box-shadow: var(--bs-box-shadow-inset);
   --bs-progress-bar-color: #fff;
-  --bs-progress-bar-bg: #5a8dee;
+  --bs-progress-bar-bg: #16a34a;
   --bs-progress-bar-transition: width 0.6s ease;
   display: flex;
   height: var(--bs-progress-height);
@@ -4431,8 +4431,8 @@ textarea.form-control-lg {
   --bs-list-group-disabled-color: rgb(168.2, 177, 187);
   --bs-list-group-disabled-bg: transparent;
   --bs-list-group-active-color: #fff;
-  --bs-list-group-active-bg: rgba(90, 141, 238, 0.08);
-  --bs-list-group-active-border-color: rgba(90, 141, 238, 0.08);
+  --bs-list-group-active-bg: rgba(22, 163, 74, 0.08);
+  --bs-list-group-active-border-color: rgba(22, 163, 74, 0.08);
   display: flex;
   flex-direction: column;
   padding-left: 0;
@@ -12463,7 +12463,7 @@ html:not([dir=rtl]) .card .card-separator {
 }
 
 .border-primary {
-  border-color: #5a8dee !important;
+  border-color: #16a34a !important;
 }
 
 .border-secondary {
@@ -22677,7 +22677,7 @@ html:not([dir=rtl]) .switches-stacked .switch {
 }
 .timeline .timeline-item .timeline-indicator i,
 .timeline .timeline-item .timeline-indicator-advanced i {
-  color: #5a8dee;
+  color: #16a34a;
   font-size: 0.85rem !important;
 }
 .timeline .timeline-item .timeline-point {
@@ -22689,7 +22689,7 @@ html:not([dir=rtl]) .switches-stacked .switch {
   height: 0.75rem;
   width: 0.75rem;
   border-radius: 50%;
-  background-color: #5a8dee;
+  background-color: #16a34a;
 }
 .timeline .timeline-item.timeline-item-transparent .timeline-event {
   top: -1.4rem;

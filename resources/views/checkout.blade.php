@@ -9,7 +9,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #16a34a 0%, #166534 100%);
             height: 100vh;
             overflow: hidden;
         }
@@ -55,13 +55,13 @@
         }
 
         .back-btn:hover {
-            background: #667eea;
+            background: #16a34a;
             color: white;
             transform: translateX(-3px);
         }
 
         h1 {
-            color: #667eea;
+            color: #16a34a;
             font-size: 20px;
             flex: 1;
         }
@@ -89,7 +89,7 @@
         }
 
         .order-items-container::-webkit-scrollbar-thumb {
-            background: #667eea;
+            background: #16a34a;
             border-radius: 10px;
         }
 
@@ -115,7 +115,7 @@
         }
 
         .item-meta {
-            color: #667eea;
+            color: #16a34a;
             font-size: 11px;
         }
 
@@ -140,7 +140,7 @@
         .summary-row.total {
             font-size: 22px;
             font-weight: bold;
-            color: #667eea;
+            color: #16a34a;
             margin-top: 6px;
             padding-top: 10px;
             border-top: 2px solid #e0e0e0;
@@ -169,13 +169,13 @@
         }
 
         .payment-method:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
+            border-color: #16a34a;
+            background: #f2fbf5;
         }
 
         .payment-method.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #16a34a;
+            background: linear-gradient(135deg, #16a34a 0%, #166534 100%);
             color: white;
         }
 
@@ -210,14 +210,14 @@
             font-size: 28px;
             font-weight: bold;
             text-align: center;
-            color: #667eea;
+            color: #16a34a;
             margin-bottom: 10px;
         }
 
         .amount-input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
         }
 
         .quick-amount-btns {
@@ -239,9 +239,9 @@
         }
 
         .quick-amount-btn:hover {
-            background: #667eea;
+            background: #16a34a;
             color: white;
-            border-color: #667eea;
+            border-color: #16a34a;
         }
 
         .quick-amount-btn:active {
@@ -249,8 +249,8 @@
         }
 
         .change-display {
-            background: #e8f4ff;
-            border: 3px solid #667eea;
+            background: #e8f7ee;
+            border: 3px solid #16a34a;
             border-radius: 12px;
             padding: 18px;
             margin-bottom: 12px;
@@ -267,7 +267,7 @@
         .change-amount {
             font-size: 36px;
             font-weight: bold;
-            color: #667eea;
+            color: #16a34a;
         }
 
         .btn-group {
@@ -287,13 +287,13 @@
         }
 
         .btn-print {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #16a34a 0%, #166534 100%);
             color: white;
         }
 
         .btn-print:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 25px rgba(22, 163, 74, 0.4);
         }
 
         .btn-print:active:not(:disabled) {
