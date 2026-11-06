@@ -26,11 +26,11 @@ class BatchController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $batch = Batch::where('branch_id',$login_user->branch_id)->orderBy('created_at','DESC')->get();
+            $batch = Batch::with('supplier')->where('branch_id',$login_user->branch_id)->orderBy('created_at','DESC')->get();
         }else if($login_user->role_id == 4){
             $batch = Batch::where('company_id',$login_user->company_id)->orderBy('created_at','DESC')->get();
         }else{
-            $batch = Batch::orderBy('created_at','DESC')->get();
+            $batch = Batch::with('supplier')->orderBy('created_at','DESC')->get();
         }
         return view('batch.index')->with('batch',$batch);
     }
@@ -76,14 +76,18 @@ class BatchController extends Controller
             'year' => $check->year,
             'month' => $check->month,
             'company' => $company,
+            'suppliers' => \App\Models\Supplier::orderBy('name')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'batch_no'   => 'required|string',
-            'batch_date' => 'required|date',
+            'batch_no'    => 'required|string',
+            'batch_date'  => 'required|date',
+            'supplier_id' => 'required|exists:suppliers,id,deleted_at,NULL',
+        ], [
+            'supplier_id.required' => 'Choose which supplier this stock comes from.',
         ]);
         $company = $this->authorizeCompanyId($request->company_id);
 
@@ -91,6 +95,7 @@ class BatchController extends Controller
         $batch = Batch::create([
             'branch_id'  => $company->branch_id,
             'company_id' => $company->id,
+            'supplier_id' => $request->supplier_id,
             'batch_no'   => $request->batch_no,
             'batch_date' => $request->batch_date,
         ]);
@@ -118,7 +123,8 @@ class BatchController extends Controller
 
         $product = Product::where('branch_id', $batch->branch_id)->where('company_id', $batch->company_id)->get();
 
-        return view('batch.create')->with('batch',$batch)->with('company',$company)->with('product',$product);
+        return view('batch.create')->with('batch',$batch)->with('company',$company)->with('product',$product)
+            ->with('suppliers', \App\Models\Supplier::orderBy('name')->get());
     }
 
     public function update(Request $request, Batch $batch)

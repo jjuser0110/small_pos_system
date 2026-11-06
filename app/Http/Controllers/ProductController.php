@@ -13,7 +13,6 @@ use App\Models\Product;
 use App\Models\BatchItem;
 use App\Models\Branch;
 use App\Models\Company;
-use App\Models\Supplier;
 use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -59,11 +58,9 @@ class ProductController extends Controller
             $product_link = Product::all();
         }
 
-        $supplier = Supplier::all();
         $uom      = Uom::all();
 
         return view('product.create')
-            ->with('supplier', $supplier)
             ->with('category', $category)
             ->with('uom', $uom)
             ->with('product_link', $product_link);
@@ -73,7 +70,7 @@ class ProductController extends Controller
     private const FORM_FIELDS = [
         'product_name', 'product_code', 'barcode', 'arrangement', 'uom',
         'selling_price', 'is_active', 'connected_product_id',
-        'connected_product_quantity', 'supplier_id',
+        'connected_product_quantity',
     ];
 
     public function store(Request $request)
@@ -124,11 +121,9 @@ class ProductController extends Controller
             $product_link = Product::where('id', '!=', $product->id)->get();
         }
 
-        $supplier = Supplier::all();
         $uom      = Uom::all();
 
         return view('product.create')
-            ->with('supplier', $supplier)
             ->with('product', $product)
             ->with('category', $category)
             ->with('uom', $uom)

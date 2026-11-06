@@ -62,6 +62,22 @@
                     required
                     @if(isset($batch)) disabled @endif/>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="supplier_id">Supplier</label>
+                    @if(isset($batch))
+                        <input type="text" class="form-control" value="{{ $batch->supplier->name ?? ($batch->batch_no && str_starts_with($batch->batch_no, 'TRF') ? 'Stock transfer' : '-') }}" disabled>
+                    @else
+                        <select name="supplier_id" id="supplier_id" class="select2 form-select" required>
+                            <option value="">-- Choose supplier --</option>
+                            @foreach($suppliers as $sup)
+                                <option value="{{ $sup->id }}" @if(old('supplier_id') == $sup->id) selected @endif>{{ $sup->name }}</option>
+                            @endforeach
+                        </select>
+                        @if($suppliers->isEmpty())
+                            <small class="text-danger">No suppliers yet. Add one under Master Setting &rarr; Supplier first.</small>
+                        @endif
+                    @endif
+                </div>
                 <hr>
                 @if(isset($batch))
                 <div class="col-md-6 mb-4">
@@ -123,7 +139,6 @@
                                         <th>Total Cost Per Unit</th>
                                         <th>Total Cost</th>
                                         <th>Balance</th>
-                                        <th>Supplier</th>
                                         <th>Created At</th>
                                         <th>Updated At</th>
                                         <th>Actions</th>
@@ -139,7 +154,6 @@
                                         <td style="text-align:center">{{number_format($row->cost_per_unit??0,2)}}</td>
                                         <td style="text-align:center">{{number_format($row->total_cost??0,2)}}</td>
                                         <td style="text-align:center">{{$row->balance??""}}</td>
-                                        <td>{{$row->product->supplier->name??""}}</td>
                                         <td style="text-align:center">{{$row->created_at??""}}</td>
                                         <td style="text-align:center">{{$row->updated_at??""}}</td>
                                         <td>
@@ -232,8 +246,6 @@
                                 <option 
                                     value="{{$prod->id}}" 
                                     data-barcode="{{$prod->barcode??''}}"
-                                    data-supplier="{{$prod->supplier->name??''}}"
-                                    data-supplier-id="{{$prod->supplier_id??''}}"
                                 >{{$prod->product_name??''}} ({{$prod->uom_dt->uom_unit??''}})</option>
                             @endforeach
                         </select>
@@ -253,11 +265,6 @@
                     <div class="col-12">
                         <label class="col-form-label">Total Cost</label>
                         <input class="form-control" type="number" step="0.01" min="0" name="total_cost" id="total_cost" onkeyup="countCost(this)" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="col-form-label">Supplier</label>
-                        <input class="form-control" type="text" id="supplier_display" value="{{$prod->supplier->name??''}}" readonly>
-                        <input type="hidden" name="supplier_id" id="supplier_id_hidden">
                     </div>
                 </div>
             </div>
@@ -346,11 +353,6 @@
             searching: true,
         });
 
-        $('#product_id').on('change', function () {
-            const selected = $(this).find('option:selected');
-            $('#supplier_display').val(selected.data('supplier') ?? '');
-            $('#supplier_id_hidden').val(selected.data('supplier-id') ?? '');
-        });
     });
 
     function countCost(el){

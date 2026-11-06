@@ -14,6 +14,7 @@ class Batch extends Model
     protected $fillable = [
         'branch_id',
         'company_id',
+        'supplier_id',
         'batch_no',
         'batch_date',
         'total_product',
@@ -30,6 +31,11 @@ class Batch extends Model
     public function company()
     {
         return $this->belongsTo('App\Models\Company');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo('App\Models\Supplier')->withTrashed();
     }
 
     public function batch_items()

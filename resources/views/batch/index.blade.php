@@ -15,7 +15,7 @@
                     <div class="dt-buttons">
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('batch.create')}}" onclick="showLoading()">
                             <span><i class="bx bx-plus me-sm-1"></i>
-                                <span class="d-none d-sm-inline-block">Add New Record</span>
+                                <span class="d-none d-sm-inline-block">Add Stock</span>
                             </span>
                         </a>
                     </div>
@@ -30,6 +30,7 @@
                             <th>Company</th>
                             <th>Stock No</th>
                             <th>Stock Date</th>
+                            <th>Supplier</th>
                             <th>Total Product</th>
                             <th>Total Item</th>
                             <th>Total Cost</th>
@@ -45,6 +46,7 @@
                             <td>{{$row->company->company_name??""}}</td>
                             <td>{{$row->batch_no??""}}</td>
                             <td>{{$row->batch_date??""}}</td>
+                            <td>{{ $row->supplier->name ?? (str_starts_with((string) $row->batch_no, 'TRF') ? 'Stock transfer' : '') }}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
                             <td>{{$row->total_cost??""}}</td>
