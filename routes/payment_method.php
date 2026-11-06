@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('/payment_method')->as('payment_method.')->middleware(['auth'])->group(function() {
+Route::prefix('/payment_method')->as('payment_method.')->middleware(['auth', 'role:1,2'])->group(function() {
     Route::get('/index', 'PaymentMethodController@index')->name('index');
     Route::get('/create', 'PaymentMethodController@create')->name('create');
     Route::post('/store', 'PaymentMethodController@store')->name('store');

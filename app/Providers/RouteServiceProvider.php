@@ -50,10 +50,16 @@ class RouteServiceProvider extends ServiceProvider
             'middleware' => 'web',
             'namespace' => $this->namespace
         ], function ($router) {
+            // web.php and api.php are registered in boot(); console.php and
+            // channels.php are not HTTP routes. Load every other route file.
+            $skip = ['web.php', 'api.php', 'console.php', 'channels.php'];
+
             $iterator = new Iterator(new DirectoryIterator(base_path('routes')), Iterator::SELF_FIRST);
             foreach ($iterator as $file) {
-                if ($file->isFile()) {
-                    require_once $file->getPathname();
+                if ($file->isFile() && !in_array($file->getFilename(), $skip, true)) {
+                    // plain require (not require_once) so routes are registered
+                    // again whenever the app boots more than once in one process
+                    require $file->getPathname();
                 }
             }
         });

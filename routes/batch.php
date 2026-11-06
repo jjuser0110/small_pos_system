@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('/batch')->as('batch.')->middleware(['auth'])->group(function() {
+Route::prefix('/batch')->as('batch.')->middleware(['auth', 'role:1,2,3,4'])->group(function() {
     Route::get('/index', 'BatchController@index')->name('index');
     Route::get('/create', 'BatchController@create')->name('create');
     Route::post('/store', 'BatchController@store')->name('store');

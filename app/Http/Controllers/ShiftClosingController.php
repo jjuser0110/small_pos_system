@@ -44,6 +44,9 @@ class ShiftClosingController extends Controller
 
     public function view(ShiftClosing $shift_closing)
     {
+        // staff may view their own shifts; managers within their scope
+        $this->authorizeRecord($shift_closing, 'user_id');
+
         return view('shift_closing.view')->with('shift_closing',$shift_closing);
     }
 

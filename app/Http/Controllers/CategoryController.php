@@ -53,15 +53,20 @@ class CategoryController extends Controller
                 'has_stock' => 0,
             ]);
         }
-        $company = Company::find($request->company_id);
-        $request->merge(['branch_id'=>$company->branch_id,'company_id'=>$company->id]);
-        $category = Category::create($request->all());
+        $company = $this->authorizeCompanyId($request->company_id);
+
+        Category::create(array_merge($this->categoryFields($request), [
+            'branch_id'  => $company->branch_id,
+            'company_id' => $company->id,
+        ]));
 
         return redirect()->route('category.index')->withSuccess('Data saved');
     }
 
     public function edit(Category $category)
     {
+        $this->authorizeRecord($category);
+
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $company = Company::where('branch_id',$login_user->branch_id)->get();
@@ -85,12 +90,20 @@ class CategoryController extends Controller
                 'has_stock' => 0,
             ]);
         }
-        $category->update($request->all());
+        $this->authorizeRecord($category);
+        $company = $this->authorizeCompanyId($request->company_id ?? $category->company_id);
+
+        $category->update(array_merge($this->categoryFields($request), [
+            'branch_id'  => $company->branch_id,
+            'company_id' => $company->id,
+        ]));
         return redirect()->route('category.index')->withSuccess('Data updated');
     }
 
     public function destroy(Category $category)
     {
+        $this->authorizeRecord($category);
+
         if($category->products()->count()>0){
             return redirect()->route('category.index')->withErrors('Category has related items. You can not delete this.');
         }
@@ -99,4 +112,9 @@ class CategoryController extends Controller
         return redirect()->route('category.index')->withSuccess('Data deleted');
     }
 
+    /** Fields a user may set from the category form. */
+    private function categoryFields(Request $request): array
+    {
+        return $request->only(['category_name', 'arrangement', 'special', 'has_stock']);
+    }
 }

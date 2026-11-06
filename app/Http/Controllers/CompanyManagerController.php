@@ -3,24 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Spatie\Browsershot\Browsershot;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
-use Bouncer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class CompanyManagerController extends Controller
 {
+    const MANAGER_ROLE = 4;
+
     public function index(Request $request)
     {
         $login_user = Auth::user();
         if ($login_user->role_id == 3) {
-            $company_manager = User::where('branch_id',$login_user->branch_id)->where('role_id',4)->get();
+            $company_manager = User::where('branch_id',$login_user->branch_id)->where('role_id',self::MANAGER_ROLE)->get();
         } else {
-            $company_manager = User::where('role_id',4)->get();
+            $company_manager = User::where('role_id',self::MANAGER_ROLE)->get();
         }
 
         return view('company_manager.index')->with('company_manager',$company_manager);
@@ -28,61 +29,105 @@ class CompanyManagerController extends Controller
 
     public function create()
     {
-        $login_user = Auth::user();
-        if($login_user->role_id == 3){
-            $company = Company::where('branch_id',$login_user->branch_id)->get();
-        }else{
-            $company = Company::all();
-        }
-
-        return view('company_manager.create')->with('company',$company);
+        return view('company_manager.create')->with('company',$this->allowedCompanies());
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|unique:users,username,NULL,id,deleted_at,NULL',
+            'name'       => 'required|string|max:255',
+            'username'   => 'required|unique:users,username,NULL,id,deleted_at,NULL',
+            'password'   => 'required|string',
+            'company_id' => ['required', Rule::in($this->allowedCompanies()->pluck('id')->all())],
         ]);
         if ($validator->fails()) {
             return redirect()->back()
-                        ->withErrors($validator);
+                        ->withErrors($validator)
+                        ->withInput($request->except('password'));
         }
-        $company = Company::find($request->company_id);
-        $request->merge(['password' => Hash::make($request->password),'role_id'=>4,'branch_id'=>$company->branch_id]);
-        $company_manager = User::create($request->all());
+
+        $company = Company::findOrFail($request->company_id);
+
+        User::create([
+            'name'       => $request->name,
+            'username'   => $request->username,
+            'password'   => Hash::make($request->password),
+            'role_id'    => self::MANAGER_ROLE,
+            'company_id' => $company->id,
+            'branch_id'  => $company->branch_id,
+        ]);
 
         return redirect()->route('company_manager.index')->withSuccess('Data saved');
     }
 
     public function edit(User $company_manager)
     {
-        $login_user = Auth::user();
-        if($login_user->role_id == 3){
-            $company = Company::where('branch_id',$login_user->branch_id)->get();
-        }else{
-            $company = Company::all();
-        }
+        $this->authorizeManager($company_manager);
 
-        return view('company_manager.create')->with('company',$company)->with('company_manager',$company_manager);
+        return view('company_manager.create')->with('company',$this->allowedCompanies())->with('company_manager',$company_manager);
     }
 
     public function update(Request $request, User $company_manager)
     {
-        if($request->password !=null){
-            $request->merge(['password' => Hash::make($request->password)]);
-        }else{
-            $request->request->remove('password');
+        $this->authorizeManager($company_manager);
+
+        $request->validate([
+            'name'       => 'required|string|max:255',
+            'company_id' => ['required', Rule::in($this->allowedCompanies()->pluck('id')->all())],
+            'is_active'  => 'nullable|in:0,1',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+
+        $data = [
+            'name'       => $request->name,
+            'company_id' => $company->id,
+            'branch_id'  => $company->branch_id,
+        ];
+        if ($request->filled('is_active')) {
+            $data['is_active'] = (int) $request->is_active;
+        }
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
         }
 
-        $company_manager->update($request->all());
+        $company_manager->update($data);
         return redirect()->route('company_manager.index')->withSuccess('Data updated');
     }
 
     public function destroy(User $company_manager)
     {
+        $this->authorizeManager($company_manager);
+
         $company_manager->delete();
 
         return redirect()->route('company_manager.index')->withSuccess('Data deleted');
     }
 
+    /** Companies the logged-in user may assign managers to. */
+    private function allowedCompanies()
+    {
+        $login_user = Auth::user();
+        if($login_user->role_id == 3){
+            return Company::where('branch_id',$login_user->branch_id)->get();
+        }
+        return Company::all();
+    }
+
+    /** The target must be a company manager inside the logged-in user's scope. */
+    private function authorizeManager(User $manager)
+    {
+        $login_user = Auth::user();
+
+        $allowed = $manager->role_id == self::MANAGER_ROLE
+            && match ((int) $login_user->role_id) {
+                1, 2    => true,
+                3       => $manager->branch_id == $login_user->branch_id,
+                default => false,
+            };
+
+        if (!$allowed) {
+            abort(403, 'Access denied');
+        }
+    }
 }

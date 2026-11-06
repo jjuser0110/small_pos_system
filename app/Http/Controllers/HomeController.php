@@ -112,7 +112,10 @@ class HomeController extends Controller
 
     public function receipt(Request $request, $order_id)
     {
-        $order = Order::find($order_id);
+        $order = Order::findOrFail($order_id);
+        // staff may reprint their own receipts; managers within their scope
+        $this->authorizeRecord($order, 'user_id');
+
         $receipt_setting = ReceiptSetting::find(1);
         return view('receipt')->with('order',$order)->with('receipt_setting',$receipt_setting);
     }

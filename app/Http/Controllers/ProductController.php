@@ -69,17 +69,26 @@ class ProductController extends Controller
             ->with('product_link', $product_link);
     }
 
+    /** Fields a user may set from the product form. */
+    private const FORM_FIELDS = [
+        'product_name', 'product_code', 'barcode', 'arrangement', 'uom',
+        'selling_price', 'is_active', 'connected_product_id',
+        'connected_product_quantity', 'supplier_id',
+    ];
+
     public function store(Request $request)
     {
-        $login_user = Auth::user();
-        $category = Category::find($request->category_id);
-        $request->merge([
-            'branch_id'         => $category->branch_id,
-            'company_id'        => $category->company_id,
-            'initial'           => $request->initial ?? 0,
-            'stock_quantity'    => $request->initial ?? 0,
-        ]);
-        $product = Product::create($request->all());
+        $category = $this->authorizeCategoryId($request->category_id);
+        $this->authorizeConnectedProduct($request->connected_product_id);
+
+        $initial = $request->initial ?? 0;
+        $product = Product::create(array_merge($request->only(self::FORM_FIELDS), [
+            'category_id'    => $category->id,
+            'branch_id'      => $category->branch_id,
+            'company_id'     => $category->company_id,
+            'initial'        => $initial,
+            'stock_quantity' => $initial,
+        ]));
 
         if ($product->initial <> 0) {
             $product->stockLogs()->create([
@@ -100,6 +109,8 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        $this->authorizeRecord($product);
+
         $login_user = Auth::user();
 
         if ($login_user->role_id == 3) {
@@ -126,7 +137,20 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $adjustment = $request->initial - $product->initial;
+        $this->authorizeRecord($product);
+        $category = $this->authorizeCategoryId($request->category_id ?? $product->category_id);
+        $this->authorizeConnectedProduct($request->connected_product_id);
+
+        $data = array_merge($request->only(self::FORM_FIELDS), [
+            'category_id' => $category->id,
+            'branch_id'   => $category->branch_id,
+            'company_id'  => $category->company_id,
+        ]);
+        if ($request->has('initial')) {
+            $data['initial'] = $request->initial ?? 0;
+        }
+
+        $adjustment = $request->has('initial') ? ($request->initial - $product->initial) : 0;
         if ($adjustment <> 0) {
             $type = $adjustment > 0 ? 'adjust_in' : 'adjust_out';
             $stockChange = abs($adjustment);
@@ -147,18 +171,19 @@ class ProductController extends Controller
                 'after_stock'   => $newStock,
             ]);
 
-            $request->merge([
-                'stock_quantity' => $newStock,
-            ]);
+            // stock only changes through this logged adjustment
+            $data['stock_quantity'] = $newStock;
         }
 
-        $product->update($request->all());
+        $product->update($data);
 
         return redirect()->route('product.index')->withSuccess('Data updated');
     }
 
     public function destroy(Product $product)
     {
+        $this->authorizeRecord($product);
+
         if($product->stock_logs()->count()>0){
             return redirect()->route('product.index')->withErrors('Product has related items. You can not delete this.');
         }
@@ -169,12 +194,15 @@ class ProductController extends Controller
 
     public function viewlog(Product $product)
     {
+        $this->authorizeRecord($product);
+
         return view('product.viewlog')->with('product',$product);
     }
 
     public function convert(Product $product)
     {
-        // dd($request->all());
+        $this->authorizeRecord($product);
+
         if($product->stock_quantity > 0){
             $batch = BatchItem::where('product_id', $product->id)
                 ->whereHas('batch', function ($query) {
@@ -252,13 +280,23 @@ class ProductController extends Controller
             'company_id' => 'required',
         ]);
 
-        $company = Company::findOrFail($request->company_id);
-        if (!$company) {
-            return back()->withErrors('Company not found');
-        }
+        $company = $this->authorizeCompanyId($request->company_id);
 
         Excel::import(new ProductImport($company->branch_id, $company->id), $request->file('file'));
 
         return back()->with('success', 'Products imported successfully');
+    }
+
+    /** A linked (box/bottle) product must also be inside the user's scope. */
+    private function authorizeConnectedProduct($productId): void
+    {
+        if (!$productId) {
+            return;
+        }
+        $linked = Product::find($productId);
+        if (!$linked) {
+            abort(403, 'Access denied');
+        }
+        $this->authorizeRecord($linked);
     }
 }

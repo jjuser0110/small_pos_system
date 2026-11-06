@@ -161,6 +161,8 @@ class OrderController extends Controller
 
     public function view(Order $order)
     {
+        $this->authorizeRecord($order);
+
         return view('order.view')->with('order',$order);
     }
 
@@ -169,6 +171,7 @@ class OrderController extends Controller
         if (!(auth()->user()->role_id == 1 || auth()->user()->role_id == 2 || auth()->user()->role_id == 3)) {
             return back()->withErrors('Access denied');
         }
+        $this->authorizeRecord($order);
 
         $request->validate([
             'voided_reason' => 'required|string',
@@ -274,6 +277,16 @@ class OrderController extends Controller
 
     public function discount(Request $request, Order $order)
     {
+        // same roles that see the discount column on the order list
+        if (!in_array(auth()->user()->role_id, [1, 2, 3])) {
+            abort(403, 'Access denied');
+        }
+        $this->authorizeRecord($order);
+
+        $request->validate([
+            'discount' => 'required|numeric|min:0',
+        ]);
+
         $order->update([
             'discount' => $request->discount,
             'amount_received' => $order->final_total + $order->change - $request->discount,

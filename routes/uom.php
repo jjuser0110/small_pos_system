@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('/uom')->as('uom.')->middleware(['auth'])->group(function() {
+Route::prefix('/uom')->as('uom.')->middleware(['auth', 'role:1,2'])->group(function() {
     Route::get('/index', 'UomController@index')->name('index');
     Route::get('/create', 'UomController@create')->name('create');
     Route::post('/store', 'UomController@store')->name('store');

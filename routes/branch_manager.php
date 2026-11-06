@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('/branch_manager')->as('branch_manager.')->middleware(['auth'])->group(function() {
+Route::prefix('/branch_manager')->as('branch_manager.')->middleware(['auth', 'role:1,2'])->group(function() {
     Route::get('/index', 'BranchManagerController@index')->name('index');
     Route::get('/create', 'BranchManagerController@create')->name('create');
     Route::post('/store', 'BranchManagerController@store')->name('store');

@@ -40,13 +40,18 @@ class CompanyController extends Controller
 
     public function store(Request $request)
     {
-        $company = Company::create($request->all());
+        $request->validate(['branch_id' => 'required|exists:branches,id']);
+        $this->authorizeBranchId($request->branch_id);
+
+        Company::create($request->only(['branch_id', 'company_name', 'company_code']));
 
         return redirect()->route('company.index')->withSuccess('Data saved');
     }
 
     public function edit(Company $company)
     {
+        $this->authorizeCompany($company);
+
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $branch = Branch::where('id',$login_user->branch_id)->get();
@@ -59,12 +64,20 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company)
     {
-        $company->update($request->all());
+        $this->authorizeCompany($company);
+        $request->validate(['branch_id' => 'sometimes|required|exists:branches,id']);
+        if ($request->has('branch_id')) {
+            $this->authorizeBranchId($request->branch_id);
+        }
+
+        $company->update($request->only(['branch_id', 'company_name', 'company_code']));
         return redirect()->route('company.index')->withSuccess('Data updated');
     }
 
     public function destroy(Company $company)
     {
+        $this->authorizeCompany($company);
+
         if($company->categories()->count()>0 || $company->users()->count()>0){
             return redirect()->route('company.index')->withErrors('Company has related items. You can not delete this.');
         }
@@ -73,4 +86,18 @@ class CompanyController extends Controller
         return redirect()->route('company.index')->withSuccess('Data deleted');
     }
 
+    /** Branch managers may only manage companies in their own branch. */
+    private function authorizeCompany(Company $company): void
+    {
+        if (!$this->userCanAccess($company->branch_id, $company->id)) {
+            abort(403, 'Access denied');
+        }
+    }
+
+    private function authorizeBranchId($branchId): void
+    {
+        if (!$this->userCanAccess($branchId, null)) {
+            abort(403, 'Access denied');
+        }
+    }
 }

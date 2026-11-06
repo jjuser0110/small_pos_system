@@ -81,9 +81,19 @@ class BatchController extends Controller
 
     public function store(Request $request)
     {
-        $company = Company::find($request->company_id);
-        $request->merge(['branch_id'=>$company->branch_id,'company_id'=>$company->id]);
-        $batch = Batch::create($request->all());
+        $request->validate([
+            'batch_no'   => 'required|string',
+            'batch_date' => 'required|date',
+        ]);
+        $company = $this->authorizeCompanyId($request->company_id);
+
+        // status and totals are never taken from the request
+        $batch = Batch::create([
+            'branch_id'  => $company->branch_id,
+            'company_id' => $company->id,
+            'batch_no'   => $request->batch_no,
+            'batch_date' => $request->batch_date,
+        ]);
         $check = RunningNumber::where('code', $request->code)
             ->where('year', $request->year)
             ->where('month', $request->month)
@@ -95,6 +105,8 @@ class BatchController extends Controller
 
     public function edit(Batch $batch)
     {
+        $this->authorizeRecord($batch);
+
         $login_user = Auth::user();
         if($login_user->role_id == 3){
             $company = Company::where('branch_id',$login_user->branch_id)->get();
@@ -111,12 +123,19 @@ class BatchController extends Controller
 
     public function update(Request $request, Batch $batch)
     {
-        $batch->update($request->all());
+        $this->authorizeRecord($batch);
+
+        // the edit form has no editable fields; only the date may change here
+        $request->validate(['batch_date' => 'sometimes|date']);
+        $batch->update($request->only('batch_date'));
+
         return redirect()->route('batch.index')->withSuccess('Data updated');
     }
 
     public function destroy(Batch $batch)
     {
+        $this->authorizeRecord($batch);
+
         $batch->batch_items()->delete();
         $batch->delete();
 
@@ -125,6 +144,8 @@ class BatchController extends Controller
 
     public function complete(Batch $batch)
     {
+        $this->authorizeRecord($batch);
+
         if($batch->batch_items->isEmpty()){
             return redirect()->back()->withErrors('No Batch Items to process');
         }
@@ -161,15 +182,41 @@ class BatchController extends Controller
 
     public function addBatchItem(Request $request, Batch $batch)
     {
-        $product = Product::find($request->product_id);
-        $request->merge(['branch_id'=>$product->branch_id,'company_id'=>$product->company_id,'category_id'=>$product->category_id,'batch_id'=>$batch->id,'balance'=>$request->quantity]);
-        // dd($request->all());
-        $batch_items = BatchItem::create($request->all());
+        $this->authorizeRecord($batch);
+
+        $request->validate([
+            'product_id'    => 'required',
+            'quantity'      => 'required|numeric|min:0',
+            'cost_per_unit' => 'required|numeric|min:0',
+            'total_cost'    => 'required|numeric|min:0',
+        ]);
+
+        // the product must belong to the same company as the batch
+        $product = Product::where('id', $request->product_id)
+            ->where('company_id', $batch->company_id)
+            ->first();
+        if (!$product) {
+            return redirect()->back()->withErrors('Product does not belong to this batch\'s company.');
+        }
+
+        BatchItem::create([
+            'batch_id'      => $batch->id,
+            'branch_id'     => $product->branch_id,
+            'company_id'    => $product->company_id,
+            'category_id'   => $product->category_id,
+            'product_id'    => $product->id,
+            'quantity'      => $request->quantity,
+            'cost_per_unit' => $request->cost_per_unit,
+            'total_cost'    => $request->total_cost,
+            'balance'       => $request->quantity,
+        ]);
         return redirect()->back()->withSuccess('Data updated');
     }
 
     public function destroyItem(BatchItem $batch_item)
     {
+        $this->authorizeRecord($batch_item);
+
         $batch_item->delete();
 
         return redirect()->back()->withSuccess('Data deleted');
@@ -177,6 +224,8 @@ class BatchController extends Controller
 
     public function updateBatchItem(Request $request, BatchItem $batchItem)
     {
+        $this->authorizeRecord($batchItem);
+
         $request->validate([
             'quantity'      => 'required',
             'cost_per_unit' => 'required',
@@ -278,11 +327,15 @@ class BatchController extends Controller
 
     public function downloadTemplate(Batch $batch)
     {
+        $this->authorizeRecord($batch);
+
         return Excel::download(new StockTemplateExport($batch), 'stock_template.xlsx');
     }
 
     public function import(Request $request, Batch $batch)
     {
+        $this->authorizeRecord($batch);
+
         $request->validate([
             'file'       => 'required|mimes:xlsx,csv',
         ]);

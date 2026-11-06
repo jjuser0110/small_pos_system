@@ -10,7 +10,7 @@ use App\Jobs\DoClosing;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, ValidatesRequests;
+    use AuthorizesRequests, ValidatesRequests, Concerns\AuthorizesScope;
     
 
 }
