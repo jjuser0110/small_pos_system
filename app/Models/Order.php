@@ -14,6 +14,7 @@ class Order extends Model
         'branch_id',
         'company_id',
         'user_id',
+        'shift_closing_id',
         'order_no',
         'order_date',
         'total_product',
@@ -55,6 +56,16 @@ class Order extends Model
     public function profit_items()
     {
         return $this->hasMany(\App\Models\OrderItemProfit::class, 'order_id');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(\App\Models\ShiftClosing::class, 'shift_closing_id');
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(\App\Models\Refund::class);
     }
 
     public function voidedBy()

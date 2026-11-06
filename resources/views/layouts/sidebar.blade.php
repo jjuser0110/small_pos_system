@@ -39,19 +39,33 @@ $currentRoute = request()->route()->getName();
             </a>
         </li>
         @php
-            $borrowPending = 0;
-            if (in_array(auth()->user()->role_id, [1, 2, 3])) {
-                $bq = \App\Models\StaffBorrow::where('status', 'pending');
-                if (auth()->user()->role_id == 3) {
-                    $bq->where('branch_id', auth()->user()->branch_id); // manager: own branch only
-                }
-                $borrowPending = $bq->count();
-            }
+            // badges = things waiting for this user to approve
+            $borrowPending = \App\Models\StaffBorrow::pendingFor(auth()->user())->count();
+            $refundPending = \App\Models\Refund::pendingFor(auth()->user())->count();
+            $damagePending = \App\Models\Damage::pendingFor(auth()->user())->count();
         @endphp
+        <li class="menu-item {{ Str::contains($currentRoute, 'refund.') ? 'active' : ''}}">
+            <a href="{{ route('refund.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-undo"></i>
+                <div>Refunds</div>
+                @if($refundPending > 0)
+                    <span class="badge bg-danger rounded-pill ms-auto">{{ $refundPending }}</span>
+                @endif
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'damage.') ? 'active' : ''}}">
+            <a href="{{ route('damage.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-error"></i>
+                <div>Damage</div>
+                @if($damagePending > 0)
+                    <span class="badge bg-danger rounded-pill ms-auto">{{ $damagePending }}</span>
+                @endif
+            </a>
+        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'staff_borrow.index') ? 'active' : ''}}">
             <a href="{{ route('staff_borrow.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Borrow Records</div>
+                <i class="menu-icon tf-icons bx bx-wallet"></i>
+                <div>Advance</div>
                 @if($borrowPending > 0)
                     <span class="badge bg-danger rounded-pill ms-auto">{{ $borrowPending }}</span>
                 @endif

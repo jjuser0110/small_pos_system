@@ -13,6 +13,7 @@ use App\Models\BatchItem;
 use App\Models\ShiftClosing;
 use App\Models\ShiftClosingDetail;
 use App\Models\ShiftMethodClosing;
+use App\Models\PaymentMethod;
 use App\Services\StockService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -338,21 +339,31 @@ class CartController extends Controller
 
     public function place(Request $request)
     {
+        $methods = PaymentMethod::pluck('payment_method_name')->all();
+        $request->validate([
+            'payment_method'  => ['required', \Illuminate\Validation\Rule::in($methods)],
+            'amount_received' => 'required|numeric|min:0',
+        ]);
+
         try {
             $user = Auth::user();
             $order = null;
 
             DB::transaction(function () use ($user, $request, &$order) {
-                $order = $this->createOrder($user, $request);
-
                 $carts = Cart::where('user_id', $user->id)->get();
+                if ($carts->isEmpty()) {
+                    throw new \RuntimeException('Cart is empty.');
+                }
+
+                $shift = ShiftClosing::openOrStart($user);
+                $order = $this->createOrder($user, $request, $shift);
 
                 foreach ($carts as $cart) {
                     $this->processItem($order, $cart);
                     $cart->delete();
                 }
 
-                $this->finalizeOrder($order, $request);
+                $this->finalizeOrder($order, $request, $shift);
             });
 
             return response()->json([
@@ -360,15 +371,16 @@ class CartController extends Controller
                 'order_id' => $order->id
             ]);
 
+        } catch (\RuntimeException $e) {
+            // e.g. not enough stock: the whole order is rolled back
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            report($e);
+            return response()->json(['status' => 'error', 'message' => 'Could not place the order. Please try again.'], 500);
         }
     }
 
-    private function createOrder($user, $request)
+    private function createOrder($user, $request, ShiftClosing $shift)
     {
         $now = Carbon::now();
         $year = $now->year;
@@ -390,6 +402,7 @@ class CartController extends Controller
             'branch_id' => $user->branch_id,
             'company_id' => $user->company_id,
             'user_id' => $user->id,
+            'shift_closing_id' => $shift->id,
             'order_no' => $order_no,
             'order_date' => $now,
         ]);
@@ -449,11 +462,17 @@ class CartController extends Controller
         }
     }
 
-    private function finalizeOrder($order, $request)
+    private function finalizeOrder($order, $request, ShiftClosing $shift)
     {
+        $order->load('items.category');
         $totalProduct = $order->items->count();
         $totalQty     = $order->items->sum('quantity');
-        $totalPrice   = $order->items->sum('total_price');
+        $totalPrice   = round($order->items->sum('total_price'), 2);
+        $received     = (float) $request->amount_received;
+
+        if ($received + 0.001 < $totalPrice) {
+            throw new \RuntimeException('Amount received is less than the total.');
+        }
 
         $order->update([
             'total_product'   => $totalProduct,
@@ -462,71 +481,35 @@ class CartController extends Controller
             'tax_amount'      => 0,
             'final_total'     => $totalPrice,
             'payment_method'  => $request->payment_method,
-            'amount_received' => $request->amount_received,
-            'change'          => $request->change,
+            'amount_received' => $received,
+            'change'          => round($received - $totalPrice, 2),
         ]);
 
-        $user  = Auth::user();
-        $shift = ShiftClosing::where('user_id', $user->id)
-            ->whereNull('closing_time')
-            ->first();
-
-        if ($shift) {
-            $shift->update([
-                'total_order_count'  => $shift->total_order_count + $totalProduct,
-                'total_order_amount' => round($shift->total_order_amount + $totalPrice, 2),
-            ]);
-
-        } else {
-            $shift = ShiftClosing::create([
-                'user_id'            => $user->id,
-                'branch_id'          => $user->branch_id,
-                'company_id'         => $user->company_id,
-                'total_order_count'  => $totalProduct,
-                'total_order_amount' => $totalPrice,
-                'first_sale_time'    => Carbon::now(),
-            ]);
-        }
+        // one more order on this shift
+        $shift->update([
+            'total_order_count'  => $shift->total_order_count + 1,
+            'total_item_count'   => $shift->total_item_count + $totalQty,
+            'total_order_amount' => round($shift->total_order_amount + $totalPrice, 2),
+            'first_sale_time'    => $shift->first_sale_time ?? Carbon::now(),
+        ]);
 
         foreach ($order->items as $item) {
-            $checkShiftClosingDetail = ShiftClosingDetail::where('shift_closing_id', $shift->id)
-                ->where(function ($query) use ($item) {
-                    if ($item->category->special === 1) {
-                        $query->where('product_id', $item->product_id);
-                    } else {
-                        $query->whereNull('product_id');
-                    }
-                })
-                ->where('category_id', $item->category_id)
-                ->first();
-
-            if (isset($checkShiftClosingDetail)) {
-                $checkShiftClosingDetail->update([
-                    'amount' => round($checkShiftClosingDetail->amount + $item->total_price, 2),
-                ]);
-            } else {
-                ShiftClosingDetail::create([
-                    'shift_closing_id' => $shift->id,
-                    'category_id'      => $item->category_id,
-                    'product_id'       => $item->category->special === 1 ? $item->product_id : null,
-                    'amount'           => $item->total_price,
-                ]);
-            }
+            $special = (int) ($item->category->special ?? 0) === 1;
+            $detail = ShiftClosingDetail::firstOrNew([
+                'shift_closing_id' => $shift->id,
+                'category_id'      => $item->category_id,
+                'product_id'       => $special ? $item->product_id : null,
+            ]);
+            $detail->amount = round(($detail->amount ?? 0) + $item->total_price, 2);
+            $detail->save();
         }
 
-        $checkShiftMethod = ShiftMethodClosing::where('shift_closing_id', $shift->id)->where('payment_method',$request->payment_method)->first();
-        if(isset($checkShiftMethod)){
-            $checkShiftMethod->update([
-                'amount' => round($checkShiftMethod->amount + $totalPrice, 2),
-            ]);
-        }else{
-            ShiftMethodClosing::create([
-                'shift_closing_id'=>$shift->id,
-                'payment_method'=>$request->payment_method,
-                'amount'=>$totalPrice
-            ]);
-        }
-
+        $method = ShiftMethodClosing::firstOrNew([
+            'shift_closing_id' => $shift->id,
+            'payment_method'   => $request->payment_method,
+        ]);
+        $method->amount = round(($method->amount ?? 0) + $totalPrice, 2);
+        $method->save();
     }
 
     public function empty_cart()

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\StaffBorrow;
+use App\Models\ShiftClosing;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -30,10 +32,11 @@ class StaffBorrowController extends Controller
         return view('staff_borrow.index')->with('borrows', $borrows);
     }
 
+    /** Staff ask for an advance; it is tied to the shift they are working now. */
     public function store(Request $request)
     {
         $login_user = Auth::user();
-        if (!in_array($login_user->role_id, [1, 2, 5])) {
+        if (!$login_user->isStaff()) {
             abort(403);
         }
 
@@ -43,15 +46,16 @@ class StaffBorrowController extends Controller
         ]);
 
         StaffBorrow::create([
-            'user_id'    => $login_user->id,
-            'branch_id'  => $login_user->branch_id,
-            'company_id' => $login_user->company_id,
-            'amount'     => round($request->amount, 2),
-            'reason'     => $request->reason,
-            'status'     => 'pending',
+            'user_id'          => $login_user->id,
+            'branch_id'        => $login_user->branch_id,
+            'company_id'       => $login_user->company_id,
+            'shift_closing_id' => ShiftClosing::openFor($login_user)?->id,
+            'amount'           => round($request->amount, 2),
+            'reason'           => $request->reason,
+            'status'           => 'pending',
         ]);
 
-        return redirect()->route('staff_borrow.index')->withSuccess('Borrow request submitted, waiting for approval');
+        return redirect()->route('staff_borrow.index')->withSuccess('Advance request submitted, waiting for superadmin approval');
     }
 
     public function approve(StaffBorrow $staff_borrow)
@@ -64,32 +68,37 @@ class StaffBorrowController extends Controller
         return $this->decide($staff_borrow, 'rejected', $request->reject_reason);
     }
 
+    /** Only the superadmin decides. Approval cuts the amount from the requesting shift's sales. */
     private function decide(StaffBorrow $borrow, $status, $reject_reason = null)
     {
         $login_user = Auth::user();
-
-        // roles 1 and 2 can approve any branch; role 3 only their own branch
-        $can_approve = in_array($login_user->role_id, [1, 2])
-            || ($login_user->role_id == 3 && $borrow->branch_id == $login_user->branch_id);
-
-        if (!$can_approve) {
+        if ((int) $login_user->role_id !== 1) {
             abort(403);
         }
 
-        // only update if still pending (prevents double approve from two clicks/tabs)
-        $updated = StaffBorrow::where('id', $borrow->id)
-            ->where('status', 'pending')
-            ->update([
+        $updated = DB::transaction(function () use ($borrow, $status, $reject_reason, $login_user) {
+            $locked = StaffBorrow::lockForUpdate()->find($borrow->id);
+            if (!$locked || $locked->status !== 'pending') {
+                return false;   // double click / another tab
+            }
+
+            $locked->update([
                 'status'        => $status,
                 'approved_by'   => $login_user->id,
                 'status_at'     => Carbon::now(),
                 'reject_reason' => $status == 'rejected' ? $reject_reason : null,
             ]);
 
+            if ($status === 'approved' && ($shift = ShiftClosing::lockForUpdate()->find($locked->shift_closing_id))) {
+                $shift->update(['advance_amount' => round($shift->advance_amount + $locked->amount, 2)]);
+            }
+            return true;
+        });
+
         if (!$updated) {
             return redirect()->back()->withErrors('This request was already processed');
         }
 
-        return redirect()->back()->withSuccess('Request ' . $status);
+        return redirect()->back()->withSuccess('Advance ' . $status);
     }
 }

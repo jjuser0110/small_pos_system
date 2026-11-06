@@ -13,6 +13,7 @@ class StaffBorrow extends Model
         'user_id', 
         'branch_id', 
         'company_id', 
+        'shift_closing_id',
         'amount', 
         'reason',
         'status', 
@@ -29,6 +30,17 @@ class StaffBorrow extends Model
     public function approver()
     {
         return $this->belongsTo('App\Models\User', 'approved_by');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo('App\Models\ShiftClosing', 'shift_closing_id');
+    }
+
+    public static function pendingFor($user)
+    {
+        $query = self::where('status', 'pending');
+        return (int) ($user->role_id ?? 0) === 1 ? $query : $query->whereRaw('1 = 0');
     }
 
     public function branch()

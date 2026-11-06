@@ -25,6 +25,22 @@ class NotificationController extends Controller
             ];
         }
 
+        $more = [
+            ['refunds',  \App\Models\Refund::pendingFor($user)->count(),      'refund',  'to approve', 'refund.index'],
+            ['damages',  \App\Models\Damage::pendingFor($user)->count(),      'damage report', 'to approve', 'damage.index'],
+            ['advances', \App\Models\StaffBorrow::pendingFor($user)->count(), 'advance request', 'to approve', 'staff_borrow.index'],
+        ];
+        foreach ($more as [$key, $count, $noun, $what, $route]) {
+            if ($count > 0) {
+                $items[] = [
+                    'key'   => $key,
+                    'count' => $count,
+                    'text'  => "$count $noun" . ($count > 1 ? 's' : '') . " $what",
+                    'url'   => route($route, ['status' => 'pending']),
+                ];
+            }
+        }
+
         return $items;
     }
 

@@ -18,7 +18,10 @@ class ShiftClosing extends Model
         'shift',
         'work_date',
         'total_order_count',
+        'total_item_count',
         'total_order_amount',
+        'refund_amount',
+        'advance_amount',
         'first_sale_time',
         'closing_time',
     ];
@@ -31,6 +34,17 @@ class ShiftClosing extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'shift_closing_id');
+    }
+
+    /** Sales minus approved refunds and advances: the cash the shift should hand over. */
+    public function netAmount(): float
+    {
+        return round((float) $this->total_order_amount - (float) $this->refund_amount - (float) $this->advance_amount, 2);
     }
 
     public function details()

@@ -9,16 +9,40 @@
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Staff Borrow
+        <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Advance
     </h4>
 
     @if($errors->any())
         <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
+    @if(Auth::user()->isStaff())
+    <div class="card mb-4">
+        <h5 class="card-header">Request an Advance</h5>
+        <div class="card-body">
+            <form method="post" action="{{ route('staff_borrow.store') }}" class="row g-3" onsubmit="showLoading()">
+                @csrf
+                <div class="col-md-3">
+                    <label class="form-label">Amount (RM)</label>
+                    <input type="number" step="0.01" min="0.01" name="amount" class="form-control" required>
+                </div>
+                <div class="col-md-9">
+                    <label class="form-label">Reason</label>
+                    <input type="text" name="reason" maxlength="500" class="form-control">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <small class="text-muted ms-2">Waits for superadmin approval. If approved it is taken from this shift's sales.</small>
+                    <a href="{{ route('counter') }}" class="btn btn-outline-primary float-end">Back to counter</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Borrow Records</h5>
+            <h5 class="mb-0">Advance Records</h5>
             <form method="get" class="d-flex gap-2">
                 <select name="status" class="form-select" onchange="this.form.submit()">
                     <option value="">All</option>
@@ -39,7 +63,7 @@
                         <th>Status</th>
                         <th>Processed By</th>
                         <th>Processed At</th>
-                        @if(in_array(Auth::user()->role_id, [1, 2, 3]))<th>Action</th>@endif
+                        @if(Auth::user()->role_id == 1)<th>Action</th>@endif
                     </tr>
                 </thead>
                 <tbody>
@@ -58,11 +82,11 @@
                         </td>
                         <td>{{ $b->approver->name ?? '' }}</td>
                         <td>{{ $b->status_at }}</td>
-                        @if(in_array(Auth::user()->role_id, [1, 2, 3]))
+                        @if(Auth::user()->role_id == 1)
                         <td style="white-space:nowrap">
                             @if($b->status == 'pending')
                                 <div class="d-flex gap-2">
-                                    <form method="post" action="{{ route('staff_borrow.approve', $b) }}" class="m-0" onsubmit="return confirm('Approve this request?')">
+                                    <form method="post" action="{{ route('staff_borrow.approve', $b) }}" class="m-0" onsubmit="return confirm('Approve this advance? It will be taken from the shift sales.')">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                     </form>
@@ -92,7 +116,7 @@ $(function(){
         pageLength: 10,
         lengthMenu: [5, 10, 25, 50, 75, 100],
         order: [[0, 'desc']],
-        @if(in_array(Auth::user()->role_id, [1, 2, 3]))
+        @if(Auth::user()->role_id == 1)
         columnDefs: [{ orderable: false, targets: -1 }],
         @endif
     });

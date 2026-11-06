@@ -198,19 +198,32 @@ class OrderController extends Controller
                 $stock->returnSale($item, $qty, 'stock_in', 'VOID ORDER ' . $order->order_no, $item);
             }
 
-            // Reverse shift closing
-            $shift = ShiftClosing::where('user_id', $order->user_id)
-                ->whereNull('closing_time')
-                ->first();
+            // Reverse the shift the order was sold in. Approved refunds on it were
+            // already counted as refunds, so take them back out of refund_amount
+            // and only reverse what was still collected for the payment method.
+            $shift = ShiftClosing::lockForUpdate()->find($order->shift_closing_id)
+                ?? ShiftClosing::where('user_id', $order->user_id)->whereNull('closing_time')->first();
 
             if ($shift) {
-                $shift->decrement('total_order_count', $order->total_product);
-                $shift->decrement('total_order_amount', $order->total_price);
+                $refunded = (float) $order->refunds()->where('status', 'approved')->sum('amount');
+
+                $shift->update([
+                    'total_order_count'  => max(0, $shift->total_order_count - 1),
+                    'total_item_count'   => max(0, $shift->total_item_count - $order->total_item),
+                    'total_order_amount' => round($shift->total_order_amount - $order->final_total, 2),
+                    'refund_amount'      => round(max(0, $shift->refund_amount - $refunded), 2),
+                ]);
 
                 ShiftMethodClosing::where('shift_closing_id', $shift->id)
                     ->where('payment_method', $order->payment_method)
-                    ->decrement('amount', $order->final_total);
+                    ->decrement('amount', round($order->final_total - $refunded, 2));
             }
+
+            // pending refunds on a voided order can no longer happen
+            $order->refunds()->where('status', 'pending')->update([
+                'status' => 'rejected', 'approved_by' => auth()->id(), 'status_at' => Carbon::now(),
+                'reject_reason' => 'Order voided',
+            ]);
 
             // Mark order as voided
             $order->update([

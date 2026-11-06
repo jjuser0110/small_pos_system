@@ -466,7 +466,8 @@
 
     <script>
         let cart = [];
-        let selectedPaymentMethod = 'cash';
+        // default = the first method shown (it is the one highlighted)
+        let selectedPaymentMethod = @json(optional($payment_method->first())->payment_method_name);
         let totalAmount = 0;
 
         // Load cart from server
@@ -525,6 +526,11 @@
 
         function selectPayment(method) {
             selectedPaymentMethod = method;
+
+            // QR pays the exact total, no change
+            if (/qr/i.test(method)) {
+                document.getElementById('amountReceived').value = totalAmount.toFixed(2);
+            }
 
             // Update active state
             document.querySelectorAll('.payment-method').forEach(el => {
@@ -606,11 +612,12 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify(orderData)
             })
-            .then(res => res.json())
+            .then(res => res.json().catch(() => ({ status: 'error', message: 'Server error (' + res.status + ')' })))
             .then(data => {
                 if (data.status === 'success') {
                     alert(`Order completed successfully!\n\nTotal: RM ${totalAmount.toFixed(2)}\nReceived: RM ${received.toFixed(2)}\nChange: RM ${change.toFixed(2)}\n\nThank you!`);
@@ -630,9 +637,10 @@
         }
 
         function resetButton() {
+            const btn = document.getElementById('completeBtn');
             btn.disabled = false;
-            spinner.classList.add('d-none');
-            btnText.textContent = '✓ Complete';
+            btn.querySelector('.spinner-border').classList.add('d-none');
+            btn.querySelector('.btn-text').textContent = '✓ Complete';
         }
 
         // Initialize

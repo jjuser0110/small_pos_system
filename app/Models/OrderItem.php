@@ -18,6 +18,7 @@ class OrderItem extends Model
         'product_id',
         'single_price',
         'quantity',
+        'refunded_quantity',
         'total_price',
     ];
 
@@ -49,5 +50,15 @@ class OrderItem extends Model
     public function profit_items()
     {
         return $this->hasMany(OrderItemProfit::class);
+    }
+
+    /** Quantity still refundable: sold, minus refunded, minus waiting in pending refunds. */
+    public function refundableQuantity(): float
+    {
+        $pending = RefundItem::where('order_item_id', $this->id)
+            ->whereHas('refund', fn ($q) => $q->where('status', 'pending'))
+            ->sum('quantity');
+
+        return max(0, round((float) $this->quantity - (float) $this->refunded_quantity - (float) $pending, 4));
     }
 }

@@ -32,18 +32,8 @@
         <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">
             <button class="btn btn-primary" style="float:right;" onclick="confirmClosing()">Closing</button>
 
-            @if(in_array(Auth::user()->role_id, [1, 2, 5]))
-                <button class="btn btn-warning" style="float:right;margin-right:10px" data-bs-toggle="modal" data-bs-target="#borrowModal">Borrow Money</button>
-            @endif
-
-            @if(in_array(Auth::user()->role_id, [3, 5]))
-                <a class="btn btn-info" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">
-                    {{ Auth::user()->role_id == 3 ? 'Borrow Approvals' : 'My Borrow Records' }}
-                    @if(Auth::user()->role_id == 3)
-                        @php $pending = \App\Models\StaffBorrow::where('branch_id', Auth::user()->branch_id)->where('status','pending')->count(); @endphp
-                        @if($pending > 0) <span class="badge bg-danger">{{ $pending }}</span> @endif
-                    @endif
-                </a>
+            @if(Auth::user()->isStaff())
+                <a class="btn btn-warning" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">Advance</a>
             @endif
         </div>
 
@@ -111,34 +101,6 @@
     <!--/ Card Border Shadow -->
 </div>
 
-@if(in_array(Auth::user()->role_id, [1, 2, 5]))
-<div class="modal fade" id="borrowModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form class="modal-content" method="post" action="{{ route('staff_borrow.store') }}" onsubmit="showLoading()">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title">Borrow Money</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Amount</label>
-                    <input type="number" step="0.01" min="0.01" name="amount" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reason</label>
-                    <textarea name="reason" class="form-control" rows="3" maxlength="500"></textarea>
-                </div>
-                <small class="text-muted">Your request will be pending until the branch manager approves it.</small>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </div>
-        </form>
-    </div>
-</div>
-@endif
 
 <!-- / Content -->
 

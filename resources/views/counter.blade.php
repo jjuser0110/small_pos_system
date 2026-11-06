@@ -115,6 +115,11 @@ h1 { color: #16a34a; margin-bottom: 15px; font-size: 18px; }
     margin-top: 10px;
     transition: all 0.3s;
 }
+.side-btn {
+    padding: 10px 6px; background: #fff; color: #15803d; border: 2px solid #16a34a;
+    border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
+}
+.side-btn:hover { background: #e8f7ee; }
 .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4); }
 .checkout-btn:active { transform: translateY(0); }
 
@@ -311,6 +316,11 @@ h1 { color: #16a34a; margin-bottom: 15px; font-size: 18px; }
 
             <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to empty shopping cart?')){window.location.href='{{ route('empty_cart') }}'}">Empty Cart</a>
             <button class="checkout-btn" onclick="checkout()">Checkout</button>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">
+                <button class="side-btn" onclick="window.location.href='{{ route('refund.create') }}'">Refund</button>
+                <button class="side-btn" onclick="window.location.href='{{ route('damage.index') }}'">Damage</button>
+                <button class="side-btn" onclick="window.location.href='{{ route('staff_borrow.index') }}'">Advance</button>
+            </div>
             <button class="home-btn" onclick="window.location.href='/home'">Home</button>
         </div>
     </div>
@@ -345,7 +355,7 @@ const products = {
         ]) as $p)
         {
             id: "{{ $p->id }}",
-            name: "{!! $p->product_name !!}",
+            name: @json($p->product_name),
             barcode: "{{ $p->barcode??null }}",
             uom: "{{ $p->uom_dt->uom_unit??null }}",
             price: {{ number_format($p->selling_price, 2, '.', '') }},
@@ -462,7 +472,7 @@ function displayProducts(category){
         if (p.special) {
             if (p.has_stock) {
                 const stockDiv = document.createElement('div');
-                if (p.stock === 0) {
+                if (p.stock <= 0) {
                     card.style.opacity = 0.5;
                     card.style.pointerEvents = 'none';
                     stockDiv.className = 'out-of-stock';
@@ -483,7 +493,7 @@ function displayProducts(category){
 
             if (p.has_stock) {
                 const stockDiv = document.createElement('div');
-                if (p.stock === 0) {
+                if (p.stock <= 0) {
                     card.style.opacity = 0.5;
                     card.style.pointerEvents = 'none';
                     stockDiv.className = 'out-of-stock';
@@ -494,6 +504,9 @@ function displayProducts(category){
                     stockDiv.innerText = `Stock: ${p.stock}`;
                 }
                 card.appendChild(stockDiv);
+            } else {
+                // items that do not track stock can always be sold
+                card.onclick = () => addToCart(p);
             }
         }
         container.appendChild(card);
@@ -592,7 +605,7 @@ function addToCart(product, depth = 0){
     const currentQty = existing? existing.quantity :0;
 
     // If adding 1 exceeds current stock
-    if (currentQty + 1 > product.stock) {
+    if (product.has_stock && currentQty + 1 > product.stock) {
 
         /* ============================================
            CASE 1: PRODUCT IS BOTTLE
@@ -773,7 +786,7 @@ function updateQuantity(id, change, depth = 0){
     const newQty=item.quantity+change;
 
     // If increasing beyond stock
-    if (change > 0 && newQty > product.stock) {
+    if (product.has_stock && change > 0 && newQty > product.stock) {
 
         /* ---------- CASE 1: PRODUCT IS BOTTLE ---------- */
         if (!product.connected_product_id) {
@@ -879,7 +892,8 @@ function onQuantityInputEvent(input){
     let numericValue = input.value.replace(/[^\d]/g, '');
     if(numericValue==='') numericValue='1';
     let newQty = parseInt(numericValue);
-    if(newQty>item.stock){ alert(`Cannot set quantity beyond stock (${item.stock})`); newQty=item.stock; }
+    const prod = allProducts.find(p => p.id == id);
+    if(prod && prod.has_stock && newQty>item.stock){ alert(`Cannot set quantity beyond stock (${item.stock})`); newQty=item.stock; }
     item.quantity = newQty;
     updateCart();
 
