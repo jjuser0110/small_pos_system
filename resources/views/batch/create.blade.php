@@ -17,6 +17,7 @@
         font-weight: 600;
         text-align: center;
     }
+
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
@@ -86,6 +87,9 @@
                         <input type="text" class="form-control" value="{{ $batch->status ?? 'Open' }}" readonly>
                         @if($batch->status == 'Open')
                         <a class="btn btn-outline-primary" onclick="if(confirm('Are you sure you want to complete this stock entry? The items will be added to stock.')){showLoading();window.location.href='{{ route('batch.complete',$batch) }}'}">Complete and Add to Stock</a>
+                        @endif
+                        @if($batch->status != 'Open')
+                            <button type="button" class="btn btn-outline-secondary" onclick="printReceipt()">Print</button>
                         @endif
                     </div>
                 </div>
@@ -339,11 +343,62 @@
         </div>
     @endforeach
 @endif
+
+@if(isset($batch) && $batch->status != 'Open')
+<template id="receiptContent">
+    <style>
+        @@page { size: 80mm auto; margin: 0; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            width: 80mm;
+            padding: 3mm 6mm;          /* top/bottom 3mm, left/right 6mm */
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #000;
+        }
+        .c { text-align: center; }
+        .r { text-align: right; }
+        .b { font-weight: bold; }
+        .line { border-top: 1px dashed #000; margin: 5px 0; }
+        .row { display: flex; justify-content: space-between; gap: 8px; }
+        .item-name { word-break: break-word; margin-top: 2px; }
+        .indent { padding-left: 12px; }
+    </style>
+
+    <div class="c b">{!! nl2br(e(($receipt->header ?? '') ?: config('app.name', 'My Shop'))) !!}</div>
+    <div class="c b" style="margin-top:4px">STOCK IN</div>
+    <div class="line"></div>
+
+    <div>No : {{ $batch->batch_no }}</div>
+    <div>Date : {{ $batch->batch_date }}</div>
+    <div>Supplier : {{ $batch->supplier->name ?? '-' }}</div>
+    <div>Printed : {{ now()->format('Y-m-d H:i') }}</div>
+    <div class="line"></div>
+
+    @foreach($batch->batch_items as $i => $row)
+        <div class="item-name">{{ $i+1 }}. {{ $row->product->product_name ?? '' }}</div>
+        <div class="row indent">
+            <span>{{ $row->quantity + 0 }} x RM {{ number_format($row->cost_per_unit,2) }}</span>
+            <span>RM {{ number_format($row->total_cost,2) }}</span>
+        </div>
+    @endforeach
+
+    <div class="line"></div>
+    <div class="row b"><span>Total Qty</span><span>{{ $batch->batch_items->sum('quantity') + 0 }}</span></div>
+    <div class="row b"><span>Total Cost</span><span>RM {{ number_format($batch->batch_items->sum('total_cost'),2) }}</span></div>
+    <div class="line"></div>
+
+    <div class="c">{!! nl2br(e(($receipt->footer ?? '') ?: 'Thank you')) !!}</div>
+</template>
+@endif
+
 <!-- / Content -->
 @endsection
 
 @section('scripts')
-      <script>
+    <script>
     $(function(){
         var table = $('#mytable').DataTable({
             dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
@@ -373,53 +428,86 @@
         }
     }
 
-    let buffer = "";
-    let last = Date.now();
+    @if(isset($batch) && $batch->status == 'Open')
+    (function () {
+        let buffer = '';
+        let lastTime = 0;
+        const MAX_GAP = 50;
+        const MIN_LEN = 4;
 
-    // which input should receive scanned value
-    const targetInputId = "barcode";
+        document.addEventListener('keydown', function (e) {
+            const t = e.target;
+            if (['INPUT','TEXTAREA','SELECT'].includes(t.tagName) && t.id !== 'barcode') return;
 
-    document.addEventListener("keydown", function(e) {
-        const now = Date.now();
+            const now = Date.now();
+            if (now - lastTime > MAX_GAP) buffer = '';
+            lastTime = now;
 
-        // Reset if input is slow (keyboard typing)
-        if (now - last > 50) buffer = "";
-
-        // When scanner sends ENTER
-        if (e.key === "Enter") {
-            e.preventDefault();
-            let barcode = buffer;
-            document.getElementById(targetInputId).value = barcode;
-            buffer = "";
-
-            console.log("Scanned barcode:", barcode);
-
-            let found = false;
-            let select = document.getElementById("product_id");
-
-            select.querySelectorAll("option").forEach(option => {
-                console.log("Checking option:", option.dataset.barcode);
-                if (option.dataset.barcode == barcode) {
-                    option.selected = true;
-                    found = true;
+            if (e.key === 'Enter') {
+                if (buffer.length >= MIN_LEN) {
+                    e.preventDefault();
+                    handleScan(buffer.trim());
                 }
-            });
+                buffer = '';
+                return;
+            }
+            if (e.key.length === 1) buffer += e.key;
+        });
 
-            // If using Select2, trigger update
-            $('#product_id').trigger('change');
+        function handleScan(code) {
+            const select = document.getElementById('product_id');
+            const option = [...select.options].find(o => (o.dataset.barcode || '').trim() === code);
 
-            // If no product, show alert
-            if (!found) {
-                alert("No such product!");
+            if (!option) {
+                alert('No such product: ' + code);
+                return;
             }
 
-            return;
+            document.getElementById('barcode').value = code;
+            $('#product_id').val(option.value).trigger('change');
+
+            const modalEl = document.getElementById('activityModal');
+            modalEl.addEventListener('shown.bs.modal', function onShown() {
+                document.getElementById('quantity').focus();
+                modalEl.removeEventListener('shown.bs.modal', onShown);
+            });
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
         }
 
-        // Add scanned characters
-        buffer += e.key;
-        last = now;
-    });
+        window.simulateScan = function (code) {
+            for (const ch of code) {
+                document.dispatchEvent(new KeyboardEvent('keydown', { key: ch }));
+            }
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        };
+    })();
+    @endif
+
+    function printReceipt() {
+        const content = document.getElementById('receiptContent');
+        if (!content) return;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><head><title>Stock Receipt</title></head><body>' + content.innerHTML + '</body></html>');
+        doc.close();
+
+        setTimeout(function () {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();   // shows the print dialog
+            setTimeout(function () { iframe.remove(); }, 2000);
+        }, 300);
+    }
+
+        @if(session('print'))
+        window.addEventListener('load', function () {
+            setTimeout(printReceipt, 300);
+        });
+        @endif
     </script>
 
 @endsection

@@ -132,40 +132,37 @@
 
 @section('scripts')
 <script>
-    let buffer = "";
-    let last = Date.now();
-    const targetInputId = "barcode";
+(function () {
+    let buffer = '';
+    let lastTime = 0;
+    const MAX_GAP = 50;   // raise to ~100 if your scanner is slow
+    const MIN_LEN = 4;
+    const input = document.getElementById('barcode');
 
-    document.addEventListener("keydown", function (e) {
+    document.addEventListener('keydown', function (e) {
+        const t = e.target;
+        // ignore typing in other fields (the barcode field is allowed)
+        if (['INPUT','TEXTAREA','SELECT'].includes(t.tagName) && t.id !== 'barcode') return;
+
         const now = Date.now();
-        const diff = now - last;
+        if (now - lastTime > MAX_GAP) buffer = '';
+        lastTime = now;
 
-        // Detect scanner input (<30ms between keys)
-        const isScanner = diff < 30;
-
-        if (isScanner) {
-            // STOP key from going into any input box
-            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+        if (e.key === 'Enter') {
+            if (buffer.length >= MIN_LEN) {
                 e.preventDefault();
+                input.value = buffer;
             }
-
-            // When scanner presses Enter → barcode finished
-            if (e.key === "Enter") {
-                e.preventDefault();
-                document.getElementById(targetInputId).value = buffer;
-                buffer = "";
-                return;
-            }
-
-            // Add scanned char
-            buffer += e.key;
-            last = now;
+            buffer = '';
             return;
         }
 
-        // Human typing → reset scanner buffer
-        buffer = "";
-        last = now;
+        if (e.key.length === 1) {
+            buffer += e.key;
+            // while in the barcode box, stop the key typing so the final value is set cleanly
+            if (t.id === 'barcode') e.preventDefault();
+        }
     });
+})();
 </script>
 @endsection

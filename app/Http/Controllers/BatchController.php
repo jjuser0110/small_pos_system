@@ -123,7 +123,10 @@ class BatchController extends Controller
 
         $product = Product::where('branch_id', $batch->branch_id)->where('company_id', $batch->company_id)->get();
 
+        $receipt = \App\Models\ReceiptSetting::first();
+
         return view('batch.create')->with('batch',$batch)->with('company',$company)->with('product',$product)
+            ->with('receipt', $receipt)
             ->with('suppliers', \App\Models\Supplier::orderBy('name')->get());
     }
 
@@ -197,9 +200,12 @@ class BatchController extends Controller
         });
 
         if (!$done) {
-            return redirect()->route('batch.index')->withErrors('This stock entry is already completed.');
+            return redirect()->route('batch.edit', $batch)->withErrors('This stock entry is already completed.');
         }
-        return redirect()->route('batch.index')->withSuccess('Stock added');
+
+        return redirect()->route('batch.edit', $batch)
+            ->with('print', true)
+            ->withSuccess('Stock added');
     }
 
     public function addBatchItem(Request $request, Batch $batch)
