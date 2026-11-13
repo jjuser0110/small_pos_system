@@ -19,26 +19,26 @@
                         <tr>
                             <th>No.</th>
                             <th>Product</th>
-                            <th>Unit Price (RM)</th>
+                            <th>Unit Price</th>
                             <th>Quantity</th>
-                            <th>Total Price (RM)</th>
+                            <th>Total Price</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($order->items as $index => $item)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $item->product->product_name ?? '' }}</td>
-                            <td>{{ number_format($item->single_price ?? 0, 2) }}</td>
+                            <td>{{ $item->displayName() }}</td>
+                            <td>{{ money($item->single_price ?? 0) }}</td>
                             <td>{{ number_format($item->quantity ?? 0, 0) }}</td>
-                            <td>{{ number_format($item->total_price ?? 0, 2) }}</td>
+                            <td>{{ money($item->total_price ?? 0) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="4" class="text-end">Total:</th>
-                            <th>{{ number_format($order->items->sum('total_price'), 2) }}</th>
+                            <th>{{ money($order->items->sum('total_price')) }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -50,12 +50,12 @@
                             <th>No.</th>
                             <th>Product</th>
                             <th>Batch</th>
-                            <th>Cost Price (RM)</th>
-                            <th>Selling Price (RM)</th>
+                            <th>Cost Price</th>
+                            <th>Selling Price</th>
                             <th>Quantity</th>
-                            <th>Total Cost Price (RM)</th>
-                            <th>Total Selling Price (RM)</th>
-                            <th>Total Profit (RM)</th>
+                            <th>Total Cost Price</th>
+                            <th>Total Selling Price</th>
+                            <th>Total Profit</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,21 +64,21 @@
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $item->product->product_name ?? '' }}</td>
                             <td>{{ $item->batch->batch_no ?? '' }}</td>
-                            <td>{{ number_format($item->cost_price ?? 0, 2) }}</td>
-                            <td>{{ number_format($item->selling_price ?? 0, 2) }}</td>
+                            <td>{{ money($item->cost_price ?? 0) }}</td>
+                            <td>{{ money($item->selling_price ?? 0) }}</td>
                             <td>{{ number_format($item->quantity ?? 0, 2) }}</td>
-                            <td>{{ number_format($item->total_cost_price ?? 0, 2) }}</td>
-                            <td>{{ number_format($item->total_selling_price ?? 0, 2) }}</td>
-                            <td>{{ number_format($item->total_earning ?? 0, 2) }}</td>
+                            <td>{{ money($item->total_cost_price ?? 0) }}</td>
+                            <td>{{ money($item->total_selling_price ?? 0) }}</td>
+                            <td>{{ money($item->total_earning ?? 0) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="6" class="text-end">Total:</th>
-                            <th>{{ number_format($order->profit_items->sum('total_cost_price'), 2) }}</th>
-                            <th>{{ number_format($order->profit_items->sum('total_selling_price'), 2) }}</th>
-                            <th>{{ number_format($order->profit_items->sum('total_earning'), 2) }}</th>
+                            <th>{{ money($order->profit_items->sum('total_cost_price')) }}</th>
+                            <th>{{ money($order->profit_items->sum('total_selling_price')) }}</th>
+                            <th>{{ money($order->profit_items->sum('total_earning')) }}</th>
                         </tr>
                     </tfoot>
                 </table>

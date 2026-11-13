@@ -73,4 +73,15 @@ class Product extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    /** Sell options (Carton, bundle...), stock always counted in this item's base unit. */
+    public function units()
+    {
+        return $this->hasMany(ProductUnit::class)->where('is_active', true)->orderBy('base_qty');
+    }
+
+    public function allUnits()
+    {
+        return $this->hasMany(ProductUnit::class)->orderBy('base_qty');
+    }
 }

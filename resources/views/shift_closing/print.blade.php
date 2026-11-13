@@ -48,12 +48,12 @@
                 <td>{{ $row->company_code }}</td>
                 <td class="num">{{ $row->total_order_count + 0 }}</td>
                 <td class="num">{{ $row->total_item_count + 0 }}</td>
-                <td class="num">{{ number_format($row->total_order_amount, 2) }}</td>
-                <td class="num">{{ number_format($row->refund_amount, 2) }}</td>
-                <td class="num">{{ number_format($row->advance_amount, 2) }}</td>
-                <td class="num">{{ number_format($row->netAmount(), 2) }}</td>
+                <td class="num">{{ money($row->total_order_amount) }}</td>
+                <td class="num">{{ money($row->refund_amount) }}</td>
+                <td class="num">{{ money($row->advance_amount) }}</td>
+                <td class="num">{{ money($row->netAmount()) }}</td>
                 @foreach($totals['methods']->keys() as $m)
-                    <td class="num">{{ number_format($row->items->where('payment_method', $m)->sum('amount'), 2) }}</td>
+                    <td class="num">{{ money($row->items->where('payment_method', $m)->sum('amount')) }}</td>
                 @endforeach
             </tr>
             @empty
@@ -66,11 +66,11 @@
                 <td colspan="4" class="num">Total</td>
                 <td class="num">{{ $totals['orders'] + 0 }}</td>
                 <td class="num">{{ $totals['items'] + 0 }}</td>
-                <td class="num">{{ number_format($totals['sales'], 2) }}</td>
-                <td class="num">{{ number_format($totals['refunds'], 2) }}</td>
-                <td class="num">{{ number_format($totals['advances'], 2) }}</td>
-                <td class="num">{{ number_format($totals['net'], 2) }}</td>
-                @foreach($totals['methods'] as $amount)<td class="num">{{ number_format($amount, 2) }}</td>@endforeach
+                <td class="num">{{ money($totals['sales']) }}</td>
+                <td class="num">{{ money($totals['refunds']) }}</td>
+                <td class="num">{{ money($totals['advances']) }}</td>
+                <td class="num">{{ money($totals['net']) }}</td>
+                @foreach($totals['methods'] as $amount)<td class="num">{{ money($amount) }}</td>@endforeach
             </tr>
         </tfoot>
         @endif

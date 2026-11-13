@@ -148,9 +148,8 @@ class RefundController extends Controller
                         throw new RuntimeException('Refund is more than what is left on the order.');
                     }
 
-                    if ($item->category->has_stock ?? false) {
-                        $stock->returnSale($item, (float) $line->quantity, 'refund_in', "Refund #{$refund->id} ({$order->order_no})", $refund);
-                    }
+                    // refunded sale units back to stock in base units (e.g. 1 carton = 24 tins)
+                    $stock->returnSale($item, (float) $line->quantity * $item->baseQty(), 'refund_in', "Refund #{$refund->id} ({$order->order_no})", $refund);
                     $item->update(['refunded_quantity' => round($item->refunded_quantity + $line->quantity, 4)]);
                 }
 

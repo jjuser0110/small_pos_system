@@ -3,6 +3,7 @@
 <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
 <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/hammer/hammer.js') }}"></script>
 <script src="{{ asset('assets/vendor/libs/i18n/i18n.js') }}"></script>
@@ -32,6 +33,25 @@
 @yield('page-js')
 
 @yield('scripts')
+<script>
+    // Searchable dropdowns everywhere: every form select becomes a select2 box
+    // (type to search). Add class "no-select2" to keep a plain dropdown.
+    window.initSelect2 = function (root) {
+        if (!window.jQuery || !jQuery.fn.select2) return;
+        jQuery(root || document).find('select.form-select, select.select2').each(function () {
+            var $s = jQuery(this);
+            if ($s.data('select2') || $s.hasClass('no-select2') || $s.closest('.dataTables_length').length) return;
+            var $modal = $s.closest('.modal');
+            var blank = $s.find('option[value=""]').first();
+            $s.select2({
+                width: '100%',
+                dropdownParent: $modal.length ? $modal : jQuery(document.body),
+                placeholder: blank.length ? blank.text() : undefined,
+            });
+        });
+    };
+    jQuery(function () { window.initSelect2(document); });
+</script>
 <script>
     function showLoading(){
         document.getElementById('loading-screen').classList.remove('d-none');

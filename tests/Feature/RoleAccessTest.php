@@ -76,7 +76,7 @@ class RoleAccessTest extends TestCase
             'payment_method.index'   => 'role:1,2',
             'receipt_setting.store'  => 'role:1,2',
             'company.index'          => 'role:1,2,3',
-            'company_staff.update'   => 'role:1,2,3',
+            'company_staff.update'   => 'role:1',
             'order.index'            => 'role:1,2,3',
             'product.index'          => 'role:1,2,3',
             'batch.index'            => 'role:1,2,3',

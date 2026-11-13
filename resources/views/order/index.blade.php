@@ -70,7 +70,7 @@
                             <div class="d-flex align-items-center mb-2 pb-1">
                             <h4 class="ms-1 mb-0">Total Amount</h4>
                             </div>
-                            <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($activeOrderTotal, 2) }}</p>
+                            <p class="mb-1" style="margin:10px;font-size:18px">{{ money($activeOrderTotal) }}</p>
                         </div>
                         </div>
                     </div>
@@ -80,7 +80,7 @@
                                 <div class="d-flex align-items-center mb-2 pb-1">
                                 <h4 class="ms-1 mb-0">Total Profit</h4>
                                 </div>
-                                <p class="mb-1" style="margin:10px;font-size:18px">{{ number_format($total_profit ?? 0, 2) }}</p>
+                                <p class="mb-1" style="margin:10px;font-size:18px">{{ money($total_profit ?? 0) }}</p>
                             </div>
                         </div>
                     </div>
@@ -116,10 +116,10 @@
                             <td>{{$row->user->username??""}}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
-                            <td data-order="{{ $row->final_total }}">{{number_format($row->final_total, 2)??""}}</td>
+                            <td data-order="{{ $row->final_total }}">{{ money($row->final_total) }}</td>
                             <td>{{$row->payment_method??""}}</td>
-                            <td>{{$row->amount_received??""}}</td>
-                            <td>{{$row->change??""}}</td>
+                            <td>{{ money($row->amount_received) }}</td>
+                            <td>{{ money($row->change) }}</td>
                             <td>{{$row->status??""}}</td>
 
                             @if (in_array(Auth::user()->role_id, [1, 2, 3]))
@@ -164,7 +164,7 @@
                             <th>Company</th>
                             <th>Category</th>
                             <th>Number of Transactions</th>
-                            <th>Total Amount (RM)</th>
+                            <th>Total Amount</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -175,14 +175,14 @@
                             <td>{{ $item->company->company_name ?? '' }}</td>
                             <td>{{ $item->category->category_name ?? '' }}</td>
                             <td>{{ $item->order_item_count }}</td>
-                            <td>{{ number_format($item->total_amount ?? 0, 2) }}</td>
+                            <td>{{ money($item->total_amount ?? 0) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="5" class="text-end">Total:</th>
-                            <th>{{ number_format($categoryTotals->sum('total_amount') ?? 0, 2) }}</th>
+                            <th>{{ money($categoryTotals->sum('total_amount') ?? 0) }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -195,7 +195,7 @@
                             <th>Branch</th>
                             <th>Company</th>
                             <th>Category</th>
-                            <th>Total Profit (RM)</th>
+                            <th>Total Profit</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -205,14 +205,14 @@
                             <td>{{ $profit_item->branch->branch_name ?? '' }}</td>
                             <td>{{ $profit_item->company->company_name ?? '' }}</td>
                             <td>{{ $profit_item->category->category_name ?? '' }}</td>
-                            <td>{{ number_format($profit_item->total_amount ?? 0, 2) }}</td>
+                            <td>{{ money($profit_item->total_amount ?? 0) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="4" class="text-end">Total:</th>
-                            <th>{{ number_format($categoryProfits->sum('total_amount') ?? 0, 2) }}</th>
+                            <th>{{ money($categoryProfits->sum('total_amount') ?? 0) }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -257,20 +257,9 @@
 @endsection
 
 @section('page-js')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection
 
 @section('scripts')
-<script>
-    $(document).ready(function () {
-        $('.select2').select2({
-            placeholder: "Select",
-            allowClear: true,
-            width: '100%',
-        });
-    });
-</script>
 <script>
     $(function(){
       var table = $('#mytable').DataTable({

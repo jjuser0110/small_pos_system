@@ -52,7 +52,7 @@
         <div class="col-6 col-md-2 mb-3">
             <div class="card h-100"><div class="card-body p-3">
                 <small class="text-muted">{{ $label }}</small>
-                <div class="fs-5 fw-semibold">{{ $money ? 'RM ' . number_format($value, 2) : $value + 0 }}</div>
+                <div class="fs-5 fw-semibold">{{ $money ? money($value) : $value + 0 }}</div>
             </div></div>
         </div>
         @endforeach
@@ -78,12 +78,12 @@
                         <td>{{ $row->company_code }}</td>
                         <td>{{ $row->total_order_count + 0 }}</td>
                         <td>{{ $row->total_item_count + 0 }}</td>
-                        <td data-order="{{ $row->total_order_amount }}">{{ number_format($row->total_order_amount, 2) }}</td>
-                        <td>{{ number_format($row->refund_amount, 2) }}</td>
-                        <td>{{ number_format($row->advance_amount, 2) }}</td>
-                        <td><b>{{ number_format($row->netAmount(), 2) }}</b></td>
+                        <td data-order="{{ $row->total_order_amount }}">{{ money($row->total_order_amount) }}</td>
+                        <td>{{ money($row->refund_amount) }}</td>
+                        <td>{{ money($row->advance_amount) }}</td>
+                        <td><b>{{ money($row->netAmount()) }}</b></td>
                         @foreach($totals['methods']->keys() as $m)
-                            <td>{{ number_format($row->items->where('payment_method', $m)->sum('amount'), 2) }}</td>
+                            <td>{{ money($row->items->where('payment_method', $m)->sum('amount')) }}</td>
                         @endforeach
                         <td>{{ $row->closing_time ?? 'Open' }}</td>
                         <td><a href="{{ route('shift_closing.view', $row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a></td>

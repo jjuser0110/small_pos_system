@@ -64,6 +64,31 @@ class User extends Authenticatable
         return (int) $this->role_id === self::ROLE_STAFF;
     }
 
+    /** @var array<string, ?Company> working company per host, cached for the request */
+    private array $workingCompanyCache = [];
+
+    /**
+     * The company this user is working for right now. Staff work for whichever
+     * company's domain they logged in on (any company in their branch); their
+     * own company_id is only their "home" company. Everyone else: own company.
+     */
+    public function workingCompany(?string $host = null): ?Company
+    {
+        if (!$this->isStaff()) {
+            return $this->company;
+        }
+
+        $host = $host ?? request()->getHost();
+        if (!array_key_exists($host, $this->workingCompanyCache)) {
+            $this->workingCompanyCache[$host] = Company::where('branch_id', $this->branch_id)
+                ->whereNotNull('domain')
+                ->get()
+                ->first(fn ($company) => $company->matchesHost($host));
+        }
+
+        return $this->workingCompanyCache[$host];
+    }
+
     /** The shift occurrence this staff member may be logged in for right now. */
     public function currentShiftWindow(?Carbon $now = null): ?ShiftWindow
     {

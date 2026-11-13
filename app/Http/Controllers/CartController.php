@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\ProductUnit;
 use App\Models\RunningNumber;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -21,44 +22,60 @@ use DB;
 
 class CartController extends Controller
 {
+    /** Cart lines for the counter and checkout. */
     public function load()
     {
-        $cart = Cart::with('product')
+        $cart = Cart::with(['product', 'unit'])
             ->where('user_id', auth()->id())
-            ->get();
-
-        foreach($cart as $ca){
-            $ca->product_name = $ca->product->product_name;
-            $ca->stock = $ca->product->stock_quantity;
-        }
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($line) => [
+                'id'              => $line->id,
+                'product_id'      => $line->product_id,
+                'product_unit_id' => $line->product_unit_id,
+                'product_name'    => ($line->product->product_name ?? '') . ($line->unit ? " ({$line->unit->name})" : ''),
+                'single_price'    => $line->single_price,
+                'quantity'        => $line->quantity,
+                'total_price'     => $line->total_price,
+                'stock'           => $line->product->stock_quantity ?? 0,
+            ]);
 
         return response()->json($cart);
     }
 
+    /** Add one of an item, or of one of its sell options (unit_id), to the cart. */
     public function add(Request $request)
     {
         $product = Product::find($request->id);
-        if (!$product) {
-            return response()->json(['status' => 'error', 'message' => 'Product not found'], 404);
+        if (!$product || !$product->is_active) {
+            return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
         }
 
-        $item = Cart::where('user_id', auth()->id())
+        $unit = null;
+        if ($request->filled('unit_id')) {
+            $unit = ProductUnit::where('id', $request->unit_id)->where('product_id', $product->id)->where('is_active', true)->first();
+            if (!$unit) {
+                return response()->json(['status' => 'error', 'message' => 'Sell option not found'], 404);
+            }
+        }
+        $price = $unit ? (float) $unit->price : (float) $product->selling_price;
+
+        $line = Cart::where('user_id', auth()->id())
             ->where('product_id', $product->id)
+            ->where('product_unit_id', $unit?->id)
             ->first();
 
-        if ($item) {
-            $newQty = $item->quantity + 1;
-            $item->update([
-                'quantity' => $newQty,
-                'total_price' => $newQty * $item->single_price,
-            ]);
+        if ($line) {
+            $qty = $line->quantity + 1;
+            $line->update(['quantity' => $qty, 'total_price' => round($qty * $line->single_price, 2)]);
         } else {
             Cart::create([
-                'user_id' => auth()->id(),
-                'product_id' => $product->id,
-                'quantity' => 1,
-                'single_price' => $product->selling_price,
-                'total_price' => $product->selling_price,
+                'user_id'         => auth()->id(),
+                'product_id'      => $product->id,
+                'product_unit_id' => $unit?->id,
+                'quantity'        => 1,
+                'single_price'    => $price,
+                'total_price'     => $price,
             ]);
         }
 
@@ -67,274 +84,24 @@ class CartController extends Controller
 
     public function update(Request $request)
     {
-        $item = Cart::where('user_id', auth()->id())
-            ->where('product_id', $request->id)
-            ->first();
+        $request->validate(['line_id' => 'required|integer', 'quantity' => 'required|numeric|min:1|max:99999']);
 
-        if (!$item) return response()->json(['status' => 'error'], 404);
+        $line = Cart::where('user_id', auth()->id())->where('id', $request->line_id)->first();
+        if (!$line) {
+            return response()->json(['status' => 'error', 'message' => 'Cart line not found'], 404);
+        }
 
-        $item->update([
-            'quantity' => $request->quantity,
-            'total_price' => $item->single_price * $request->quantity,
-        ]);
+        $qty = (float) $request->quantity;
+        $line->update(['quantity' => $qty, 'total_price' => round($line->single_price * $qty, 2)]);
 
         return response()->json(['status' => 'ok']);
     }
 
     public function remove(Request $request)
     {
-        Cart::where('user_id', auth()->id())
-            ->where('product_id', $request->id)
-            ->delete();
+        Cart::where('user_id', auth()->id())->where('id', $request->line_id)->delete();
 
         return response()->json(['status' => 'ok']);
-    }
-
-    public function convertBox(Request $request)
-    {
-        $product = Product::findOrFail($request->box_id);
-
-        // BOX MUST HAVE STOCK
-        if ($product->stock_quantity <= 0) {
-            return response()->json(['error' => 'Stock not enough'], 422);
-        }
-
-        // Get FIRST BATCH ITEM for this box
-        $batch = BatchItem::where('product_id', $product->id)
-            ->whereHas('batch', function ($query) {
-                $query->where('status', 'Completed');
-            })
-            ->where('balance', '>', 0)
-            ->orderBy('created_at', 'ASC')
-            ->first();
-
-        if (!$batch) {
-            return response()->json(['error' => 'No batch found for this product'], 422);
-        }
-
-        // IDENTIFY CONNECTED PRODUCT (bottle)
-        $connected_product = Product::find($product->connected_product_id);
-        if (!$connected_product) {
-            return response()->json(['error' => 'Connected product not found'], 422);
-        }
-
-        $bottle_qty = $product->connected_product_quantity;
-
-        /** -----------------------------------
-         *  1) STOCK LOG — OUT (BOX)
-         * ----------------------------------- */
-        $batch->stock_logs()->create([
-            'branch_id'     => $product->branch_id,
-            'company_id'    => $product->company_id,
-            'category_id'   => $product->category_id,
-            'product_id'    => $product->id,
-            'type'          => 'convert_out',
-            'description'   => $batch->batch->batch_no ?? '',
-            'before_stock'  => $product->stock_quantity,
-            'quantity'      => 1,
-            'after_stock'   => $product->stock_quantity - 1,
-        ]);
-
-        // Reduce BOX batch balance
-        $batch->update([
-            'balance'       => $batch->balance - 1,
-            'quantity'      => $batch->quantity - 1,
-            'total_cost'    => round($batch->cost_per_unit * ($batch->quantity - 1), 2),
-        ]);
-
-        // Reduce BOX stock
-        $product->update([
-            'stock_quantity' => $product->stock_quantity - 1
-        ]);
-
-        /** -----------------------------------
-         *  2) CREATE NEW BATCH FOR BOTTLES
-         * ----------------------------------- */
-        $total_cost     = $batch->cost_per_unit;
-        $cost_per_unit  = round($total_cost / $bottle_qty, 2);
-
-        $newBatch = BatchItem::create([
-            'batch_id'      => $batch->batch_id,
-            'branch_id'     => $batch->branch_id,
-            'company_id'    => $batch->company_id,
-            'category_id'   => $batch->category_id,
-            'product_id'    => $connected_product->id,
-            'quantity'      => $bottle_qty,
-            'balance'       => $bottle_qty,
-            'total_cost'    => $total_cost,
-            'cost_per_unit' => $cost_per_unit,
-        ]);
-
-        /** -----------------------------------
-         *  3) STOCK LOG — IN (BOTTLES)
-         * ----------------------------------- */
-        $newBatch->stock_logs()->create([
-            'branch_id'     => $connected_product->branch_id,
-            'company_id'    => $connected_product->company_id,
-            'category_id'   => $connected_product->category_id,
-            'product_id'    => $connected_product->id,
-            'type'          => 'convert_in',
-            'description'   => $batch->batch->batch_no ?? '',
-            'before_stock'  => $connected_product->stock_quantity,
-            'quantity'      => $bottle_qty,
-            'after_stock'   => $connected_product->stock_quantity + $bottle_qty,
-        ]);
-
-        // Increase bottle stock
-        $connected_product->update([
-            'stock_quantity' => $connected_product->stock_quantity + $bottle_qty
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => "1 box converted into {$bottle_qty} bottles",
-            'new_bottle_stock' => $connected_product->stock_quantity,
-            'new_box_stock' => $product->stock_quantity,
-        ]);
-    }
-
-    public function convertBottleToBox(Request $request)
-    {
-        $box = Product::findOrFail($request->box_id);
-
-        // Identify bottle
-        $bottle = Product::find($box->connected_product_id);
-        if (!$bottle) {
-            return response()->json(['error' => 'Connected bottle not found'], 422);
-        }
-
-        $requiredQty = $box->connected_product_quantity;
-
-        // BOTTLE MUST HAVE ENOUGH STOCK
-        if ($bottle->stock_quantity < $requiredQty) {
-            return response()->json(['error' => 'Not enough bottles to rebuild box'], 422);
-        }
-
-        /** -----------------------------------
-         *  1) GET FIFO BOTTLE BATCH
-         * ----------------------------------- */
-        $batch = BatchItem::where('product_id', $bottle->id)
-            ->whereHas('batch', function ($query) {
-                $query->where('status', 'Completed');
-            })
-            ->where('balance', '>=', $requiredQty)
-            ->orderBy('created_at', 'ASC')
-            ->first();
-
-        if (!$batch) {
-            return response()->json(['error' => 'No sufficient bottle batch found'], 422);
-        }
-
-        /** -----------------------------------
-         *  2) STOCK LOG — OUT (BOTTLES)
-         * ----------------------------------- */
-        $batch->stock_logs()->create([
-            'branch_id'     => $bottle->branch_id,
-            'company_id'    => $bottle->company_id,
-            'category_id'   => $bottle->category_id,
-            'product_id'    => $bottle->id,
-            'type'          => 'convert_out',
-            'description'   => $batch->batch->batch_no ?? '',
-            'before_stock'  => $bottle->stock_quantity,
-            'quantity'      => $requiredQty,
-            'after_stock'   => $bottle->stock_quantity - $requiredQty,
-        ]);
-
-        // Reduce bottle batch
-        $batch->update([
-            'balance'       => $batch->balance - $requiredQty,
-            'quantity'      => $batch->quantity - $requiredQty,
-            'total_cost'    => round($batch->cost_per_unit * ($batch->quantity - $requiredQty), 2),
-        ]);
-
-        // Reduce bottle stock
-        $bottle->update([
-            'stock_quantity' => $bottle->stock_quantity - $requiredQty
-        ]);
-
-        /** -----------------------------------
-         *  3) CREATE / UPDATE BOX BATCH
-         * ----------------------------------- */
-        $total_cost = round($batch->cost_per_unit * $requiredQty, 2);
-
-        $boxBatch = BatchItem::where('product_id', $box->id)
-            ->whereHas('batch', function ($query) {
-                $query->where('status', 'Completed');
-            })
-            ->orderBy('created_at', 'DESC')
-            ->first();
-
-        if ($boxBatch) {
-            // Increase existing box batch
-            $boxBatch->update([
-                'quantity'      => $boxBatch->quantity + 1,
-                'balance'       => $boxBatch->balance + 1,
-                'total_cost'    => round($boxBatch->total_cost + $total_cost, 2),
-                'cost_per_unit' => round(($boxBatch->total_cost + $total_cost) / ($boxBatch->quantity + 1), 2),
-            ]);
-        } else {
-            // Create new box batch
-            $boxBatch = BatchItem::create([
-                'batch_id'      => $batch->batch_id,
-                'branch_id'     => $batch->branch_id,
-                'company_id'    => $batch->company_id,
-                'category_id'   => $batch->category_id,
-                'product_id'    => $box->id,
-                'quantity'      => 1,
-                'balance'       => 1,
-                'total_cost'    => $total_cost,
-                'cost_per_unit' => $total_cost,
-            ]);
-        }
-
-        /** -----------------------------------
-         *  4) STOCK LOG — IN (BOX)
-         * ----------------------------------- */
-        $boxBatch->stock_logs()->create([
-            'branch_id'     => $box->branch_id,
-            'company_id'    => $box->company_id,
-            'category_id'   => $box->category_id,
-            'product_id'    => $box->id,
-            'type'          => 'convert_in',
-            'description'   => $batch->batch->batch_no ?? '',
-            'before_stock'  => $box->stock_quantity,
-            'quantity'      => 1,
-            'after_stock'   => $box->stock_quantity + 1,
-        ]);
-
-        // Increase box stock
-        $box->update([
-            'stock_quantity' => $box->stock_quantity + 1
-        ]);
-
-        return response()->json([
-            'success'           => true,
-            'message'           => "Converted {$requiredQty} bottles into 1 box",
-            'new_bottle_stock'  => $bottle->stock_quantity,
-            'new_box_stock'     => $box->stock_quantity,
-        ]);
-    }
-
-    public function validateCart(Request $request)
-    {
-        $user = auth()->user();
-        $carts = Cart::where('user_id', $user->id)->get();
-
-        if ($carts->isEmpty()) {
-            return response()->json(['error' => 'Cart is empty'], 422);
-        }
-
-        foreach ($carts as $cart) {
-            $product = Product::find($cart->product_id);
-
-            if (!$product || $cart->quantity > $product->stock_quantity) {
-                return response()->json([
-                    'error' => "{$cart->product->product_name} stock not sufficient"
-                ], 422);
-            }
-        }
-
-        return response()->json(['success' => true]);
     }
 
     public function place(Request $request)
@@ -355,8 +122,17 @@ class CartController extends Controller
                     throw new \RuntimeException('Cart is empty.');
                 }
 
-                $shift = ShiftClosing::openOrStart($user);
-                $order = $this->createOrder($user, $request, $shift);
+                // staff sell for the company whose domain they logged in on; managers at the
+                // counter sell for the company the items belong to
+                $company = $user->isStaff()
+                    ? $user->workingCompany()
+                    : \App\Models\Company::find(Product::whereIn('id', $carts->pluck('product_id'))->value('company_id'));
+                if (!$company) {
+                    throw new \RuntimeException('Cannot tell which company this sale is for.');
+                }
+
+                $shift = ShiftClosing::openOrStart($user, $company);
+                $order = $this->createOrder($user, $request, $shift, $company);
 
                 foreach ($carts as $cart) {
                     $this->processItem($order, $cart);
@@ -380,7 +156,7 @@ class CartController extends Controller
         }
     }
 
-    private function createOrder($user, $request, ShiftClosing $shift)
+    private function createOrder($user, $request, ShiftClosing $shift, \App\Models\Company $company)
     {
         $now = Carbon::now();
         $year = $now->year;
@@ -399,8 +175,8 @@ class CartController extends Controller
             sprintf('%0'.$rn->no_of_digit_behind.'d', $rn->running_no);
 
         $order = Order::create([
-            'branch_id' => $user->branch_id,
-            'company_id' => $user->company_id,
+            'branch_id' => $company->branch_id,
+            'company_id' => $company->id,
             'user_id' => $user->id,
             'shift_closing_id' => $shift->id,
             'order_no' => $order_no,
@@ -413,51 +189,53 @@ class CartController extends Controller
 
     private function processItem($order, $cart)
     {
-        $product = Product::with('category')->findOrFail($cart->product_id);
+        $product = Product::findOrFail($cart->product_id);
+        $unit = $cart->product_unit_id ? ProductUnit::withTrashed()->find($cart->product_unit_id) : null;
+        $baseQty = $unit ? (float) $unit->base_qty : 1.0;          // e.g. Carton = 24 tins
 
         $item = OrderItem::create([
-            'order_id' => $order->id,
-            'branch_id' => $order->branch_id,
-            'company_id' => $order->company_id,
-            'category_id' => $product->category_id,
-            'product_id' => $product->id,
-            'single_price' => $cart->single_price,
-            'quantity' => $cart->quantity,
-            'total_price' => $cart->total_price,
+            'order_id'        => $order->id,
+            'branch_id'       => $order->branch_id,
+            'company_id'      => $order->company_id,
+            'category_id'     => $product->category_id,
+            'product_id'      => $product->id,
+            'product_unit_id' => $unit?->id,
+            'unit_name'       => $unit?->name,
+            'base_qty'        => $baseQty,
+            'single_price'    => $cart->single_price,
+            'quantity'        => $cart->quantity,
+            'total_price'     => $cart->total_price,
         ]);
 
-        if (!$product->category->has_stock) {
-            return;
-        }
+        // stock is in base units; the counter may sell into negative stock
+        $slices = app(StockService::class)->stockOut($product, (float) $cart->quantity * $baseQty,
+            'stock_out', 'Order ' . $order->order_no, $item, true);
 
-        // FIFO out of completed batches; refuses to oversell
-        $slices = app(StockService::class)->stockOut($product, (float) $cart->quantity, 'stock_out', 'Order ' . $order->order_no, $item);
-
-        // one profit row per batch slice (unbatched stock has no known cost, so no profit row)
+        // one profit row per batch slice, per base unit (unbatched stock has no known cost: no profit row)
+        $sellPerBase = (float) $item->single_price / $baseQty;
         foreach ($slices as $slice) {
             if (!$slice['batch_item']) {
                 continue;
             }
             $cost = $slice['cost_per_unit'];
-            $sell = (float) $item->single_price;
             $qty  = $slice['quantity'];
 
             OrderItemProfit::create([
-                'order_id' => $item->order_id,
-                'branch_id' => $item->branch_id,
-                'company_id' => $item->company_id,
-                'order_item_id' => $item->id,
-                'category_id' => $item->category_id,
-                'product_id' => $item->product_id,
-                'batch_id' => $slice['batch_item']->batch_id,
-                'batch_item_id' => $slice['batch_item']->id,
-                'cost_price' => $cost,
-                'selling_price' => $sell,
-                'earning' => round($sell - $cost, 2),
-                'quantity' => $qty,
-                'total_cost_price' => round($cost * $qty, 2),
-                'total_selling_price' => round($sell * $qty, 2),
-                'total_earning' => round(($sell - $cost) * $qty, 2),
+                'order_id'            => $item->order_id,
+                'branch_id'           => $item->branch_id,
+                'company_id'          => $item->company_id,
+                'order_item_id'       => $item->id,
+                'category_id'         => $item->category_id,
+                'product_id'          => $item->product_id,
+                'batch_id'            => $slice['batch_item']->batch_id,
+                'batch_item_id'       => $slice['batch_item']->id,
+                'cost_price'          => $cost,
+                'selling_price'       => round($sellPerBase, 4),
+                'earning'             => round($sellPerBase - $cost, 4),
+                'quantity'            => $qty,
+                'total_cost_price'    => round($cost * $qty, 2),
+                'total_selling_price' => round($sellPerBase * $qty, 2),
+                'total_earning'       => round(($sellPerBase - $cost) * $qty, 2),
             ]);
         }
     }
@@ -494,11 +272,10 @@ class CartController extends Controller
         ]);
 
         foreach ($order->items as $item) {
-            $special = (int) ($item->category->special ?? 0) === 1;
             $detail = ShiftClosingDetail::firstOrNew([
                 'shift_closing_id' => $shift->id,
                 'category_id'      => $item->category_id,
-                'product_id'       => $special ? $item->product_id : null,
+                'product_id'       => null,
             ]);
             $detail->amount = round(($detail->amount ?? 0) + $item->total_price, 2);
             $detail->save();
@@ -516,35 +293,5 @@ class CartController extends Controller
     {
         Cart::where('user_id', auth()->id())->delete();
         return redirect()->back();
-    }
-
-    public function addSpecial(Request $request)
-    {
-        $product = Product::find($request->id);
-        if (!$product) {
-            return response()->json(['status' => 'error', 'message' => 'Product not found'], 404);
-        }
-
-        $item = Cart::where('user_id', auth()->id())
-            ->where('product_id', $product->id)
-            ->first();
-
-        if ($item) {
-            $newQty = $item->quantity + $request->amount;
-            $item->update([
-                'quantity' => $newQty,
-                'total_price' => $newQty * $item->single_price,
-            ]);
-        } else {
-            Cart::create([
-                'user_id' => auth()->id(),
-                'product_id' => $product->id,
-                'quantity' => $request->amount,
-                'single_price' => $product->selling_price,
-                'total_price' => $request->amount * $product->selling_price,
-            ]);
-        }
-
-        return response()->json(['status' => 'ok']);
     }
 }

@@ -63,22 +63,29 @@ class ShiftClosing extends Model
      * shifts with no sales still appear in reports. An open record left over
      * from an earlier shift day is closed first.
      */
-    public static function openOrStart($user): self
+    public static function openOrStart($user, ?Company $company = null): self
     {
+        // staff work for the company of the domain they logged in on
+        $company = $company ?? $user->workingCompany();
         $window = $user->currentShiftWindow();
         $workDate = $window?->workDate ?? now()->toDateString();
 
         $open = self::openFor($user);
-        if ($open && $open->work_date && $open->work_date != $workDate) {
-            $previous = \App\Support\ShiftWindow::forDate($open->shift ?? $user->shift ?? 'AM', \Carbon\Carbon::parse($open->work_date)->toDateString());
+        $otherDay = $open && $open->work_date && $open->work_date != $workDate;
+        $otherCompany = $open && $company && (int) $open->company_id !== (int) $company->id;
+        if ($otherDay || $otherCompany) {
+            // an earlier shift day ends at its logout time; switching company ends it now
+            $previous = $otherDay
+                ? \App\Support\ShiftWindow::forDate($open->shift ?? $user->shift ?? 'AM', \Carbon\Carbon::parse($open->work_date)->toDateString())
+                : null;
             $open->update(['closing_time' => $previous?->logoutAt ?? now()]);
             $open = null;
         }
 
         return $open ?? self::create([
             'user_id'    => $user->id,
-            'branch_id'  => $user->branch_id,
-            'company_id' => $user->company_id,
+            'branch_id'  => $company->branch_id ?? $user->branch_id,
+            'company_id' => $company->id ?? $user->company_id,
             'shift'      => $user->shift,
             'work_date'  => $workDate,
         ]);

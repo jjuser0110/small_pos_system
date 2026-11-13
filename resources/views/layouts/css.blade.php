@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icons.css') }}" />
 
 <!-- Core CSS -->
+<link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core.css') }}?v=2" />
 <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default.css') }}?v=2" />
 <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />

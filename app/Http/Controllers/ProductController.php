@@ -23,60 +23,45 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $login_user = Auth::user();
-
-        if ($login_user->role_id == 3) {
-            $product = Product::where('branch_id', $login_user->branch_id)
-                ->orWhere('created_at', '>=', now()->subDay())
-                ->get();
-            $companies = Company::all(); // needs to list all companies to transfer to
-        } elseif ($login_user->role_id == 4) {
-            $product = Product::where('company_id', $login_user->company_id)
-                ->orWhere('created_at', '>=', now()->subDay())
-                ->get();
-            $companies = Company::all();
-        } else {
-            $product = Product::all();
-            $companies = Company::all();
+        $query = Product::with(['category', 'company', 'branch', 'uom_dt', 'units']);
+        if (Auth::user()->role_id == 3) {
+            // branch manager: own branch only
+            $query->where('branch_id', Auth::user()->branch_id);
         }
 
-        return view('product.index', compact('product', 'companies'));
+        return view('product.index', [
+            'product'   => $query->orderBy('product_name')->get(),
+            'companies' => $this->scopedCompanies(),   // for the Excel import
+        ]);
     }
 
     public function create()
     {
-        $login_user = Auth::user();
-
-        if ($login_user->role_id == 3) {
-            $category     = Category::where('branch_id', $login_user->branch_id)->get();
-            $product_link = Product::where('branch_id', $login_user->branch_id)->get();
-        } elseif ($login_user->role_id == 4) {
-            $category     = Category::where('company_id', $login_user->company_id)->get();
-            $product_link = Product::where('company_id', $login_user->company_id)->get();
-        } else {
-            $category     = Category::all();
-            $product_link = Product::all();
-        }
-
-        $uom      = Uom::all();
-
         return view('product.create')
-            ->with('category', $category)
-            ->with('uom', $uom)
-            ->with('product_link', $product_link);
+            ->with('category', $this->formCategories())
+            ->with('uom', Uom::all());
+    }
+
+    /** Categories the user may put items in (their branch for a branch manager). */
+    private function formCategories()
+    {
+        $query = Category::with('company')->orderBy('category_name');
+        if (Auth::user()->role_id == 3) {
+            $query->where('branch_id', Auth::user()->branch_id);
+        }
+        return $query->get();
     }
 
     /** Fields a user may set from the product form. */
     private const FORM_FIELDS = [
         'product_name', 'product_code', 'barcode', 'arrangement', 'uom',
-        'selling_price', 'is_active', 'connected_product_id',
-        'connected_product_quantity',
+        'selling_price', 'is_active',
     ];
 
     public function store(Request $request)
     {
+        $this->validateItem($request);
         $category = $this->authorizeCategoryId($request->category_id);
-        $this->authorizeConnectedProduct($request->connected_product_id);
 
         $initial = $request->initial ?? 0;
         $product = Product::create(array_merge($request->only(self::FORM_FIELDS), [
@@ -101,6 +86,8 @@ class ProductController extends Controller
             ]);
         }
 
+        $this->saveUnits($product, $request->input('units', []));
+
         return redirect()->route('product.index')->withSuccess('Data saved');
     }
 
@@ -108,33 +95,17 @@ class ProductController extends Controller
     {
         $this->authorizeRecord($product);
 
-        $login_user = Auth::user();
-
-        if ($login_user->role_id == 3) {
-            $category     = Category::where('branch_id', $login_user->branch_id)->get();
-            $product_link = Product::where('branch_id', $login_user->branch_id)->where('id', '!=', $product->id)->get();
-        } elseif ($login_user->role_id == 4) {
-            $category     = Category::where('company_id', $login_user->company_id)->get();
-            $product_link = Product::where('company_id', $login_user->company_id)->where('id', '!=', $product->id)->get();
-        } else {
-            $category     = Category::all();
-            $product_link = Product::where('id', '!=', $product->id)->get();
-        }
-
-        $uom      = Uom::all();
-
         return view('product.create')
-            ->with('product', $product)
-            ->with('category', $category)
-            ->with('uom', $uom)
-            ->with('product_link', $product_link);
+            ->with('product', $product->load('allUnits'))
+            ->with('category', $this->formCategories())
+            ->with('uom', Uom::all());
     }
 
     public function update(Request $request, Product $product)
     {
         $this->authorizeRecord($product);
+        $this->validateItem($request, $product);
         $category = $this->authorizeCategoryId($request->category_id ?? $product->category_id);
-        $this->authorizeConnectedProduct($request->connected_product_id);
 
         $data = array_merge($request->only(self::FORM_FIELDS), [
             'category_id' => $category->id,
@@ -171,6 +142,7 @@ class ProductController extends Controller
         }
 
         $product->update($data);
+        $this->saveUnits($product, $request->input('units', []));
 
         return redirect()->route('product.index')->withSuccess('Data updated');
     }
@@ -194,75 +166,6 @@ class ProductController extends Controller
         return view('product.viewlog')->with('product',$product);
     }
 
-    public function convert(Product $product)
-    {
-        $this->authorizeRecord($product);
-
-        if($product->stock_quantity > 0){
-            $batch = BatchItem::where('product_id', $product->id)
-                ->whereHas('batch', function ($query) {
-                    $query->where('status', 'Completed');
-                })
-                ->where('balance', '>', 0)
-                ->orderBy('created_at', 'ASC')
-                ->first();
-            if(isset($batch)){
-                $batch->stock_logs()->create([
-                    'branch_id' => $product->branch_id,
-                    'company_id' => $product->company_id,
-                    'category_id' => $product->category_id,
-                    'product_id' => $product->id,
-                    'type' => 'convert_out',
-                    'description' => $batch->batch->batch_no ?? '',
-                    'before_stock' => $product->stock_quantity,
-                    'quantity' => 1,
-                    'after_stock' => $product->stock_quantity - 1,
-                ]);
-                $batch->update([
-                    'balance'=>$batch->balance - 1,
-                    'quantity'=>$batch->quantity - 1,
-                    'total_cost'=>round($batch->cost_per_unit*($batch->quantity - 1),2),
-                ]);
-                $product->update(['stock_quantity' => $product->stock_quantity -1]);
-
-                $connected_product = Product::find($product->connected_product_id);
-                $total_cost = $batch->cost_per_unit;
-                $cost_per_unit = round($total_cost / $product->connected_product_quantity,2);
-                $batch_item = BatchItem::create([
-                    'batch_id'=> $batch->batch_id,
-                    'branch_id'=> $batch->branch_id,
-                    'company_id'=> $batch->company_id,
-                    'category_id'=> $batch->category_id,
-                    'product_id'=> $product->connected_product_id,
-                    'quantity'=> $product->connected_product_quantity,
-                    'total_cost'=> $total_cost,
-                    'cost_per_unit'=> $cost_per_unit,
-                    'balance'=> $product->connected_product_quantity,
-                ]);
-
-                $batch_item->stock_logs()->create([
-                    'branch_id' => $connected_product->branch_id,
-                    'company_id' => $connected_product->company_id,
-                    'category_id' => $connected_product->category_id,
-                    'product_id' => $connected_product->id,
-                    'type' => 'convert_in',
-                    'description' => $batch->batch->batch_no ?? '',
-                    'before_stock' => $connected_product->stock_quantity,
-                    'quantity' => $product->connected_product_quantity,
-                    'after_stock' => round($connected_product->stock_quantity + $product->connected_product_quantity),
-                ]);
-                $connected_product->update(['stock_quantity' => round($connected_product->stock_quantity + $product->connected_product_quantity)]);
-
-            }else{
-                return redirect()->route('product.index')->withError('No batch item found for this product');
-            }
-        }else{
-            return redirect()->route('product.index')->withError('Stock Not Enough');
-        }
-
-        return redirect()->route('product.index')->withSuccess('Item converted');
-    }
-
     public function downloadTemplate()
     {
         return Excel::download(new ProductTemplateExport, 'product_template.xlsx');
@@ -282,16 +185,46 @@ class ProductController extends Controller
         return back()->with('success', 'Products imported successfully');
     }
 
-    /** A linked (box/bottle) product must also be inside the user's scope. */
-    private function authorizeConnectedProduct($productId): void
+    private function validateItem(Request $request, ?Product $product = null): void
     {
-        if (!$productId) {
-            return;
+        $request->validate([
+            'product_name'     => 'required|string|max:255',
+            'selling_price'    => 'required|numeric|min:0',
+            'units'            => 'nullable|array',
+            'units.*.name'     => 'required|string|max:100',
+            'units.*.base_qty' => 'required|numeric|gt:0',
+            'units.*.price'    => 'required|numeric|min:0',
+            'units.*.barcode'  => 'nullable|string|max:100',
+        ], [
+            'units.*.name.required'     => 'Every sell option needs a name.',
+            'units.*.base_qty.gt'       => 'Base units in a sell option must be more than 0.',
+        ]);
+
+        // a barcode must point to exactly one thing in the company, or scanning cannot work
+        $codes = collect($request->input('units', []))->pluck('barcode')->push($request->barcode)
+            ->map(fn ($c) => trim((string) $c))->filter();
+        if ($codes->duplicates()->isNotEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['barcode' => 'The same barcode is used twice on this item.']);
         }
-        $linked = Product::find($productId);
-        if (!$linked) {
-            abort(403, 'Access denied');
+    }
+
+    /** Create, update and remove the item's sell options to match the form. */
+    private function saveUnits(Product $product, array $rows): void
+    {
+        $keep = [];
+        foreach ($rows as $row) {
+            $data = [
+                'name'      => trim($row['name']),
+                'base_qty'  => (float) $row['base_qty'],
+                'price'     => round((float) $row['price'], 2),
+                'barcode'   => trim((string) ($row['barcode'] ?? '')) ?: null,
+                'is_active' => true,
+            ];
+            $unit = !empty($row['id']) ? $product->allUnits()->where('id', $row['id'])->first() : null;
+            $unit ? $unit->update($data) : $unit = $product->allUnits()->create($data);
+            $keep[] = $unit->id;
         }
-        $this->authorizeRecord($linked);
+        // removed rows are soft-deleted so old orders still show what was sold
+        $product->allUnits()->whereNotIn('id', $keep)->get()->each->delete();
     }
 }

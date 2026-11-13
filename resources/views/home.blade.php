@@ -61,7 +61,7 @@
         <div class="col-6 col-md-2 mb-4">
             <div class="card card-border-shadow-primary h-100"><div class="card-body p-3">
                 <small class="text-muted">{{ $label }}</small>
-                <div class="fs-5 fw-semibold">{{ $money ? 'RM ' . number_format($value, 2) : $value + 0 }}</div>
+                <div class="fs-5 fw-semibold">{{ $money ? money($value) : $value + 0 }}</div>
             </div></div>
         </div>
         @endforeach
@@ -70,7 +70,7 @@
             <div class="col-6 col-md-2 mb-4">
                 <div class="card h-100"><div class="card-body p-3">
                     <small class="text-muted">{{ strtoupper($item->payment_method ?? '') }}</small>
-                    <div class="fs-5 fw-semibold">RM {{ number_format($item->amount ?? 0, 2) }}</div>
+                    <div class="fs-5 fw-semibold">{{ money($item->amount ?? 0) }}</div>
                 </div></div>
             </div>
             @endforeach

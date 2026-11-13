@@ -18,7 +18,7 @@
         <div class="col-6 col-md-2 mb-3">
             <div class="card h-100"><div class="card-body p-3">
                 <small class="text-muted">{{ $label }}</small>
-                <div class="fs-5 fw-semibold">{{ $money ? 'RM ' . number_format($value, 2) : $value }}</div>
+                <div class="fs-5 fw-semibold">{{ $money ? money($value) : $value }}</div>
             </div></div>
         </div>
         @endforeach
@@ -33,15 +33,15 @@
             <div class="card h-100">
                 <h5 class="card-header">By payment method</h5>
                 <table class="table mb-0">
-                    <thead><tr><th>Method</th><th class="text-end">Amount (RM)</th></tr></thead>
+                    <thead><tr><th>Method</th><th class="text-end">Amount</th></tr></thead>
                     <tbody>
                         @forelse($shift_closing->items as $m)
-                            <tr><td>{{ $m->payment_method }}</td><td class="text-end">{{ number_format($m->amount, 2) }}</td></tr>
+                            <tr><td>{{ $m->payment_method }}</td><td class="text-end">{{ money($m->amount) }}</td></tr>
                         @empty
                             <tr><td colspan="2" class="text-muted">No sales</td></tr>
                         @endforelse
                     </tbody>
-                    <tfoot><tr><th>Total collected</th><th class="text-end">{{ number_format($shift_closing->items->sum('amount'), 2) }}</th></tr></tfoot>
+                    <tfoot><tr><th>Total collected</th><th class="text-end">{{ money($shift_closing->items->sum('amount')) }}</th></tr></tfoot>
                 </table>
             </div>
         </div>
@@ -49,7 +49,7 @@
             <div class="card h-100">
                 <h5 class="card-header">Items sold</h5>
                 <table class="table mb-0">
-                    <thead><tr><th>Item</th><th class="text-end">Qty</th><th class="text-end">Amount (RM)</th></tr></thead>
+                    <thead><tr><th>Item</th><th class="text-end">Qty</th><th class="text-end">Amount</th></tr></thead>
                     <tbody>
                         @forelse($items->where('qty', '>', 0) as $i)
                             <tr><td>{{ $i->product->product_name ?? '' }}</td><td class="text-end">{{ $i->qty + 0 }}</td><td class="text-end">{{ number_format($i->amount, 2) }}</td></tr>
@@ -66,12 +66,12 @@
     <div class="card">
         <h5 class="card-header">By category</h5>
         <table class="table mb-0">
-            <thead><tr><th>Category / Product</th><th class="text-end">Sales (RM)</th></tr></thead>
+            <thead><tr><th>Category</th><th class="text-end">Sales</th></tr></thead>
             <tbody>
                 @foreach($shift_closing->details as $detail)
                 <tr>
-                    <td>{{ isset($detail->category) && $detail->category->special == 1 ? ($detail->product->product_name ?? '') : ($detail->category->category_name ?? '') }}</td>
-                    <td class="text-end">{{ number_format($detail->amount ?? 0, 2) }}</td>
+                    <td>{{ $detail->category->category_name ?? '' }}</td>
+                    <td class="text-end">{{ money($detail->amount ?? 0) }}</td>
                 </tr>
                 @endforeach
             </tbody>

@@ -275,15 +275,14 @@ h1 { color: #16a34a; margin-bottom: 15px; font-size: 18px; }
 <body>
 <div class="container">
     <div class="left-panel">
-        <h1>Select Products</h1>
+        <h1>Select Items</h1>
         <div class="barcode-scanner">
-            <input type="text" id="barcode" name="barcode" class="barcode-input" placeholder="Scan barcode here..." autocomplete="off">
+            <input type="text" id="barcode" class="barcode-input" placeholder="Scan barcode or type item name..." autocomplete="off">
         </div>
         <div class="categories" id="categories">
-            @foreach($category as $index=> $cat)
-            <button class="category-btn @if($index==0) active @endif" data-category="{{ Str::slug($cat->category_name, '_') }}" data-special="{{ $cat->special }}" data-has_stock="{{ $cat->has_stock }}">
-                {{$cat->category_name??''}}
-            </button>
+            <button class="category-btn active" data-category="all">All</button>
+            @foreach($category as $cat)
+            <button class="category-btn" data-category="{{ $cat->id }}">{{ $cat->category_name }}</button>
             @endforeach
         </div>
         <div class="products" id="products"></div>
@@ -298,693 +297,223 @@ h1 { color: #16a34a; margin-bottom: 15px; font-size: 18px; }
             <h1>Cart</h1>
         </div>
         <div class="cart-items" id="cartItems">
-            <div class="empty-cart">
-                <div class="empty-cart-icon">🛒</div>
-                <p>Cart is empty</p>
-            </div>
+            <div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Cart is empty</p></div>
         </div>
 
         <div class="cart-summary">
-            <div class="summary-row">
-                <span>Subtotal:</span>
-                <span id="subtotal">$0.00</span>
-            </div>
-            <div class="summary-row total-row">
-                <span>Total:</span>
-                <span id="total">$0.00</span>
-            </div>
+            <div class="summary-row"><span>Subtotal:</span><span id="subtotal">RM 0.00</span></div>
+            <div class="summary-row total-row"><span>Total:</span><span id="total">RM 0.00</span></div>
 
             <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to empty shopping cart?')){window.location.href='{{ route('empty_cart') }}'}">Empty Cart</a>
             <button class="checkout-btn" onclick="checkout()">Checkout</button>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px">
                 <button class="side-btn" onclick="window.location.href='{{ route('refund.create') }}'">Refund</button>
-                <button class="side-btn" onclick="window.location.href='{{ route('damage.index') }}'">Damage</button>
                 <button class="side-btn" onclick="window.location.href='{{ route('staff_borrow.index') }}'">Advance</button>
             </div>
-            <button class="home-btn" onclick="window.location.href='/home'">Home</button>
-        </div>
-    </div>
-</div>
-
-<div id="amountModal" class="custom-modal">
-    <div class="custom-modal-content">
-        <div class="custom-modal-header">
-            <h5 id="modalTitle">Enter Amount</h5>
-            <span class="custom-modal-close" onclick="closeModal()">&times;</span>
-        </div>
-
-        <div class="custom-modal-body">
-            <label>Amount (RM)</label>
-            <input type="number" id="modalAmount" class="amount-input" placeholder="0.00" step="0.01" autofocus>
-        </div>
-
-        <div class="custom-modal-footer">
-            <button class="modal-btn cancel-btn" onclick="closeModal()">Cancel</button>
-            <button class="modal-btn confirm-btn" onclick="confirmAmount()">Confirm</button>
+            <button class="home-btn" onclick="window.location.href='{{ route('home') }}'">Home</button>
         </div>
     </div>
 </div>
 
 <script>
-const products = {
-    @foreach($category as $cat)
-    "{{ Str::slug($cat->category_name, '_') }}": [
-        @foreach($products->where('category_id', $cat->id)->sortBy([
-            fn($p) => $p->barcode ? 1 : 0,
-            fn($p) => $p->product_name
-        ]) as $p)
-        {
-            id: "{{ $p->id }}",
-            name: @json($p->product_name),
-            barcode: "{{ $p->barcode??null }}",
-            uom: "{{ $p->uom_dt->uom_unit??null }}",
-            price: {{ number_format($p->selling_price, 2, '.', '') }},
-            stock: {{ $p->stock_quantity }},
-            connected_product_id: {{ $p->connected_product_id ?? 0 }},
-            connected_product_quantity: {{ $p->connected_product_quantity ?? 0 }},
-            special: {{ $cat->special }},
-            has_stock: {{ $cat->has_stock }},
-        }@if(!$loop->last), @endif
-        @endforeach
-    ]@if(!$loop->last), @endif
-    @endforeach
-};
-const allProducts = Object.values(products).flat();
+/*
+ * Everything that can be sold, one tile each: an item in its base unit, and
+ * each of its sell options. Categories and items arrive already sorted by
+ * their arrangement number.
+ */
+const sellables = @json($sellables);
+const csrf = '{{ csrf_token() }}';
 
 let cart = [];
-let selectedCategory = "{{ Str::slug($category->first()->category_name, '_') }}";
-let isLoading = false;
+let selectedCategory = 'all';
 
-function findProductById(id) {
-    for (let cat in products) {
-        const result = products[cat].find(p => p.id == id);
-        if (result) return result;
+const money = v => 'RM ' + Number(v).toFixed(2);
+const fmtQty = v => Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+function post(url, data) {
+    return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+        body: JSON.stringify(data),
+    }).then(r => r.json().then(j => { if (!r.ok) throw new Error(j.message || 'Request failed'); return j; }));
+}
+
+// ---------- item grid ----------
+const grid = document.getElementById('products');
+const searchInput = document.getElementById('barcode');
+
+function visibleSellables() {
+    const term = searchInput.value.trim().toLowerCase();
+    if (term) {
+        // typing searches every category by name or barcode
+        return sellables.filter(s => s.name.toLowerCase().includes(term) || (s.barcode || '').toLowerCase().includes(term));
     }
-    return null;
+    return selectedCategory === 'all' ? sellables : sellables.filter(s => String(s.category_id) === String(selectedCategory));
 }
 
-// Load cart from server
-function loadCartFromServer() {
-    if (isLoading) return;
-    isLoading = true;
-    fetch('/cart/load')
-    .then(res => res.json())
-    .then(data => {
-        cart = data.map(item => ({
-            id: item.product_id,
-            name: item.product_name,
-            price: parseFloat(item.single_price),
-            quantity: item.quantity,
-            stock: item.stock,
-        }));
-        updateCart();
-        isLoading = false;
-    }).catch(err => { console.error(err); isLoading=false; });
-}
-
-// Barcode scanner
-const barcodeInput = document.getElementById('barcode');
-let barcodeTimeout;
-barcodeInput.addEventListener('input', e => {
-    clearTimeout(barcodeTimeout);
-    barcodeTimeout = setTimeout(() => {
-        const barcode = e.target.value.trim();
-        if(barcode){ processBarcode(barcode); e.target.value=''; }
-    },100);
-});
-barcodeInput.addEventListener('keypress', e => {
-    if(e.key==='Enter'){ clearTimeout(barcodeTimeout); const barcode=e.target.value.trim(); if(barcode){ processBarcode(barcode); e.target.value=''; } }
-});
-let buffer = "";
-let last = Date.now();
-document.addEventListener("keydown", function(e) {
-    if (document.activeElement === barcodeInput) return;
-
-    const now = Date.now();
-
-    if (now - last > 50) buffer = "";
-
-    if (e.key === "Enter") {
-        let scanned = buffer.trim();
-        buffer = "";
-
-        if (scanned) {
-            barcodeInput.value = scanned;
-
-            processBarcode(scanned);
-
-            barcodeInput.value = "";
-        }
-
+function renderGrid() {
+    grid.innerHTML = '';
+    const list = visibleSellables();
+    if (!list.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;color:#999;padding:20px;text-align:center">No items found</div>';
         return;
     }
+    list.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.onclick = () => addToCart(s);
 
-    // Add character to buffer
-    buffer += e.key;
-    last = now;
-});
-function processBarcode(barcode) {
-    let found = null;
-    for(let cat in products){
-        found = products[cat].find(p=>p.barcode==barcode);
-        if(found) break;
-    }
-    if(found) addToCart(found);
-    else { barcodeInput.style.borderColor='#e74c3c'; setTimeout(()=>barcodeInput.style.borderColor='#e0e0e0',500); alert('Product not found!'); }
-}
+        const name = document.createElement('div');
+        name.className = 'product-name';
+        name.innerText = s.name;
+        card.appendChild(name);
 
-// Display products
-function displayProducts(category){
-    const container = document.getElementById('products');
-    container.innerHTML='';
-
-    if (!products[category] || products[category].length === 0) return;
-
-    products[category].forEach(p=>{
-        const card=document.createElement('div');
-        card.className='product-card';
-
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'product-name';
-        nameDiv.innerText = p.name;
-        card.appendChild(nameDiv);
-
-        if (p.special) {
-            if (p.has_stock) {
-                const stockDiv = document.createElement('div');
-                if (p.stock <= 0) {
-                    card.style.opacity = 0.5;
-                    card.style.pointerEvents = 'none';
-                    stockDiv.className = 'out-of-stock';
-                    stockDiv.innerText = 'Out of Stock';
-                } else {
-                    card.onclick = () => addToCart(p);
-                    stockDiv.className = 'product-stock';
-                    stockDiv.innerText = `Stock: ${p.stock}`;
-                }
-                card.appendChild(stockDiv);
-            }
-            card.onclick=()=>openModal(p);
-        } else {
-            const priceDiv = document.createElement('div');
-            priceDiv.className = 'product-price';
-            priceDiv.innerText = `RM ${p.price.toFixed(2)}/${p.uom}`;
-            card.appendChild(priceDiv);
-
-            if (p.has_stock) {
-                const stockDiv = document.createElement('div');
-                if (p.stock <= 0) {
-                    card.style.opacity = 0.5;
-                    card.style.pointerEvents = 'none';
-                    stockDiv.className = 'out-of-stock';
-                    stockDiv.innerText = 'Out of Stock';
-                } else {
-                    card.onclick = () => addToCart(p);
-                    stockDiv.className = 'product-stock';
-                    stockDiv.innerText = `Stock: ${p.stock}`;
-                }
-                card.appendChild(stockDiv);
-            } else {
-                // items that do not track stock can always be sold
-                card.onclick = () => addToCart(p);
-            }
+        if (s.unit_label) {
+            const unit = document.createElement('div');
+            unit.style.cssText = 'font-size:11px;color:#15803d;font-weight:600;margin-bottom:3px';
+            unit.innerText = s.unit_label;
+            card.appendChild(unit);
         }
-        container.appendChild(card);
+
+        const price = document.createElement('div');
+        price.className = 'product-price';
+        price.innerText = money(s.price);
+        card.appendChild(price);
+
+        // stock is shown but never blocks a sale; negative means sold before stock was added
+        const stock = document.createElement('div');
+        stock.className = s.stock <= 0 ? 'out-of-stock' : 'product-stock';
+        stock.style.fontSize = '11px';
+        stock.innerText = 'Stock: ' + fmtQty(s.stock);
+        card.appendChild(stock);
+
+        grid.appendChild(card);
     });
 }
 
-function openModal(product) {
-     modalProduct = product;
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCategory = btn.dataset.category;
+        searchInput.value = '';
+        renderGrid();
+    };
+});
 
-    document.getElementById('modalTitle').innerText =
-        `Enter Amount for ${product.name}`;
-
-    document.getElementById('modalAmount').value = '';
-    document.getElementById('amountModal').style.display = 'block';
-
-    setTimeout(() => {
-        document.getElementById('modalAmount').focus();
-    }, 100);
+// ---------- search box and barcode scanner ----------
+function findByBarcode(code) {
+    code = code.trim();
+    return code ? sellables.find(s => (s.barcode || '') === code) : null;
 }
 
-function closeModal() {
-    document.getElementById('amountModal').style.display = 'none';
-    modalProduct = null;
-}
+searchInput.addEventListener('input', renderGrid);
+searchInput.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const term = searchInput.value.trim();
+    const exact = findByBarcode(term);
+    const matches = visibleSellables();
+    if (exact) {
+        addToCart(exact);
+    } else if (matches.length === 1) {
+        addToCart(matches[0]);
+    } else if (!matches.length) {
+        flashSearch();
+        return;
+    } else {
+        return; // several matches: let the cashier tap one
+    }
+    searchInput.value = '';
+    renderGrid();
+});
 
-function confirmAmount() {
-    const amountInput = document.getElementById('modalAmount');
-    const amount = parseFloat(amountInput.value);
-    console.log(amount);
-    if (!amount || amount == 0) {
-        alert('Please enter a valid amount');
-        amountInput.focus();
+// a scanner types very fast and ends with Enter, even when the search box is not focused
+let scanBuffer = '';
+let lastKey = 0;
+document.addEventListener('keydown', e => {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    const now = Date.now();
+    if (now - lastKey > 50) scanBuffer = '';
+    lastKey = now;
+    if (e.key === 'Enter') {
+        const hit = findByBarcode(scanBuffer);
+        if (hit) addToCart(hit); else if (scanBuffer.length >= 4) flashSearch();
+        scanBuffer = '';
         return;
     }
+    if (e.key.length === 1) scanBuffer += e.key;
+});
 
-    // Add to cart as custom-price item
-    addSpecialToCart(modalProduct, amount);
-
-    closeModal();
+function flashSearch() {
+    searchInput.style.borderColor = '#e74c3c';
+    setTimeout(() => searchInput.style.borderColor = '#e0e0e0', 600);
 }
 
-function addSpecialToCart(product, amount) {
-    const productId = String(product.id);
-    let existingItem = cart.find(item => String(item.id) === productId);
-    console.log(existingItem);
-    if (existingItem) {
-        // Update quantity in cart
-        existingItem.quantity += amount;
+// ---------- cart ----------
+function loadCart() {
+    return fetch('/cart/load', { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            cart = data.map(i => ({ id: i.id, name: i.product_name, price: parseFloat(i.single_price), quantity: parseFloat(i.quantity) }));
+            renderCart();
+        });
+}
 
-        // Update DOM quantity
-        let cartItem = document.querySelector(
-            `.cart-item[data-item-id="${productId}"]`
-        );
+function addToCart(s) {
+    post('/cart/add', { id: s.product_id, unit_id: s.unit_id })
+        .then(loadCart)
+        .catch(err => alert(err.message));
+}
 
-        if (cartItem) {
-            cartItem.querySelector('.quantity-input').value =
-                existingItem.quantity;
-        }
+function setQuantity(lineId, qty) {
+    qty = Math.max(0, Math.floor(Number(qty) || 0));
+    const req = qty <= 0 ? post('/cart/remove', { line_id: lineId }) : post('/cart/update', { line_id: lineId, quantity: qty });
+    req.then(loadCart).catch(err => { alert(err.message); loadCart(); });
+}
 
+function renderCart() {
+    const box = document.getElementById('cartItems');
+    if (!cart.length) {
+        box.innerHTML = '<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Cart is empty</p></div>';
     } else {
-        cart.push({
-            id: productId,
-            name: product.name,
-            price: product.price,
-            quantity: amount,
-            stock: product.stock,
+        box.innerHTML = '';
+        cart.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'cart-item';
+            row.innerHTML =
+                '<div class="item-info"><div class="item-name"></div><div class="item-price"></div></div>' +
+                '<div class="item-controls">' +
+                '<button class="qty-btn">−</button>' +
+                '<input type="text" class="quantity-input" inputmode="numeric">' +
+                '<button class="qty-btn">+</button>' +
+                '<button class="remove-btn">×</button></div>';
+            row.querySelector('.item-name').innerText = item.name;
+            row.querySelector('.item-price').innerText = money(item.price) + ' each';
+            const buttons = row.querySelectorAll('.qty-btn');
+            const input = row.querySelector('.quantity-input');
+            input.value = item.quantity;
+            buttons[0].onclick = () => setQuantity(item.id, item.quantity - 1);
+            buttons[1].onclick = () => setQuantity(item.id, item.quantity + 1);
+            row.querySelector('.remove-btn').onclick = () => setQuantity(item.id, 0);
+            input.onchange = () => setQuantity(item.id, input.value);
+            input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } };
+            box.appendChild(row);
         });
     }
-
-    updateCart();
-
-    fetch('/cart/add-special', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            id: product.id,
-            amount: amount
-        })
-    }).catch(err => {
-        console.error(err);
-        alert('Failed to add special item');
-    });
+    const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    document.getElementById('subtotal').innerText = money(subtotal);
+    document.getElementById('total').innerText = money(subtotal);
 }
 
-// Add to cart
-function addToCart(product, depth = 0){
-    if (depth > 5) {
-        alert('Unable to auto-convert stock.');
-        return;
-    }
-
-    const existing = cart.find(i=>i.id==product.id);
-    const currentQty = existing? existing.quantity :0;
-
-    // If adding 1 exceeds current stock
-    if (product.has_stock && currentQty + 1 > product.stock) {
-
-        /* ============================================
-           CASE 1: PRODUCT IS BOTTLE
-           → find parent (box / bundle) → bottles
-        ============================================ */
-        if (!product.connected_product_id) {
-             const parents = allProducts
-                .filter(p =>
-                    p.connected_product_id == product.id &&
-                    p.stock > 0 &&
-                    p.connected_product_quantity > 0
-                )
-                .sort((a, b) =>
-                    b.connected_product_quantity - a.connected_product_quantity
-                );
-
-            const parent = parents[0];
-
-            if (!parent) {
-                alert(`Cannot add more. Only ${product.stock} in stock.`);
-                return;
-            }
-
-            fetch('/cart/convert-box', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ box_id: parent.id })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                parent.stock = data.new_box_stock;
-                product.stock = data.new_bottle_stock;
-
-                updateProductStockUI(parent);
-                updateProductStockUI(product);
-
-                addToCart(product, depth + 1);
-            });
-
-            return;
-        }
-        /* ============================================
-           CASE 2: PRODUCT IS BOX / BUNDLE
-           → reduce bottles → rebuild box
-        ============================================ */
-        else {
-            const bottle = allProducts.find(
-                p => p.id == product.connected_product_id
-            );
-
-            if (!bottle) {
-                alert('Linked bottle not found.');
-                return;
-            }
-
-            fetch('/cart/convert-bottle-to-box', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    bottle_id: bottle.id,
-                    box_id: product.id
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                bottle.stock = data.new_bottle_stock;
-                product.stock = data.new_box_stock;
-
-                updateProductStockUI(bottle);
-                updateProductStockUI(product);
-
-                addToCart(product, depth + 1);
-            });
-
-            return;
-        }
-    }
-
-    /* ============================================
-       NORMAL ADD TO CART
-    ============================================ */
-    if(existing) existing.quantity++;
-    else cart.push({id:product.id,name:product.name,price:product.price,quantity:1,stock:product.stock});
-
-    updateCart();
-
-    setTimeout(()=>{
-        const elem=document.querySelector(`[data-item-id="${product.id}"]`);
-        if(elem){ elem.classList.add('adding'); setTimeout(()=>elem.classList.remove('adding'),300);}
-    },0);
-
-    fetch('/cart/add',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-        body:JSON.stringify({id:product.id,price:product.price,name:product.name})
-    }).then(res=>res.json()).catch(err=>{
-        console.error(err);
-        if(existing){ existing.quantity--; if(existing.quantity<=0) cart=cart.filter(i=>i.id!=product.id);}
-        else cart=cart.filter(i=>i.id!=product.id);
-        updateCart(); alert('Failed to add item. Please try again.');
-    });
-}
-
-function updateProductStockUI(product) {
-    const container = document.getElementById('products');
-    const cards = container.querySelectorAll('.product-card');
-    cards.forEach(card => {
-        const nameElem = card.querySelector('.product-name');
-        if (!nameElem || nameElem.innerText !== product.name) return;
-
-        let stockElem = card.querySelector('.product-stock');
-        let outElem = card.querySelector('.out-of-stock');
-
-        if (product.stock === 0) {
-            // Out of stock
-            card.style.opacity = 0.5;
-            card.style.pointerEvents = 'none';
-
-            // Add out-of-stock label if not present
-            if (!outElem) {
-                outElem = document.createElement('div');
-                outElem.className = 'out-of-stock';
-                outElem.innerText = 'Out of Stock';
-                card.appendChild(outElem);
-            }
-
-            // Remove stock display if it exists
-            if (stockElem) stockElem.remove();
-
-        } else {
-            // In stock
-            card.style.opacity = 1;
-            card.style.pointerEvents = 'auto';
-
-            // Remove out-of-stock label if present
-            if (outElem) outElem.remove();
-
-            // Update or create stock display
-            if (!stockElem) {
-                stockElem = document.createElement('div');
-                stockElem.className = 'product-stock';
-                card.appendChild(stockElem);
-            }
-            stockElem.innerText = `Stock: ${product.stock}`;
-        }
-    });
-}
-
-// Update quantity buttons
-function updateQuantity(id, change, depth = 0){
-    if (depth > 5) {
-        alert('Unable to auto-convert stock.');
-        return;
-    }
-
-    const item=cart.find(i=>i.id==id);
-    if(!item) return;
-
-    const product = allProducts.find(p => p.id == id);
-    if (!product) return;
-
-    const newQty=item.quantity+change;
-
-    // If increasing beyond stock
-    if (product.has_stock && change > 0 && newQty > product.stock) {
-
-        /* ---------- CASE 1: PRODUCT IS BOTTLE ---------- */
-        if (!product.connected_product_id) {
-
-            const parents = allProducts
-                .filter(p =>
-                    p.connected_product_id == product.id &&
-                    p.stock > 0 &&
-                    p.connected_product_quantity > 0
-                )
-                .sort((a, b) =>
-                    b.connected_product_quantity - a.connected_product_quantity
-                );
-
-            const parent = parents[0];
-
-            if (!parent) {
-                alert(`Cannot add more. Only ${product.stock} in stock.`);
-                return;
-            }
-
-            fetch('/cart/convert-box', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ box_id: parent.id })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                parent.stock = data.new_box_stock;
-                product.stock = data.new_bottle_stock;
-
-                updateProductStockUI(parent);
-                updateProductStockUI(product);
-
-                updateQuantity(id, change, depth + 1);
-            });
-
-            return;
-        }
-
-        /* ---------- CASE 2: PRODUCT IS BOX / BUNDLE ---------- */
-        else {
-            const bottle = allProducts.find(
-                p => p.id == product.connected_product_id
-            );
-
-            if (!bottle) {
-                alert('Linked bottle not found.');
-                return;
-            }
-
-            fetch('/cart/convert-bottle-to-box', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    bottle_id: bottle.id,
-                    box_id: product.id
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-
-                bottle.stock = data.new_bottle_stock;
-                product.stock = data.new_box_stock;
-
-                updateProductStockUI(bottle);
-                updateProductStockUI(product);
-
-                updateQuantity(id, change, depth + 1);
-            });
-
-            return;
-        }
-    }
-
-    if(newQty<=0){ removeFromCart(id); return; }
-    item.quantity=newQty; updateCart();
-    fetch('/cart/update',{ method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({id:id,quantity:newQty}) })
-    .then(res=>res.json()).catch(err=>{ console.error(err); item.quantity-=change; updateCart(); alert('Failed to update quantity.'); });
-}
-
-// Input events for quantity (Enter or blur)
-function onQuantityInputEvent(input){
-    const id = input.dataset.id;
-    const item = cart.find(i => i.id==id);
-    if(!item) return;
-
-    let numericValue = input.value.replace(/[^\d]/g, '');
-    if(numericValue==='') numericValue='1';
-    let newQty = parseInt(numericValue);
-    const prod = allProducts.find(p => p.id == id);
-    if(prod && prod.has_stock && newQty>item.stock){ alert(`Cannot set quantity beyond stock (${item.stock})`); newQty=item.stock; }
-    item.quantity = newQty;
-    updateCart();
-
-    fetch('/cart/update', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
-        body: JSON.stringify({id:id, quantity:newQty})
-    }).then(res=>res.json()).catch(err=>{ console.error(err); alert('Failed to update quantity.'); });
-}
-
-// Bind events to inputs
-function bindQuantityInputs(){
-    document.querySelectorAll('.quantity-input').forEach(input=>{
-        input.onkeypress = e => { if(e.key==='Enter'){ e.preventDefault(); onQuantityInputEvent(input); } };
-        input.onblur = e => onQuantityInputEvent(input);
-    });
-}
-
-// Remove
-function removeFromCart(id){
-    const original=[...cart]; cart=cart.filter(i=>i.id!=id); updateCart();
-    fetch('/cart/remove',{ method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({id:id}) })
-    .then(res=>res.json()).catch(err=>{ console.error(err); cart=original; updateCart(); alert('Failed to remove item.'); });
-}
-
-// Update cart UI
-function updateCart(){
-    const container=document.getElementById('cartItems');
-    if(cart.length===0){
-        container.innerHTML=`<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Cart is empty</p></div>`;
-    } else {
-        container.innerHTML=cart.map(item=>`
-            <div class="cart-item" data-item-id="${item.id}">
-                <div class="item-info">
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-price">RM ${item.price.toFixed(2)} each</div>
-                </div>
-                <div class="item-controls">
-                    <button class="qty-btn" onclick="updateQuantity('${item.id}',-1)">−</button>
-                    <input type="text" class="quantity-input" value="${item.quantity}" data-id="${item.id}">
-                    <button class="qty-btn" onclick="updateQuantity('${item.id}',1)">+</button>
-                    <button class="remove-btn" onclick="removeFromCart('${item.id}')">×</button>
-                </div>
-            </div>
-        `).join('');
-    }
-    const subtotal=cart.reduce((acc,i)=>acc+i.price*i.quantity,0);
-    document.getElementById('subtotal').innerText=`RM ${subtotal.toFixed(2)}`;
-    document.getElementById('total').innerText=`RM ${subtotal.toFixed(2)}`;
-    bindQuantityInputs();
-}
-
-// Checkout
 function checkout() {
-    if(cart.length===0) {
-        alert('Cart empty');
-        return;
-    }
-
-    // fetch('/checkout/validate', {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'X-CSRF-TOKEN': '{{ csrf_token() }}'
-    //     }
-    // })
-    // .then(res => res.json())
-    // .then(data => {
-    //     if (data.error) {
-    //         alert(data.error);
-    //         return;
-    //     }
-
-    //     window.location.href = '/checkout';
-    // })
-    // .catch(() => alert('Validation failed'));
-
-    window.location.href = '/checkout';
+    if (!cart.length) { alert('Cart empty'); return; }
+    window.location.href = '{{ route('checkout') }}';
 }
 
-// Categories click
-document.querySelectorAll('.category-btn').forEach(btn=>{
-    btn.onclick=()=>{
-        document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active'); selectedCategory=btn.dataset.category; displayProducts(selectedCategory);
-    }
-});
-
-// Init
-displayProducts(selectedCategory);
-loadCartFromServer();
+renderGrid();
+loadCart();
+searchInput.focus();
 </script>
 @include('layouts.shift-timer')
 @include('layouts.counter-notifications')

@@ -15,7 +15,7 @@
                     <a href="{{ route('refund.create') }}" class="btn btn-warning">New Refund</a>
                 @endif
                 <form method="get">
-                    <select name="status" class="form-select" onchange="this.form.submit()">
+                    <select name="status" class="form-select no-select2" onchange="this.form.submit()">
                         <option value="">All</option>
                         @foreach(['pending','approved','rejected'] as $s)
                             <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
@@ -44,7 +44,7 @@
                                 {{ $line->product->product_name ?? '' }} × {{ $line->quantity + 0 }}<br>
                             @endforeach
                         </td>
-                        <td>RM {{ number_format($r->amount, 2) }}</td>
+                        <td>{{ money($r->amount) }}</td>
                         <td>{{ $r->reason }}</td>
                         <td>{{ $r->requester->name ?? '' }}</td>
                         <td>
@@ -57,7 +57,7 @@
                         <td style="white-space:nowrap">
                             @if($r->status == 'pending' && $r->canBeDecidedBy(Auth::user()))
                                 <div class="d-flex gap-2">
-                                    <form method="post" action="{{ route('refund.approve', $r) }}" class="m-0" onsubmit="return confirm('Approve this refund of RM {{ number_format($r->amount, 2) }}? Stock is returned and the amount is taken off the shift.')">
+                                    <form method="post" action="{{ route('refund.approve', $r) }}" class="m-0" onsubmit="return confirm('Approve this refund of {{ money($r->amount) }}? Stock is returned and the amount is taken off the shift.')">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                     </form>

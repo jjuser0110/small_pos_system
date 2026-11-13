@@ -191,8 +191,9 @@ class OrderController extends Controller
             // put every sold item back into stock, onto the batches it came from
             $stock = app(StockService::class);
             foreach ($order->items as $item) {
-                $qty = (float) $item->quantity - (float) ($item->refunded_quantity ?? 0);
-                if ($qty <= 0 || !($item->category->has_stock ?? false)) {
+                // sale units left x base units per sale unit (e.g. 2 cartons x 24 tins)
+                $qty = ((float) $item->quantity - (float) ($item->refunded_quantity ?? 0)) * $item->baseQty();
+                if ($qty <= 0) {
                     continue;
                 }
                 $stock->returnSale($item, $qty, 'stock_in', 'VOID ORDER ' . $order->order_no, $item);

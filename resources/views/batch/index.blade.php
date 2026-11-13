@@ -49,7 +49,7 @@
                             <td>{{ $row->supplier->name ?? (str_starts_with((string) $row->batch_no, 'TRF') ? 'Stock transfer' : '') }}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
-                            <td>{{$row->total_cost??""}}</td>
+                            <td data-order="{{ $row->total_cost }}">{{ money($row->total_cost) }}</td>
                             <td>{{$row->status??""}}</td>
                             <td>
                                 <a href="{{ route('batch.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>

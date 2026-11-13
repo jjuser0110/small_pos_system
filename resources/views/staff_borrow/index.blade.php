@@ -44,7 +44,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Advance Records</h5>
             <form method="get" class="d-flex gap-2">
-                <select name="status" class="form-select" onchange="this.form.submit()">
+                <select name="status" class="form-select no-select2" onchange="this.form.submit()">
                     <option value="">All</option>
                     @foreach(['pending','approved','rejected'] as $s)
                         <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
@@ -71,7 +71,7 @@
                     <tr>
                         <td>{{ $b->created_at }}</td>
                         <td>{{ $b->user->name ?? '' }} ({{ $b->user->username ?? '' }})</td>
-                        <td>{{ number_format($b->amount, 2) }}</td>
+                        <td>{{ money($b->amount) }}</td>
                         <td>{{ $b->reason }}</td>
                         <td>
                             @if($b->status == 'pending') <span style="color:orange">Pending</span>

@@ -3,13 +3,13 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('product.index')}}">Product /</a>
+        <a class="text-muted fw-light" href="{{route('product.index')}}">Item List /</a>
          @if (isset($product)) Edit @else Create @endif
     </h4>
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <h5 class="card-header">Product Details</h5>
+                <h5 class="card-header">Item Details</h5>
                 <div class="card-body">
                     <form class="row g-3" enctype="multipart/form-data" @if (isset($product)) method="post" action="{{ route('product.update',$product) }}" @else method="post" action="{{ route('product.store') }}" @endif onsubmit="showLoading()">
                     @csrf
@@ -25,7 +25,7 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="product_name">Product Name</label>
+                        <label class="form-label" for="product_name">Item Name</label>
                         <input
                         type="text"
                         class="form-control"
@@ -63,7 +63,7 @@
                         value="{{$product->arrangement??''}}"/>
                     </div>
                     <div class="col-md-6 mb-4">
-                        <label for="select2Basic" class="form-label">Uom</label>
+                        <label for="select2Basic" class="form-label">Base Unit (UOM)</label>
                         <select id="select2Basic" name="uom" class="select2 form-select" data-allow-clear="true">
                             @foreach($uom as $row)
                                 <option value="{{ $row->id }}" @if(isset($product) && $product->uom == $row->id) selected @endif>
@@ -73,7 +73,7 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="initial">Initial Quantity</label>
+                        <label class="form-label" for="initial">Initial Quantity (base units)</label>
                         <input
                         type="number"
                         class="form-control"
@@ -82,7 +82,7 @@
                         value="{{$product->initial??0}}"/>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="selling_price">Selling Price (RM)</label>
+                        <label class="form-label" for="selling_price">Selling Price per base unit (RM)</label>
                         <input
                         type="number"
                         class="form-control"
@@ -102,21 +102,34 @@
                     </div>
                     @endif
                     <hr>
-                        <div class="col-6">
-                            <label class="col-form-label">Product Link</label>
-                            <select id="connected_product_id" name="connected_product_id" class="select2 form-select" data-allow-clear="true">
-                                    <option value="" >--SELECT--</option>
-                                @foreach($product_link as $prod)
-                                    <option value="{{$prod->id}}" @if(isset($product) && $product->connected_product_id == $prod->id) selected @endif>{{$prod->product_name??''}} ({{$prod->uom_dt->uom_unit??''}})</option>
+                    <div class="col-12">
+                        <h6 class="mb-1">Sell Options</h6>
+                        <p class="text-muted small mb-2">
+                            Other ways to sell this item. Stock is always counted in the base unit above.
+                            Example for Cola (base unit Tin): <b>Carton</b> = 24 tins for RM 50.00, <b>3 for RM10</b> = 3 tins for RM 10.00.
+                        </p>
+                        <table class="table table-sm table-bordered" id="unitsTable">
+                            <thead>
+                                <tr><th>Name</th><th style="width:150px">Base units in it</th><th style="width:150px">Price (RM)</th><th>Barcode</th><th style="width:50px"></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach(old('units', isset($product) ? $product->allUnits->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'base_qty' => $u->base_qty + 0, 'price' => $u->price, 'barcode' => $u->barcode, 'is_active' => $u->is_active])->all() : []) as $i => $u)
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="units[{{ $i }}][id]" value="{{ $u['id'] ?? '' }}">
+                                        <input type="text" class="form-control form-control-sm" name="units[{{ $i }}][name]" value="{{ $u['name'] ?? '' }}" placeholder="Carton" required>
+                                    </td>
+                                    <td><input type="number" class="form-control form-control-sm" name="units[{{ $i }}][base_qty]" value="{{ $u['base_qty'] ?? '' }}" min="0.0001" step="any" required></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="units[{{ $i }}][price]" value="{{ $u['price'] ?? '' }}" min="0" step="0.01" required></td>
+                                    <td><input type="text" class="form-control form-control-sm" name="units[{{ $i }}][barcode]" value="{{ $u['barcode'] ?? '' }}"></td>
+                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">&times;</button></td>
+                                </tr>
                                 @endforeach
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="col-form-label">Quantity</label>
-                            <input class="form-control" type="number" step="0.01" min="0" name="connected_product_quantity" value="{{$product->connected_product_quantity??''}}">
-                        </div>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addUnitRow()">+ Add sell option</button>
+                    </div>
                     <hr>
-
 
                     <div class="col-12">
                         <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>
@@ -132,6 +145,21 @@
 
 @section('scripts')
 <script>
+let unitRowIndex = {{ count(old('units', isset($product) ? $product->allUnits : [])) }};
+function addUnitRow() {
+    const i = unitRowIndex++;
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+        '<td><input type="hidden" name="units[' + i + '][id]" value="">' +
+        '<input type="text" class="form-control form-control-sm" name="units[' + i + '][name]" placeholder="Carton" required></td>' +
+        '<td><input type="number" class="form-control form-control-sm" name="units[' + i + '][base_qty]" min="0.0001" step="any" placeholder="24" required></td>' +
+        '<td><input type="number" class="form-control form-control-sm" name="units[' + i + '][price]" min="0" step="0.01" placeholder="50.00" required></td>' +
+        '<td><input type="text" class="form-control form-control-sm" name="units[' + i + '][barcode]"></td>' +
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">&times;</button></td>';
+    document.querySelector('#unitsTable tbody').appendChild(tr);
+    tr.querySelector('input[type=text]').focus();
+}
+
 (function () {
     let buffer = '';
     let lastTime = 0;

@@ -17,7 +17,7 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between">
                 <span><b>{{ $order->order_no }}</b> · {{ $order->created_at->format('H:i') }} · {{ $order->payment_method }}</span>
-                <span>RM {{ number_format($order->final_total, 2) }}</span>
+                <span>{{ money($order->final_total) }}</span>
             </div>
             <div class="card-body">
                 <form method="post" action="{{ route('refund.store') }}" onsubmit="showLoading()">
@@ -29,8 +29,8 @@
                         @foreach($order->items as $item)
                             @php $can = $item->refundableQuantity(); @endphp
                             <tr>
-                                <td>{{ $item->product->product_name ?? '' }}</td>
-                                <td>RM {{ number_format($item->single_price, 2) }}</td>
+                                <td>{{ $item->displayName() }}</td>
+                                <td>{{ money($item->single_price) }}</td>
                                 <td>{{ $item->quantity + 0 }}</td>
                                 <td>{{ $can + 0 }}</td>
                                 <td>

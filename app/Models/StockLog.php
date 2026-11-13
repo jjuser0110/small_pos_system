@@ -18,6 +18,7 @@ class StockLog extends Model
         'company_id',
         'category_id',
         'product_id',
+        'user_id',
         'type',
         'description',
         'before_stock',
@@ -25,6 +26,13 @@ class StockLog extends Model
         'after_stock',
     ];
     
+    protected static function booted(): void
+    {
+        static::creating(function (StockLog $log) {
+            $log->user_id ??= auth()->id();
+        });
+    }
+
     public function content()
     {
         return $this->morphTo();
@@ -43,6 +51,11 @@ class StockLog extends Model
     public function category()
     {
         return $this->belongsTo('App\Models\Category');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User');
     }
 
     public function product()

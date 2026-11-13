@@ -76,7 +76,7 @@
                         <td>{{ $item->company->company_name ?? '' }}</td>
                         <td>{{ $item->product->product_name ?? '' }}</td>
                         <td>{{ $item->total_quantity }}</td>
-                        <td>{{ number_format($item->total_amount, 2) }}</td>
+                        <td>{{ money($item->total_amount) }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -90,20 +90,9 @@
 @endsection
 
 @section('page-js')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection
 
 @section('scripts')
-<script>
-    $(document).ready(function () {
-        $('.select2').select2({
-            placeholder: "Select",
-            allowClear: true,
-            width: '100%',
-        });
-    });
-</script>
 <script>
 $(function(){
     var table = $('#mytable').DataTable({

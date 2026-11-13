@@ -43,16 +43,6 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        if (empty($request->special)) {
-            $request->merge([
-                'special' => 0,
-            ]);
-        }
-        if (empty($request->has_stock)) {
-            $request->merge([
-                'has_stock' => 0,
-            ]);
-        }
         $company = $this->authorizeCompanyId($request->company_id);
 
         Category::create(array_merge($this->categoryFields($request), [
@@ -80,16 +70,6 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
-        if (empty($request->special)) {
-            $request->merge([
-                'special' => 0,
-            ]);
-        }
-        if (empty($request->has_stock)) {
-            $request->merge([
-                'has_stock' => 0,
-            ]);
-        }
         $this->authorizeRecord($category);
         $company = $this->authorizeCompanyId($request->company_id ?? $category->company_id);
 
@@ -115,6 +95,7 @@ class CategoryController extends Controller
     /** Fields a user may set from the category form. */
     private function categoryFields(Request $request): array
     {
-        return $request->only(['category_name', 'arrangement', 'special', 'has_stock']);
+        // every item tracks stock and sells at a fixed price
+        return $request->only(['category_name', 'arrangement']) + ['special' => 0, 'has_stock' => 1];
     }
 }

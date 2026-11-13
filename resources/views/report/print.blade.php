@@ -58,7 +58,7 @@
                     <td>{{ $item->company->company_name ?? '' }}</td>
                     <td>{{ $item->product->product_name ?? '' }}</td>
                     <td class="num">{{ $item->total_quantity }}</td>
-                    <td class="num">{{ number_format($item->total_amount, 2) }}</td>
+                    <td class="num">{{ money($item->total_amount) }}</td>
                 </tr>
             @empty
                 <tr>
@@ -71,7 +71,7 @@
             <tr>
                 <td colspan="4" class="num">Grand Total</td>
                 <td class="num">{{ $grandQuantity }}</td>
-                <td class="num">{{ number_format($grandAmount, 2) }}</td>
+                <td class="num">{{ money($grandAmount) }}</td>
             </tr>
         </tfoot>
         @endif

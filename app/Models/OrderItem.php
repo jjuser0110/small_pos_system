@@ -16,6 +16,9 @@ class OrderItem extends Model
         'company_id',
         'category_id',
         'product_id',
+        'product_unit_id',
+        'unit_name',
+        'base_qty',
         'single_price',
         'quantity',
         'refunded_quantity',
@@ -45,6 +48,19 @@ class OrderItem extends Model
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class, 'company_id');
+    }
+
+    /** Name as sold, e.g. "Cola (Carton)". */
+    public function displayName(): string
+    {
+        $name = $this->product->product_name ?? '';
+        return $this->unit_name ? "$name ({$this->unit_name})" : $name;
+    }
+
+    /** Base units per sale unit (1 when sold as the item itself). */
+    public function baseQty(): float
+    {
+        return (float) ($this->base_qty ?: 1);
     }
 
     public function profit_items()

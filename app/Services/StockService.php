@@ -32,17 +32,20 @@ class StockService
      *
      * @return array<int, array{batch_item: ?BatchItem, quantity: float, cost_per_unit: ?float}>
      *
-     * @throws RuntimeException when there is not enough stock
+     * With $allowNegative (counter sales) a shortfall is taken anyway and stock
+     * goes below zero; otherwise (transfers, damage, adjustments) it is refused.
+     *
+     * @throws RuntimeException when there is not enough stock and negative is not allowed
      */
-    public function stockOut(Product $product, float $qty, string $type, string $description, Model $source): array
+    public function stockOut(Product $product, float $qty, string $type, string $description, Model $source, bool $allowNegative = false): array
     {
         $this->assertPositive($qty);
 
-        return DB::transaction(function () use ($product, $qty, $type, $description, $source) {
+        return DB::transaction(function () use ($product, $qty, $type, $description, $source, $allowNegative) {
             $product = Product::lockForUpdate()->findOrFail($product->id);
             $stock = (float) $product->stock_quantity;
 
-            if ($qty - $stock > self::EPS) {
+            if (!$allowNegative && $qty - $stock > self::EPS) {
                 throw new RuntimeException("Not enough stock for {$product->product_name} (have {$stock}, need {$qty}).");
             }
 

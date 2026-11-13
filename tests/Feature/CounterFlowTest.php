@@ -87,18 +87,50 @@ class CounterFlowTest extends TestCase
         $this->assertSame(0, Order::count());
     }
 
-    public function test_cannot_oversell(): void
+    public function test_counter_can_sell_into_negative_stock(): void
     {
         $this->beer->update(['stock_quantity' => 1]);
         \App\Models\BatchItem::where('product_id', $this->beer->id)->update(['balance' => 1]);
 
-        $this->postJson(self::HOST . '/cart/add', ['id' => $this->beer->id]);
-        $this->postJson(self::HOST . '/cart/add', ['id' => $this->beer->id]);
-        $this->postJson(self::HOST . '/cart/placeorder', ['payment_method' => 'Cash', 'amount_received' => 24])
-            ->assertStatus(422)->assertJson(['status' => 'error']);
+        $order = $this->sell(3);
 
-        $this->assertSame(0, Order::count());
-        $this->assertEquals(1, $this->beer->fresh()->stock_quantity);
+        $this->assertEquals(-2, $this->beer->fresh()->stock_quantity, 'the counter never blocks a sale');
+        // the 1 in stock was costed; the 2 sold without stock have no cost, so no profit row
+        $this->assertEquals(1, OrderItemProfit::where('order_item_id', $order->items->first()->id)->sum('quantity'));
+    }
+
+    public function test_sell_option_moves_base_units_and_refunds_back(): void
+    {
+        $carton = $this->beer->allUnits()->create(['name' => 'Carton', 'base_qty' => 6, 'price' => 60.00, 'barcode' => 'CTN6']);
+        $this->stockBatch($this->beer, 20, 5.00, 'SB2');   // stock now 30
+
+        $this->postJson(self::HOST . '/cart/add', ['id' => $this->beer->id, 'unit_id' => $carton->id])->assertOk();
+        $this->postJson(self::HOST . '/cart/add', ['id' => $this->beer->id, 'unit_id' => $carton->id])->assertOk();
+        $this->postJson(self::HOST . '/cart/add', ['id' => $this->beer->id])->assertOk();   // and 1 single
+
+        $lines = $this->getJson(self::HOST . '/cart/load')->json();
+        $this->assertCount(2, $lines, 'carton and single are separate cart lines');
+        $this->assertSame('Beer (Carton)', $lines[0]['product_name']);
+
+        $res = $this->postJson(self::HOST . '/cart/placeorder', ['payment_method' => 'Cash', 'amount_received' => 132]);
+        $res->assertOk();
+        $order = Order::find($res->json('order_id'));
+
+        $this->assertEquals(132.00, $order->final_total);          // 2 x 60 + 12
+        $this->assertEquals(30 - 12 - 1, $this->beer->fresh()->stock_quantity);
+        $cartonLine = $order->items->firstWhere('product_unit_id', $carton->id);
+        $this->assertSame('Carton', $cartonLine->unit_name);
+        $this->assertEquals(12, OrderItemProfit::where('order_item_id', $cartonLine->id)->sum('quantity'), 'profit rows in base units');
+        $this->assertEquals(120.00, OrderItemProfit::where('order_item_id', $cartonLine->id)->sum('total_selling_price'));
+
+        // refund 1 carton: 6 base units come back
+        $this->post(self::HOST . route('refund.store', [], false), [
+            'order_id' => $order->id, 'qty' => [$cartonLine->id => 1], 'reason' => 'damaged box',
+        ])->assertSessionHasNoErrors();
+        $this->actingAs($this->makeUser(1))->post(route('refund.approve', Refund::first()))->assertSessionHasNoErrors();
+
+        $this->assertEquals(17 + 6, $this->beer->fresh()->stock_quantity);
+        $this->assertEquals(60.00, Refund::first()->amount);
     }
 
     // ---- refund -------------------------------------------------------

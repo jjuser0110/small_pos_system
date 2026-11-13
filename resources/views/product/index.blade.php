@@ -9,13 +9,13 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Product </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Item List </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Product Listing</h5>
+                    <h5 class="card-title mb-0">Item List</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
                     <div class="dt-buttons">
@@ -45,12 +45,13 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Product Name</th>
+                            <th>Item Name</th>
                             <th>Category</th>
                             <th>Barcode</th>
-                            <th>S.P.</th>
-                            <th>Uom</th>
+                            <th>Price</th>
+                            <th>Unit</th>
                             <th>Stock Bal.</th>
+                            <th>Sell Options</th>
                             <th>Company</th>
                             <th>Branch</th>
                             {{-- <th>Arrange</th> --}}
@@ -65,9 +66,14 @@
                             <td>{{$row->product_name??""}}</td>
                             <td>{{$row->category->category_name??""}}</td>
                             <td>{{$row->barcode??""}}</td>
-                            <td>{{$row->selling_price??""}}</td>
+                            <td data-order="{{ $row->selling_price }}">{{ money($row->selling_price) }}</td>
                             <td>{{$row->uom_dt->uom_unit??""}}</td>
-                            <td>{{$row->stock_quantity??""}}</td>
+                            <td @if($row->stock_quantity < 0) style="color:red" @endif>{{ $row->stock_quantity + 0 }}</td>
+                            <td>
+                                @foreach($row->units as $unit)
+                                    <span class="badge bg-label-primary mb-1">{{ $unit->name }} &times;{{ $unit->base_qty + 0 }} · RM {{ number_format($unit->price, 2) }}</span>
+                                @endforeach
+                            </td>
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->branch->branch_code??""}}</td>
                             {{-- <td>{{$row->arrangement??""}}</td> --}}
@@ -78,9 +84,6 @@
                                 onclick="openAdjustModal('{{ $row->id }}', '{{ addslashes($row->product_name) }}', '{{ $row->stock_quantity }}')">
                                     <i class="fa-solid fa-boxes-stacked"></i>
                                 </a>
-                                @endif
-                                @if($row->connected_product_quantity > 0)
-                                <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to convert this product to smaller unit?')){window.location.href='{{ route('product.convert',$row) }}'}"><i class="fa-solid fa-exchange-alt"></i></a>
                                 @endif
                                 <a href="{{ route('product.viewlog',$row) }}" onclick="showLoading()"><i class="fa-solid fa-eye"></i></a>
                                 <a href="{{ route('product.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
@@ -100,7 +103,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Upload Product Excel</h5>
+                    <h5 class="modal-title">Upload Items Excel</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 

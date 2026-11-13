@@ -29,9 +29,9 @@
                 @foreach([
                     ['Present days', $presentDays],
                     ['Working time', $fmt($minutesWorked)],
-                    ['Advances (approved)', 'RM ' . number_format($advanceTotal, 2)],
-                    ['Advances (pending)', 'RM ' . number_format($advancePending, 2)],
-                    ['Sales in shifts', 'RM ' . number_format($salesTotal, 2)],
+                    ['Advances (approved)', money($advanceTotal)],
+                    ['Advances (pending)', money($advancePending)],
+                    ['Sales in shifts', money($salesTotal)],
                 ] as [$label, $value])
                 <div class="col-6 col-md-4 mb-3">
                     <div class="card h-100"><div class="card-body p-3">
@@ -49,7 +49,7 @@
         <div class="table-responsive">
             <table class="table table-bordered mb-0">
                 <thead>
-                    <tr><th>Date</th><th>Shift</th><th>Login</th><th>Logout</th><th>How it ended</th><th>Hours</th><th class="text-end">Sales (RM)</th></tr>
+                    <tr><th>Date</th><th>Shift</th><th>Login</th><th>Logout</th><th>How it ended</th><th>Hours</th><th class="text-end">Sales</th></tr>
                 </thead>
                 <tbody>
                     @forelse($attendance as $a)
@@ -67,7 +67,7 @@
                             @endswitch
                         </td>
                         <td>{{ $a->minutesWorked() !== null ? $fmt($a->minutesWorked()) : '' }}</td>
-                        <td class="text-end">{{ number_format(($shiftsByDate[\Carbon\Carbon::parse($a->work_date)->toDateString()] ?? collect())->sum('total_order_amount'), 2) }}</td>
+                        <td class="text-end">{{ money(($shiftsByDate[\Carbon\Carbon::parse($a->work_date)->toDateString()] ?? collect())->sum('total_order_amount')) }}</td>
                     </tr>
                     @empty
                     <tr><td colspan="7" class="text-muted">No shifts this month.</td></tr>
@@ -81,12 +81,12 @@
         <h5 class="card-header">Advances in {{ \Carbon\Carbon::parse($month . '-01')->format('F Y') }}</h5>
         <div class="table-responsive">
             <table class="table table-bordered mb-0">
-                <thead><tr><th>Date</th><th class="text-end">Amount (RM)</th><th>Reason</th><th>Status</th><th>Processed By</th></tr></thead>
+                <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Reason</th><th>Status</th><th>Processed By</th></tr></thead>
                 <tbody>
                     @forelse($advances as $b)
                     <tr>
                         <td>{{ $b->created_at->format('d M H:i') }}</td>
-                        <td class="text-end">{{ number_format($b->amount, 2) }}</td>
+                        <td class="text-end">{{ money($b->amount) }}</td>
                         <td>{{ $b->reason }}</td>
                         <td>{{ ucfirst($b->status) }}@if($b->reject_reason)<br><small>{{ $b->reject_reason }}</small>@endif</td>
                         <td>{{ $b->approver->name ?? '' }}</td>

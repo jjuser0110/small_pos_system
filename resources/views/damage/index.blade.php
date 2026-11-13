@@ -46,7 +46,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Damage Reports</h5>
             <form method="get">
-                <select name="status" class="form-select" onchange="this.form.submit()">
+                <select name="status" class="form-select no-select2" onchange="this.form.submit()">
                     <option value="">All</option>
                     @foreach(['pending','approved','rejected'] as $s)
                         <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>

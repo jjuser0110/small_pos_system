@@ -76,32 +76,64 @@ class HomeController extends Controller
     public function counter(Request $request)
     {
         $login_user = Auth::user();
-        if($login_user->role_id == 3){
-            $category = Category::where('branch_id',$login_user->branch_id)->get();
-            $products = Product::where('branch_id',$login_user->branch_id)
-                ->where('is_active', 1)
-                ->orderByRaw('barcode IS NOT NULL')
-                ->orderByRaw('arrangement IS NULL')
-                ->orderBy('arrangement')
-                ->get();
-        }else if($login_user->role_id == 5){
-            $category = Category::where('company_id',$login_user->company_id)->get();
-            $products = Product::where('company_id',$login_user->company_id)
-                ->where('is_active', 1)
-                ->orderByRaw('barcode IS NOT NULL')
-                ->orderByRaw('arrangement IS NULL')
-                ->orderBy('arrangement')
-                ->get();
-        }else{
-            $category = Category::all();
-            $products = Product::where('is_active', 1)
-                ->orderByRaw('barcode IS NOT NULL')
-                ->orderByRaw('arrangement IS NULL')
-                ->orderBy('arrangement')
-                ->get();
+
+        $categoryQuery = Category::query();
+        $productQuery = Product::with(['category', 'uom_dt', 'units'])->where('is_active', 1);
+        if ($login_user->role_id == 3) {
+            $categoryQuery->where('branch_id', $login_user->branch_id);
+            $productQuery->where('branch_id', $login_user->branch_id);
+        } elseif ($login_user->role_id == 5) {
+            $company = $login_user->workingCompany();
+            $categoryQuery->where('company_id', $company?->id);
+            $productQuery->where('company_id', $company?->id);
         }
 
-        return view('counter')->with('category',$category)->with('products',$products);
+        // arrangement first (blank arrangement last), then name
+        $category = $categoryQuery->orderByRaw('arrangement IS NULL')->orderBy('arrangement')->orderBy('category_name')->get();
+        $categoryOrder = $category->pluck('id')->flip();
+
+        $products = $productQuery->orderByRaw('arrangement IS NULL')->orderBy('arrangement')->orderBy('product_name')->get()
+            ->sortBy(fn ($p) => $categoryOrder[$p->category_id] ?? PHP_INT_MAX, SORT_REGULAR)
+            ->values();
+
+        return view('counter', [
+            'category'  => $category,
+            'sellables' => $this->sellables($products),
+        ]);
+    }
+
+    /** One tile per thing the counter can sell: each item, and each of its sell options. */
+    private function sellables($products): array
+    {
+        $tiles = [];
+        foreach ($products as $p) {
+            $stock = (float) $p->stock_quantity;
+            $tiles[] = [
+                'key'         => 'p' . $p->id,
+                'product_id'  => $p->id,
+                'unit_id'     => null,
+                'category_id' => $p->category_id,
+                'name'        => $p->product_name,
+                'unit_label'  => $p->uom_dt->uom_name ?? null,
+                'price'       => round((float) $p->selling_price, 2),
+                'barcode'     => $p->barcode,
+                'stock'       => $stock,
+            ];
+            foreach ($p->relationLoaded('units') ? $p->units : [] as $unit) {
+                $tiles[] = [
+                    'key'         => 'u' . $unit->id,
+                    'product_id'  => $p->id,
+                    'unit_id'     => $unit->id,
+                    'category_id' => $p->category_id,
+                    'name'        => $p->product_name,
+                    'unit_label'  => $unit->name,
+                    'price'       => round((float) $unit->price, 2),
+                    'barcode'     => $unit->barcode,
+                    'stock'       => $unit->base_qty > 0 ? floor($stock / $unit->base_qty) : 0,
+                ];
+            }
+        }
+        return $tiles;
     }
 
     public function checkout(Request $request)

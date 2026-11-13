@@ -117,7 +117,6 @@ class RecordScopeTest extends TestCase
         $this->expect403(fn () => $c->update(Request::create('/', 'POST'), $product));
         $this->expect403(fn () => $c->destroy($product));
         $this->expect403(fn () => $c->viewlog($product));
-        $this->expect403(fn () => $c->convert($product));
     }
 
     public function test_branch_manager_cannot_touch_other_branch_categories(): void

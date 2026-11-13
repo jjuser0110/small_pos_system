@@ -226,12 +226,12 @@
             @foreach($order->items as $item)
             <div class="item">
                 <div class="item-row">
-                    <span class="item-name">{{$item->product->product_name??''}}</span>
+                    <span class="item-name">{{ $item->displayName() }}</span>
                     <span style="text-align: center;">{{$item->quantity??0}}</span>
-                    <span style="text-align: right;">{{number_format($item->total_price??0,2)}}</span>
+                    <span style="text-align: right;">{{ money($item->total_price??0) }}</span>
                 </div>
                 <div style="font-size: 10px; color: #666; margin-left: 5px;">
-                    @ RM {{number_format($item->single_price??0,2)}} each
+                    @ {{ money($item->single_price??0) }} each
                 </div>
             </div>
             @endforeach
@@ -242,7 +242,7 @@
             
             <div class="total-row grand-total">
                 <span>TOTAL:</span>
-                <span>RM {{number_format($order->total_price??0,2)}}</span>
+                <span>{{ money($order->total_price??0) }}</span>
             </div>
         </div>
 
@@ -254,11 +254,11 @@
             </div>
             <div class="payment-row">
                 <span>Amount Paid:</span>
-                <span>RM {{number_format($order->amount_received??0,2)}}</span>
+                <span>{{ money($order->amount_received??0) }}</span>
             </div>
             <div class="payment-row" style="font-weight: bold;">
                 <span>Change:</span>
-                <span>RM {{number_format($order->change??0,2)}}</span>
+                <span>{{ money($order->change??0) }}</span>
             </div>
         </div>
 

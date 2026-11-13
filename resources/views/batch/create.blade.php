@@ -155,8 +155,8 @@
                                         <td>{{$row->product->barcode??""}}</td>
                                         <td>{{$row->product->product_name??""}}</td>
                                         <td style="text-align:center">{{$row->quantity??""}}</td>
-                                        <td style="text-align:center">{{number_format($row->cost_per_unit??0,2)}}</td>
-                                        <td style="text-align:center">{{number_format($row->total_cost??0,2)}}</td>
+                                        <td style="text-align:center">{{ money($row->cost_per_unit??0) }}</td>
+                                        <td style="text-align:center">{{ money($row->total_cost??0) }}</td>
                                         <td style="text-align:center">{{$row->balance??""}}</td>
                                         <td style="text-align:center">{{$row->created_at??""}}</td>
                                         <td style="text-align:center">{{$row->updated_at??""}}</td>
@@ -177,7 +177,7 @@
                                         <th colspan="3" style="text-align:right">Total:</th>
                                         <th>{{ $batch->batch_items->sum('quantity') ?? 0 }}</th>
                                         <th></th>
-                                        <th>{{ number_format($batch->batch_items->sum('total_cost') ?? 0, 2) }}</th>
+                                        <th>{{ money($batch->batch_items->sum('total_cost') ?? 0) }}</th>
                                         <th></th>
                                     </tr>
                                 </tfoot>
@@ -381,13 +381,13 @@
         <div class="item-name">{{ $i+1 }}. {{ $row->product->product_name ?? '' }}</div>
         <div class="row indent">
             <span>{{ $row->quantity + 0 }} x RM {{ number_format($row->cost_per_unit,2) }}</span>
-            <span>RM {{ number_format($row->total_cost,2) }}</span>
+            <span>{{ money($row->total_cost) }}</span>
         </div>
     @endforeach
 
     <div class="line"></div>
     <div class="row b"><span>Total Qty</span><span>{{ $batch->batch_items->sum('quantity') + 0 }}</span></div>
-    <div class="row b"><span>Total Cost</span><span>RM {{ number_format($batch->batch_items->sum('total_cost'),2) }}</span></div>
+    <div class="row b"><span>Total Cost</span><span>{{ money($batch->batch_items->sum('total_cost')) }}</span></div>
     <div class="line"></div>
 
     <div class="c">{!! nl2br(e(($receipt->footer ?? '') ?: 'Thank you')) !!}</div>
