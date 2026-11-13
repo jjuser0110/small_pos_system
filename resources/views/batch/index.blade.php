@@ -31,6 +31,7 @@
                             <th>Stock No</th>
                             <th>Stock Date</th>
                             <th>Supplier</th>
+                            <th>Supplier Inv.</th>
                             <th>Total Product</th>
                             <th>Total Item</th>
                             <th>Total Cost</th>
@@ -47,6 +48,7 @@
                             <td>{{$row->batch_no??""}}</td>
                             <td>{{$row->batch_date??""}}</td>
                             <td>{{ $row->supplier->name ?? (str_starts_with((string) $row->batch_no, 'TRF') ? 'Stock transfer' : '') }}</td>
+                            <td>{{ $row->supplier_invoice }}</td>
                             <td>{{$row->total_product??""}}</td>
                             <td>{{$row->total_item??""}}</td>
                             <td data-order="{{ $row->total_cost }}">{{ money($row->total_cost) }}</td>

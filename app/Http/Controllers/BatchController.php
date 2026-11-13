@@ -86,6 +86,7 @@ class BatchController extends Controller
             'batch_no'    => 'required|string',
             'batch_date'  => 'required|date',
             'supplier_id' => 'required|exists:suppliers,id,deleted_at,NULL',
+            'supplier_invoice' => 'nullable|string|max:100',
         ], [
             'supplier_id.required' => 'Choose which supplier this stock comes from.',
         ]);
@@ -101,6 +102,7 @@ class BatchController extends Controller
             'branch_id'  => $company->branch_id,
             'company_id' => $company->id,
             'supplier_id' => $request->supplier_id,
+            'supplier_invoice' => $request->supplier_invoice,
             'batch_no'   => $request->batch_no,
             'batch_date' => $request->batch_date,
         ]);
@@ -126,7 +128,8 @@ class BatchController extends Controller
             $company = Company::all();
         }
 
-        $product = Product::where('branch_id', $batch->branch_id)->where('company_id', $batch->company_id)->get();
+        $product = Product::with(['units', 'uom_dt'])->where('company_id', $batch->company_id)->where('is_active', 1)->orderBy('product_name')->get();
+        $batch->load(['batch_items.product.allUnits', 'batch_items.product.uom_dt', 'supplier']);
 
         $receipt = \App\Models\ReceiptSetting::first();
 
@@ -139,9 +142,15 @@ class BatchController extends Controller
     {
         $this->authorizeRecord($batch);
 
-        // the edit form has no editable fields; only the date may change here
-        $request->validate(['batch_date' => 'sometimes|date']);
-        $batch->update($request->only('batch_date'));
+        $request->validate([
+            'batch_date'       => 'sometimes|date',
+            'supplier_invoice' => 'nullable|string|max:100',
+        ]);
+        $batch->update($request->only('batch_date', 'supplier_invoice'));
+
+        if ($request->input('back') === 'edit') {
+            return redirect()->route('batch.edit', $batch)->withSuccess('Saved');
+        }
 
         return redirect()->route('batch.index')->withSuccess('Data updated');
     }
@@ -213,37 +222,120 @@ class BatchController extends Controller
             ->withSuccess('Stock added');
     }
 
+    /**
+     * Add an item to an open stock entry, by item id or by scanned barcode
+     * (the item's own or one of its sell options'). Adding the same item and
+     * unit again adds 1 to that row. Answers JSON for the stock page.
+     */
     public function addBatchItem(Request $request, Batch $batch)
     {
         $this->authorizeRecord($batch);
-
-        $request->validate([
-            'product_id'    => 'required',
-            'quantity'      => 'required|numeric|min:0',
-            'cost_per_unit' => 'required|numeric|min:0',
-            'total_cost'    => 'required|numeric|min:0',
-        ]);
-
-        // the product must belong to the same company as the batch
-        $product = Product::where('id', $request->product_id)
-            ->where('company_id', $batch->company_id)
-            ->first();
-        if (!$product) {
-            return redirect()->back()->withErrors('Product does not belong to this batch\'s company.');
+        if ($batch->status !== 'Open') {
+            return $this->batchItemReply($request, false, 'This stock entry is already completed.');
         }
 
-        BatchItem::create([
-            'batch_id'      => $batch->id,
-            'branch_id'     => $product->branch_id,
-            'company_id'    => $product->company_id,
-            'category_id'   => $product->category_id,
-            'product_id'    => $product->id,
-            'quantity'      => $request->quantity,
-            'cost_per_unit' => $request->cost_per_unit,
-            'total_cost'    => $request->total_cost,
-            'balance'       => $request->quantity,
+        $product = null;
+        $unit = null;
+        if ($request->filled('barcode')) {
+            $code = trim($request->barcode);
+            $unit = \App\Models\ProductUnit::where('barcode', $code)->where('is_active', true)
+                ->whereHas('product', fn ($q) => $q->where('company_id', $batch->company_id))->first();
+            $product = $unit?->product ?? Product::where('company_id', $batch->company_id)->where('barcode', $code)->first();
+        } elseif ($request->filled('product_id')) {
+            $product = Product::where('id', $request->product_id)->where('company_id', $batch->company_id)->first();
+            if ($product && $request->filled('unit_id')) {
+                $unit = $product->allUnits()->where('id', $request->unit_id)->first();
+            }
+        }
+        if (!$product) {
+            return $this->batchItemReply($request, false, 'No item with that barcode in this company.');
+        }
+
+        $row = BatchItem::where('batch_id', $batch->id)->where('product_id', $product->id)
+            ->where('entry_unit_id', $unit?->id)->first();
+
+        if ($row) {
+            $this->saveEntryRow($row, $unit, (float) $row->entry_qty + 1, (float) $row->entry_cost);
+        } else {
+            // start from what this item cost last time (per entry unit)
+            $lastCostPerBase = (float) BatchItem::where('product_id', $product->id)->where('cost_per_unit', '>', 0)
+                ->latest('id')->value('cost_per_unit');
+            $row = new BatchItem([
+                'batch_id' => $batch->id, 'branch_id' => $product->branch_id, 'company_id' => $product->company_id,
+                'category_id' => $product->category_id, 'product_id' => $product->id,
+            ]);
+            $this->saveEntryRow($row, $unit, 1, round($lastCostPerBase * ($unit ? $unit->base_qty : 1), 2));
+        }
+
+        return $this->batchItemReply($request, true, 'Added ' . $product->product_name . ($unit ? " ({$unit->name})" : ''), $row);
+    }
+
+    /**
+     * Save a row of an open stock entry as keyed in: quantity in the chosen
+     * unit and either the cost per unit or the total cost. Stored in base units.
+     */
+    public function updateOpenItem(Request $request, BatchItem $batch_item)
+    {
+        $this->authorizeRecord($batch_item);
+        if ($batch_item->batch->status !== 'Open') {
+            return response()->json(['ok' => false, 'message' => 'This stock entry is already completed.'], 422);
+        }
+
+        $request->validate([
+            'unit_id'    => 'nullable|integer',
+            'entry_qty'  => 'required|numeric|gt:0',
+            'entry_cost' => 'nullable|numeric|min:0',
+            'total_cost' => 'nullable|numeric|min:0',
+            'changed'    => 'nullable|in:qty,cost,total,unit',
         ]);
-        return redirect()->back()->withSuccess('Data updated');
+
+        $unit = $request->filled('unit_id') ? $batch_item->product->allUnits()->where('id', $request->unit_id)->first() : null;
+        $qty = (float) $request->entry_qty;
+        // total edited: cost per unit = total / qty; otherwise total = qty x cost per unit
+        $cost = $request->changed === 'total' && $qty > 0
+            ? (float) $request->total_cost / $qty
+            : (float) $request->entry_cost;
+
+        $this->saveEntryRow($batch_item, $unit, $qty, $cost);
+        $this->updateBatchTotals($batch_item->batch);
+
+        return response()->json(['ok' => true, 'row' => $this->rowJson($batch_item->fresh())]);
+    }
+
+    /** Keyed-in quantity/cost -> base units. 10 Carton (24) at RM48 = 240 base at RM2.00. */
+    private function saveEntryRow(BatchItem $row, $unit, float $entryQty, float $entryCost): void
+    {
+        $perUnit = $unit ? (float) $unit->base_qty : 1.0;
+        $baseQty = round($entryQty * $perUnit, 4);
+        $total = round($entryQty * $entryCost, 2);
+
+        $row->fill([
+            'entry_unit_id' => $unit?->id,
+            'entry_unit'    => $unit?->name,
+            'entry_qty'     => $entryQty,
+            'entry_cost'    => round($entryCost, 4),
+            'quantity'      => $baseQty,
+            'balance'       => $baseQty,                      // open entry: nothing used yet
+            'total_cost'    => $total,
+            'cost_per_unit' => $baseQty > 0 ? round($total / $baseQty, 4) : 0,
+        ])->save();
+    }
+
+    private function rowJson(BatchItem $row): array
+    {
+        return [
+            'id' => $row->id, 'entry_qty' => (float) $row->entry_qty, 'entry_cost' => round((float) $row->entry_cost, 4),
+            'total_cost' => (float) $row->total_cost, 'quantity' => (float) $row->quantity,
+            'cost_per_unit' => (float) $row->cost_per_unit, 'unit_id' => $row->entry_unit_id,
+        ];
+    }
+
+    private function batchItemReply(Request $request, bool $ok, string $message, ?BatchItem $row = null)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => $ok, 'message' => $message, 'row' => $row ? $this->rowJson($row) : null], $ok ? 200 : 422);
+        }
+        return $ok ? back()->withSuccess($message) : back()->withErrors($message);
     }
 
     public function destroyItem(BatchItem $batch_item)

@@ -17,6 +17,10 @@ class BatchItem extends Model
         'company_id',
         'category_id',
         'product_id',
+        'entry_unit_id',
+        'entry_unit',
+        'entry_qty',
+        'entry_cost',
         'quantity',
         'total_cost',
         'cost_per_unit',
@@ -46,6 +50,13 @@ class BatchItem extends Model
     public function product()
     {
         return $this->belongsTo('App\Models\Product');
+    }
+
+    /** "10 Carton" when keyed in by a sell option, otherwise the base quantity. */
+    public function entryLabel(): string
+    {
+        $qty = rtrim(rtrim(number_format((float) ($this->entry_qty ?? $this->quantity), 2, '.', ''), '0'), '.');
+        return $this->entry_unit ? "$qty {$this->entry_unit}" : $qty;
     }
 
     public function stock_logs()

@@ -13,6 +13,7 @@ Route::prefix('/batch')->as('batch.')->middleware(['auth', 'role:1,2,3'])->group
     Route::get('/destroy/{batch}', 'BatchController@destroy')->name('destroy');
     Route::post('/addBatchItem/{batch}', 'BatchController@addBatchItem')->name('addBatchItem');
     Route::post('/updateBatchItem/{batch_item}', 'BatchController@updateBatchItem')->name('updateBatchItem');
+    Route::post('/updateOpenItem/{batch_item}', 'BatchController@updateOpenItem')->name('updateOpenItem');
     Route::get('/destroyItem/{batch_item}', 'BatchController@destroyItem')->name('destroyItem');
     Route::get('/download-template/{batch}', 'BatchController@downloadTemplate')->name('downloadTemplate');
     Route::post('/import/{batch}', 'BatchController@import')->name('import');

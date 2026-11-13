@@ -15,6 +15,7 @@ class Batch extends Model
         'branch_id',
         'company_id',
         'supplier_id',
+        'supplier_invoice',
         'batch_no',
         'batch_date',
         'total_product',
