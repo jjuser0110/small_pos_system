@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Damage;
 use App\Models\Product;
-use App\Models\ShiftClosing;
 use App\Services\StockService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,12 +13,13 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Damaged goods. Staff (at the counter) and the branch manager report them;
- * only the superadmin approves, which removes the stock (logged as "damage").
+ * Damaged goods. Only the branch manager reports them (choosing the company,
+ * then the item); only the superadmin approves, which removes the stock
+ * (logged as "damage"). Staff can see the list but not report.
  */
 class DamageController extends Controller
 {
-    private const REPORTER_ROLES = [3, 5];
+    private const REPORTER_ROLES = [3];
     private const APPROVER_ROLE = 1;
 
     public function index(Request $request)
@@ -30,7 +30,7 @@ class DamageController extends Controller
         match ((int) $user->role_id) {
             1, 2    => null,
             3       => $query->where('branch_id', $user->branch_id),
-            5       => $query->where('company_id', $user->company_id),
+            5       => $query->where('company_id', $user->workingCompany()?->id),
             default => abort(403),
         };
         if ($request->filled('status')) {
@@ -38,19 +38,16 @@ class DamageController extends Controller
         }
 
         $canReport = in_array($user->role_id, self::REPORTER_ROLES);
-        $products = collect();
-        if ($canReport) {
-            $products = Product::where('is_active', 1)
-                ->when($user->role_id == 5, fn ($q) => $q->where('company_id', $user->company_id))
-                ->when($user->role_id == 3, fn ($q) => $q->where('branch_id', $user->branch_id))
-                ->with('company')->orderBy('product_name')->get();
-        }
 
         return view('damage.index', [
             'damages'    => $query->get(),
             'canReport'  => $canReport,
             'canApprove' => (int) $user->role_id === self::APPROVER_ROLE,
-            'products'   => $products,
+            'companies'  => $canReport ? $this->scopedCompanies() : collect(),
+            'products'   => $canReport
+                ? Product::where('is_active', 1)->where('branch_id', $user->branch_id)->orderBy('product_name')
+                    ->get(['id', 'company_id', 'product_name', 'barcode', 'stock_quantity'])
+                : collect(),
         ]);
     }
 
@@ -62,15 +59,16 @@ class DamageController extends Controller
         }
 
         $request->validate([
+            'company_id' => 'required|exists:companies,id',
             'product_id' => 'required|exists:products,id',
             'quantity'   => 'required|numeric|min:0.01|max:99999999',
             'reason'     => 'required|string|max:500',
         ]);
 
+        $company = $this->authorizeCompanyId($request->company_id);   // a company in the manager's branch
         $product = Product::findOrFail($request->product_id);
-        $inScope = $user->role_id == 5 ? $product->company_id == $user->company_id : $product->branch_id == $user->branch_id;
-        if (!$inScope) {
-            abort(403);
+        if ((int) $product->company_id !== (int) $company->id) {
+            return back()->withErrors('That item does not belong to the chosen company.')->withInput();
         }
         if ($request->quantity > $product->stock_quantity) {
             return back()->withErrors("Only {$product->stock_quantity} of {$product->product_name} in stock.");
@@ -80,7 +78,6 @@ class DamageController extends Controller
             'product_id'       => $product->id,
             'branch_id'        => $product->branch_id,
             'company_id'       => $product->company_id,
-            'shift_closing_id' => $user->isStaff() ? ShiftClosing::openFor($user)?->id : null,
             'quantity'         => round($request->quantity, 4),
             'reason'           => $request->reason,
             'status'           => 'pending',

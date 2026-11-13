@@ -51,8 +51,8 @@
                     <input type="text" name="reason" maxlength="500" class="form-control" value="{{ old('reason') }}">
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Send Transfer</button>
-                    <small class="text-muted ms-2">Stock only moves after the receiving company accepts.</small>
+                    <button type="submit" class="btn btn-primary">Create Transfer</button>
+                    <small class="text-muted ms-2">The sending company's staff confirm it is sent, then the receiving company's staff confirm it is received. Only then does stock move.</small>
                 </div>
             </form>
         </div>
@@ -65,8 +65,8 @@
             <form method="get">
                 <select name="status" class="form-select no-select2" onchange="this.form.submit()">
                     <option value="">All</option>
-                    @foreach(['pending','approved','rejected'] as $s)
-                        <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                    @foreach(['pending' => 'Waiting', 'approved' => 'Received', 'rejected' => 'Rejected'] as $s => $label)
+                        <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </form>
@@ -83,8 +83,8 @@
                         <th>Reason</th>
                         <th>Sent By</th>
                         <th>Status</th>
-                        <th>Processed By</th>
-                        <th>Processed At</th>
+                        <th>Sender Confirmed</th>
+                        <th>Received / Rejected</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -99,21 +99,25 @@
                         <td>{{ $t->reason }}</td>
                         <td>{{ $t->requester->name ?? '' }}</td>
                         <td>
-                            @if($t->status == 'pending') <span style="color:orange">Pending</span>
-                            @elseif($t->status == 'approved') <span style="color:green">Accepted</span>
-                            @else <span style="color:red">Rejected</span>
-                                @if($t->reject_reason)<br><small>{{ $t->reject_reason }}</small>@endif
-                            @endif
+                            <span style="color:{{ $t->isPending() ? 'orange' : ($t->status == 'approved' ? 'green' : 'red') }}">{{ $t->stepLabel() }}</span>
+                            @if($t->reject_reason)<br><small>{{ $t->reject_reason }}</small>@endif
                         </td>
-                        <td>{{ $t->approver->name ?? '' }}</td>
-                        <td>{{ $t->status_at }}</td>
+                        <td>{{ $t->senderConfirmer->name ?? '' }}<br><small>{{ $t->sender_confirmed_at }}</small></td>
+                        <td>{{ $t->approver->name ?? '' }}<br><small>{{ $t->status_at }}</small></td>
                         <td style="white-space:nowrap">
-                            @if($t->status == 'pending' && $t->canBeDecidedBy(Auth::user()))
+                            @if($t->canBeDecidedBy(Auth::user()))
                                 <div class="d-flex gap-2">
-                                    <form method="post" action="{{ route('stock_transfer.approve', $t) }}" class="m-0" onsubmit="return confirm('Accept this transfer? The stock will be added to {{ addslashes($t->toProduct->product_name ?? '') }}.')">
+                                    @if($t->status == 'pending_sender')
+                                    <form method="post" action="{{ route('stock_transfer.approve', $t) }}" class="m-0" onsubmit="return confirm('Confirm {{ rtrim(rtrim(number_format($t->quantity, 2), '0'), '.') }} x {{ addslashes($t->fromProduct->product_name ?? '') }} is correct and being sent to {{ addslashes($t->toCompany->company_code ?? '') }}?')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                        <button type="submit" class="btn btn-sm btn-success">Confirm Sent</button>
                                     </form>
+                                    @else
+                                    <form method="post" action="{{ route('stock_transfer.approve', $t) }}" class="m-0" onsubmit="return confirm('Confirm you received {{ rtrim(rtrim(number_format($t->quantity, 2), '0'), '.') }} x {{ addslashes($t->toProduct->product_name ?? '') }}? The stock will be moved now.')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success">Confirm Received</button>
+                                    </form>
+                                    @endif
                                     <form method="post" action="{{ route('stock_transfer.reject', $t) }}" class="m-0" onsubmit="var r = prompt('Reject reason (optional):'); if (r === null) return false; this.reject_reason.value = r; return true;">
                                         @csrf
                                         <input type="hidden" name="reject_reason">

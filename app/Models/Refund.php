@@ -21,19 +21,15 @@ class Refund extends Model
     public function requester() { return $this->belongsTo(User::class, 'requested_by'); }
     public function approver()  { return $this->belongsTo(User::class, 'approved_by'); }
 
-    /** Branch manager of the refund's branch, or the superadmin. */
+    /** Only the superadmin approves or rejects refunds. */
     public function canBeDecidedBy(?User $user): bool
     {
-        return $user && ((int) $user->role_id === 1 || ((int) $user->role_id === 3 && $user->branch_id == $this->branch_id));
+        return $user && (int) $user->role_id === 1;
     }
 
     public static function pendingFor(?User $user)
     {
         $query = self::where('status', 'pending');
-        return match ((int) ($user->role_id ?? 0)) {
-            1       => $query,
-            3       => $query->where('branch_id', $user->branch_id),
-            default => $query->whereRaw('1 = 0'),
-        };
+        return (int) ($user->role_id ?? 0) === 1 ? $query : $query->whereRaw('1 = 0');
     }
 }

@@ -135,7 +135,7 @@ class CounterFlowTest extends TestCase
 
     // ---- refund -------------------------------------------------------
 
-    public function test_refund_needs_branch_manager_then_returns_stock_and_cuts_shift(): void
+    public function test_refund_needs_superadmin_then_returns_stock_and_cuts_shift(): void
     {
         $order = $this->sell(3);
         $item = $order->items->first();
@@ -152,8 +152,9 @@ class CounterFlowTest extends TestCase
         // staff cannot approve their own refund
         $this->post(self::HOST . route('refund.approve', $refund, false))->assertForbidden();
 
-        $manager = $this->makeUser(3, $this->company);
-        $this->actingAs($manager)->post(route('refund.approve', $refund))->assertSessionHasNoErrors();
+        // branch manager can no longer approve refunds; the superadmin does
+        $this->actingAs($this->makeUser(3, $this->company))->post(route('refund.approve', $refund))->assertForbidden();
+        $this->actingAs($this->makeUser(1))->post(route('refund.approve', $refund))->assertSessionHasNoErrors();
 
         $this->assertSame('approved', $refund->fresh()->status);
         $this->assertEquals(9, $this->beer->fresh()->stock_quantity);
@@ -198,10 +199,16 @@ class CounterFlowTest extends TestCase
 
     // ---- damage -------------------------------------------------------
 
-    public function test_damage_is_removed_only_when_superadmin_approves(): void
+    public function test_damage_is_reported_by_branch_manager_and_removed_when_superadmin_approves(): void
     {
+        // staff can no longer report damage
         $this->post(self::HOST . route('damage.store', [], false), [
-            'product_id' => $this->beer->id, 'quantity' => 2, 'reason' => 'dropped',
+            'company_id' => $this->company->id, 'product_id' => $this->beer->id, 'quantity' => 2, 'reason' => 'dropped',
+        ])->assertForbidden();
+
+        $manager = $this->makeUser(3, $this->company);
+        $this->actingAs($manager)->post(route('damage.store'), [
+            'company_id' => $this->company->id, 'product_id' => $this->beer->id, 'quantity' => 2, 'reason' => 'dropped',
         ])->assertSessionHasNoErrors();
         $damage = Damage::first();
         $this->assertEquals(10, $this->beer->fresh()->stock_quantity);
@@ -243,9 +250,9 @@ class CounterFlowTest extends TestCase
         $order = $this->sell(3);
         $item = $order->items->first();
         $this->post(self::HOST . route('refund.store', [], false), ['order_id' => $order->id, 'qty' => [$item->id => 1], 'reason' => 'x']);
-        $manager = $this->makeUser(3, $this->company);
-        $this->actingAs($manager)->post(route('refund.approve', Refund::first()));
+        $this->actingAs($this->makeUser(1))->post(route('refund.approve', Refund::first()));
 
+        $manager = $this->makeUser(3, $this->company);
         $this->actingAs($manager)->post(route('order.void', $order), ['voided_reason' => 'mistake'])->assertSessionHasNoErrors();
 
         $this->assertEquals(10, $this->beer->fresh()->stock_quantity, 'all 3 back: 1 by refund, 2 by void');
@@ -254,5 +261,21 @@ class CounterFlowTest extends TestCase
         $this->assertEquals(0, $shift->total_order_amount);
         $this->assertEquals(0, $shift->refund_amount);
         $this->assertEquals(0, $shift->items()->where('payment_method', 'Cash')->value('amount'));
+    }
+
+    public function test_damage_item_must_belong_to_the_chosen_company(): void
+    {
+        $other = $this->makeCompany($this->company->branch, 'Z', 'shopz.test');
+        $manager = $this->makeUser(3, $this->company);
+
+        $this->actingAs($manager)->post(route('damage.store'), [
+            'company_id' => $other->id, 'product_id' => $this->beer->id, 'quantity' => 1, 'reason' => 'x',
+        ])->assertSessionHasErrors();
+        $this->assertSame(0, Damage::count());
+    }
+
+    public function test_counter_has_no_damage_button_for_staff(): void
+    {
+        $this->get(self::HOST . '/counter')->assertOk()->assertDontSee(route('damage.index'), false);
     }
 }

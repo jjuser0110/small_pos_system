@@ -20,7 +20,7 @@ class NotificationController extends Controller
             $items[] = [
                 'key'   => 'transfers',
                 'count' => $transfers,
-                'text'  => $transfers . ' stock transfer' . ($transfers > 1 ? 's' : '') . ' waiting for you to accept',
+                'text'  => $transfers . ' stock transfer' . ($transfers > 1 ? 's' : '') . ' waiting for you to confirm',
                 'url'   => route('stock_transfer.index', ['status' => 'pending']),
             ];
         }

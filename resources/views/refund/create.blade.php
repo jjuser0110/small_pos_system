@@ -11,7 +11,7 @@
     @elseif($orders->isEmpty())
         <div class="alert alert-info">No orders in your current shift yet.</div>
     @else
-        <p class="text-muted">Orders from your current shift ({{ $shift->shift }} {{ $shift->work_date }}). Enter how many of each item to refund. The branch manager must approve before stock and money are returned.</p>
+        <p class="text-muted">Orders from your current shift ({{ $shift->shift }} {{ $shift->work_date }}). Enter how many of each item to refund. The superadmin must approve before stock and money are returned.</p>
 
         @foreach($orders as $order)
         <div class="card mb-3">

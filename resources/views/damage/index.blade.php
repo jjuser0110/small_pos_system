@@ -13,29 +13,32 @@
         <div class="card-body">
             <form method="post" action="{{ route('damage.store') }}" class="row g-3" onsubmit="showLoading()">
                 @csrf
-                <div class="col-md-5">
-                    <label class="form-label">Item</label>
-                    <select name="product_id" class="form-select" required>
-                        <option value="">-- Select item --</option>
-                        @foreach($products as $p)
-                            <option value="{{ $p->id }}">{{ $p->product_name }}@if(Auth::user()->role_id == 3) ({{ $p->company->company_code ?? '' }})@endif · stock {{ $p->stock_quantity + 0 }}</option>
+                <div class="col-md-3">
+                    <label class="form-label">Company</label>
+                    <select name="company_id" id="damage_company" class="form-select" required>
+                        <option value="">-- Choose company --</option>
+                        @foreach($companies as $c)
+                            <option value="{{ $c->id }}">{{ $c->company_name }} ({{ $c->company_code }})</option>
                         @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Item</label>
+                    <select name="product_id" id="damage_product" class="form-select" required>
+                        <option value="">-- Choose company first --</option>
                     </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Quantity</label>
                     <input type="number" step="0.01" min="0.01" name="quantity" class="form-control" required>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-3">
                     <label class="form-label">Reason</label>
                     <input type="text" name="reason" maxlength="500" class="form-control" placeholder="e.g. bottle broken" required>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">Submit</button>
                     <small class="text-muted ms-2">Stock is only removed after the superadmin approves.</small>
-                    @if(Auth::user()->isStaff())
-                        <a href="{{ route('counter') }}" class="btn btn-outline-primary float-end">Back to counter</a>
-                    @endif
                 </div>
             </form>
         </div>
@@ -103,6 +106,23 @@
 @section('scripts')
 <script>
 $(function(){
+    @if($canReport)
+    // item list follows the chosen company
+    var damageProducts = @json($products);
+    $('#damage_company').on('change', function () {
+        var companyId = this.value;
+        var select = document.getElementById('damage_product');
+        select.innerHTML = '<option value="">-- Choose item --</option>';
+        damageProducts.filter(function (p) { return String(p.company_id) === String(companyId); }).forEach(function (p) {
+            var o = document.createElement('option');
+            o.value = p.id;
+            o.textContent = p.product_name + (p.barcode ? ' [' + p.barcode + ']' : '') + ' · stock ' + Number(p.stock_quantity);
+            select.appendChild(o);
+        });
+        $(select).trigger('change.select2');
+    });
+    @endif
+
     $('#mytable').DataTable({
         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6 d-flex justify-content-center justify-content-md-end"f>><"table-responsive"t><"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
         pageLength: 10, lengthMenu: [5, 10, 25, 50, 75, 100], order: [[0, 'desc']],

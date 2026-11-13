@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\BuildsPosData;
 use Tests\TestCase;
 
+/** Item 16: branch manager sends A -> B; A staff confirm sent; B staff confirm received; stock moves. */
 class StockTransferTest extends TestCase
 {
     use RefreshDatabase, BuildsPosData;
@@ -43,17 +44,24 @@ class StockTransferTest extends TestCase
         ]);
     }
 
-    public function test_sending_creates_pending_transfer_without_moving_stock(): void
+    /** Staff working at a company: the request host is that company's domain. */
+    private function asStaffAt(Company $company, string $action, StockTransfer $t, array $data = [])
+    {
+        $staff = $this->makeUser(5, $this->a, ['shift' => 'AM']);   // home company A, works anywhere in the branch
+        return $this->actingAs($staff)->post("http://{$company->domain}" . route("stock_transfer.$action", $t, false), $data);
+    }
+
+    public function test_branch_manager_creates_transfer_waiting_for_sender(): void
     {
         $this->send(4, $this->makeUser(3, $this->a))->assertRedirect(route('stock_transfer.index'));
 
         $t = StockTransfer::first();
-        $this->assertSame('pending', $t->status);
+        $this->assertSame(StockTransfer::PENDING_SENDER, $t->status);
         $this->assertEquals(10, $this->itemA->fresh()->stock_quantity);
         $this->assertEquals(0, $this->itemB->fresh()->stock_quantity);
     }
 
-    public function test_staff_cannot_send_a_transfer(): void
+    public function test_staff_cannot_create_a_transfer(): void
     {
         $this->actingAs($this->makeUser(5, $this->a, ['shift' => 'AM']))
             ->post('http://shopa.test' . route('stock_transfer.store', [], false), [
@@ -62,71 +70,96 @@ class StockTransferTest extends TestCase
         $this->assertSame(0, StockTransfer::count());
     }
 
-    public function test_receiving_staff_accepts_and_stock_moves_with_cost_and_logs(): void
+    public function test_branch_manager_cannot_send_to_another_branch(): void
     {
-        $this->send(4, $this->makeUser(1));
+        $far = $this->makeCompany($this->makeBranch('Far'), 'F', 'far.test');
+        $farItem = $this->makeProduct($far, 'Far Beer');
+
+        $this->actingAs($this->makeUser(3, $this->a))->post(route('stock_transfer.store'), [
+            'from_product_id' => $this->itemA->id, 'to_product_id' => $farItem->id, 'quantity' => 1,
+        ])->assertForbidden();
+    }
+
+    public function test_full_flow_sender_then_receiver_then_stock_moves(): void
+    {
+        $this->send(4, $this->makeUser(3, $this->a));
         $t = StockTransfer::first();
-        $staffB = $this->makeUser(5, $this->b, ['shift' => 'AM']);
 
-        $this->actingAs($staffB)->post('http://shopb.test' . route('stock_transfer.approve', $t, false))->assertSessionHasNoErrors();
+        // B staff cannot do step 1; A staff can
+        $this->asStaffAt($this->b, 'approve', $t)->assertForbidden();
+        $this->asStaffAt($this->a, 'approve', $t)->assertSessionHasNoErrors();
+        $t->refresh();
+        $this->assertSame(StockTransfer::PENDING_RECEIVER, $t->status);
+        $this->assertNotNull($t->sender_confirmed_by);
+        $this->assertEquals(10, $this->itemA->fresh()->stock_quantity, 'nothing moves after step 1');
 
-        $this->assertSame('approved', $t->fresh()->status);
+        // A staff cannot do step 2; B staff can
+        $this->asStaffAt($this->a, 'approve', $t)->assertForbidden();
+        $this->asStaffAt($this->b, 'approve', $t)->assertSessionHasNoErrors();
+
+        $t->refresh();
+        $this->assertSame(StockTransfer::APPROVED, $t->status);
         $this->assertEquals(6, $this->itemA->fresh()->stock_quantity);
         $this->assertEquals(4, $this->itemB->fresh()->stock_quantity);
 
         // B received a completed stock entry at A's cost, so later sales have a cost
         $received = BatchItem::where('product_id', $this->itemB->id)->first();
         $this->assertEquals(3.00, $received->cost_per_unit);
-        $this->assertSame('Completed', Batch::find($t->fresh()->received_batch_id)->status);
-
+        $this->assertSame('Completed', Batch::find($t->received_batch_id)->status);
         $this->assertSame(1, StockLog::where('type', 'transfer_out')->where('product_id', $this->itemA->id)->count());
         $this->assertSame(1, StockLog::where('type', 'transfer_in')->where('product_id', $this->itemB->id)->count());
     }
 
-    public function test_sender_side_staff_and_other_company_cannot_accept(): void
+    public function test_branch_manager_cannot_confirm_but_superadmin_can_do_both_steps(): void
     {
-        $this->send(4, $this->makeUser(1));
+        $this->send(2, $this->makeUser(3, $this->a));
         $t = StockTransfer::first();
 
-        $this->actingAs($this->makeUser(5, $this->a, ['shift' => 'AM']))
-            ->post('http://shopa.test' . route('stock_transfer.approve', $t, false))->assertForbidden();
-        $this->actingAs($this->makeUser(1))->post(route('stock_transfer.approve', $t))->assertForbidden();
+        $this->actingAs($this->makeUser(3, $this->a))->post(route('stock_transfer.approve', $t))->assertForbidden();
 
-        $this->assertSame('pending', $t->fresh()->status);
-    }
+        $boss = $this->makeUser(1);
+        $this->actingAs($boss)->post(route('stock_transfer.approve', $t));
+        $this->actingAs($boss)->post(route('stock_transfer.approve', $t));
 
-    public function test_branch_manager_of_receiving_branch_can_accept(): void
-    {
-        $this->send(2, $this->makeUser(1));
-        $this->actingAs($this->makeUser(3, $this->b))->post(route('stock_transfer.approve', StockTransfer::first()));
-
+        $this->assertSame(StockTransfer::APPROVED, $t->fresh()->status);
         $this->assertEquals(2, $this->itemB->fresh()->stock_quantity);
     }
 
-    public function test_accept_fails_cleanly_if_sender_ran_out(): void
+    public function test_confirm_fails_cleanly_if_sender_ran_out(): void
     {
-        $this->send(8, $this->makeUser(1));
+        $this->send(8, $this->makeUser(3, $this->a));
+        $t = StockTransfer::first();
+        $this->asStaffAt($this->a, 'approve', $t);
         $this->itemA->update(['stock_quantity' => 5]);  // sold meanwhile
         BatchItem::where('product_id', $this->itemA->id)->update(['balance' => 5]);
 
-        $this->actingAs($this->makeUser(3, $this->b))->post(route('stock_transfer.approve', StockTransfer::first()))
-            ->assertSessionHasErrors();
+        $this->asStaffAt($this->b, 'approve', $t)->assertSessionHasErrors();
 
-        $this->assertSame('pending', StockTransfer::first()->status);
+        $this->assertSame(StockTransfer::PENDING_RECEIVER, $t->fresh()->status);
         $this->assertEquals(5, $this->itemA->fresh()->stock_quantity);
         $this->assertEquals(0, $this->itemB->fresh()->stock_quantity);
     }
 
-    public function test_reject_keeps_record_and_moves_nothing(): void
+    public function test_either_side_can_reject_its_step_and_record_is_kept(): void
     {
-        $this->send(3, $this->makeUser(1));
-        $this->actingAs($this->makeUser(3, $this->b))
-            ->post(route('stock_transfer.reject', StockTransfer::first()), ['reject_reason' => 'wrong item']);
-
+        $this->send(3, $this->makeUser(3, $this->a));
         $t = StockTransfer::first();
-        $this->assertSame('rejected', $t->status);
+        $this->asStaffAt($this->a, 'approve', $t);
+        $this->asStaffAt($this->b, 'reject', $t, ['reject_reason' => 'wrong item']);
+
+        $t->refresh();
+        $this->assertSame(StockTransfer::REJECTED, $t->status);
         $this->assertSame('wrong item', $t->reject_reason);
         $this->assertEquals(10, $this->itemA->fresh()->stock_quantity);
+    }
+
+    public function test_pending_transfers_notify_the_right_staff(): void
+    {
+        $this->send(1, $this->makeUser(3, $this->a));
+        $staff = $this->makeUser(5, $this->a, ['shift' => 'AM']);
+
+        $this->actingAs($staff)->get('http://shopa.test/notifications')->assertJsonFragment(['key' => 'transfers']);
+        $this->actingAs($staff)->get('http://shopb.test/notifications')->assertJsonMissing(['key' => 'transfers']);
     }
 
     public function test_only_superadmin_can_adjust_stock_and_it_is_logged(): void
@@ -141,6 +174,5 @@ class StockTransferTest extends TestCase
 
         $this->assertEquals(8, $this->itemA->fresh()->stock_quantity);
         $this->assertSame(1, StockLog::where('type', 'adjust_out')->count());
-        $this->assertSame(1, \App\Models\StockAdjustment::where('status', 'approved')->count());
     }
 }

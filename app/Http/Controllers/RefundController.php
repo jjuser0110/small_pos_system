@@ -121,7 +121,7 @@ class RefundController extends Controller
             $refund->update(['amount' => round($total, 2)]);
         });
 
-        return redirect()->route('refund.index')->withSuccess('Refund request sent. Waiting for the branch manager to approve.');
+        return redirect()->route('refund.index')->withSuccess('Refund request sent. Waiting for the superadmin to approve.');
     }
 
     public function approve(Refund $refund, StockService $stock)
