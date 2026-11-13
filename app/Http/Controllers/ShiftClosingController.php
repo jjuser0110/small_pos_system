@@ -69,11 +69,8 @@ class ShiftClosingController extends Controller
 
         $login_user = Auth::user();
         $query = ShiftClosing::with(['user', 'items'])
-            ->where(function ($q) use ($date_from, $date_to) {
-                // shift day; older records without one fall back to when they were created
-                $q->whereBetween('work_date', [$date_from, $date_to])
-                  ->orWhere(fn ($q) => $q->whereNull('work_date')->whereBetween(DB::raw('DATE(created_at)'), [$date_from, $date_to]));
-            })
+            // every shift has a work date (old ones were filled in), so the index on it is used
+            ->whereBetween('work_date', [$date_from, $date_to])
             ->orderByDesc('work_date')->orderByDesc('id');
 
         match ((int) $login_user->role_id) {

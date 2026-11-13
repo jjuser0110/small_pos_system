@@ -51,7 +51,8 @@ class ProfitReportController extends Controller
             ->get()->keyBy('shift_id');
 
         $damage = Damage::where('status', 'approved')
-            ->whereBetween(DB::raw('DATE(status_at)'), [$from, $to])
+            // a plain range (not DATE(status_at)) so the (status, status_at) index is used
+            ->whereBetween('status_at', [$from . ' 00:00:00', $to . ' 23:59:59'])
             ->when($request->filled('branch_id'), fn ($q) => $q->where('branch_id', $request->branch_id))
             ->when($request->filled('company_id'), fn ($q) => $q->where('company_id', $request->company_id))
             ->groupBy('company_id')
