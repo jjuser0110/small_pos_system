@@ -45,7 +45,17 @@ class HomeController extends Controller
         $user = Auth::user();
         $shift_data = ShiftClosing::where('user_id',$user->id)->whereNull('closing_time')->first();
 
-        return view('home')->with('shift_data',$shift_data);
+        // staff: today's check-in (login time, company logged in at, shift window)
+        $attendance = $user->isStaff()
+            ? StaffAttendance::where('user_id', $user->id)->where('work_date', StaffAttendance::workDateFor($user))->first()
+            : null;
+
+        return view('home', [
+            'shift_data'     => $shift_data,
+            'attendance'     => $attendance,
+            'workingCompany' => $user->workingCompany(),
+            'shiftWindow'    => $user->isStaff() ? $user->currentShiftWindow() : null,
+        ]);
     }
 
     public function change_password(Request $request){

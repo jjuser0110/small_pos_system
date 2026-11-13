@@ -74,7 +74,7 @@ class CompanyStaffController extends Controller
 
         \App\Models\StaffAttendance::closeStale($company_staff);
 
-        $attendance = \App\Models\StaffAttendance::where('user_id', $company_staff->id)
+        $attendance = \App\Models\StaffAttendance::with('company')->where('user_id', $company_staff->id)
             ->whereBetween('work_date', [$from->toDateString(), $to->toDateString()])
             ->orderBy('work_date')
             ->get();
@@ -98,7 +98,9 @@ class CompanyStaffController extends Controller
             'advances'       => $advances,
             'advanceTotal'   => $advances->where('status', 'approved')->sum('amount'),
             'advancePending' => $advances->where('status', 'pending')->sum('amount'),
-            'salesTotal'     => $shifts->sum('total_order_amount'),
+            // sales after refunds
+            'salesTotal'     => $shifts->sum('total_order_amount') - $shifts->sum('refund_amount'),
+            'refundTotal'    => $shifts->sum('refund_amount'),
             'shiftsByDate'   => $shifts->groupBy(fn ($s) => (string) $s->work_date),
         ]);
     }

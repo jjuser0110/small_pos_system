@@ -71,7 +71,7 @@
                         <select name="supplier_id" id="supplier_id" class="select2 form-select" required>
                             <option value="">-- Choose supplier --</option>
                             @foreach($suppliers as $sup)
-                                <option value="{{ $sup->id }}" @if(old('supplier_id') == $sup->id) selected @endif>{{ $sup->name }}</option>
+                                <option value="{{ $sup->id }}" @if(old('supplier_id') == $sup->id) selected @endif>{{ $sup->name }}@if(Auth::user()->role_id != 3 && $sup->branch) ({{ $sup->branch->branch_name }})@endif</option>
                             @endforeach
                         </select>
                         @if($suppliers->isEmpty())

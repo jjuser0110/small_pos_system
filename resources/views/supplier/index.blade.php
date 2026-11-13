@@ -27,6 +27,7 @@
                         <tr>
                             <th>No</th>
                             <th>Supplier Name</th>
+                            <th>Branch</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -35,6 +36,7 @@
                         <tr>
                             <td>{{$index+1??""}}</td>
                             <td>{{$row->name??""}}</td>
+                            <td>{{ $row->branch->branch_name ?? 'All branches' }}</td>
                             <td>
                                 <a href="{{ route('supplier.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('supplier.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>

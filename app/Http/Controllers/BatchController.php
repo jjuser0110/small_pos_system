@@ -76,7 +76,7 @@ class BatchController extends Controller
             'year' => $check->year,
             'month' => $check->month,
             'company' => $company,
-            'suppliers' => \App\Models\Supplier::orderBy('name')->get(),
+            'suppliers' => $this->suppliersForUser(),
         ]);
     }
 
@@ -90,6 +90,11 @@ class BatchController extends Controller
             'supplier_id.required' => 'Choose which supplier this stock comes from.',
         ]);
         $company = $this->authorizeCompanyId($request->company_id);
+
+        // the supplier must belong to the company's branch (or be shared)
+        if (!\App\Models\Supplier::forBranch($company->branch_id)->whereKey($request->supplier_id)->exists()) {
+            return back()->withErrors(['supplier_id' => 'This supplier is not for this branch.'])->withInput();
+        }
 
         // status and totals are never taken from the request
         $batch = Batch::create([
@@ -127,7 +132,7 @@ class BatchController extends Controller
 
         return view('batch.create')->with('batch',$batch)->with('company',$company)->with('product',$product)
             ->with('receipt', $receipt)
-            ->with('suppliers', \App\Models\Supplier::orderBy('name')->get());
+            ->with('suppliers', \App\Models\Supplier::forBranch($batch->branch_id)->orderBy('name')->get());
     }
 
     public function update(Request $request, Batch $batch)
@@ -371,5 +376,15 @@ class BatchController extends Controller
         Excel::import(new StockImport($batch), $request->file('file'));
 
         return back()->with('success', 'Batch items imported successfully');
+    }
+
+    /** Suppliers for the stock form: a branch manager sees their branch's (and shared) ones. */
+    private function suppliersForUser()
+    {
+        $query = \App\Models\Supplier::with('branch')->orderBy('name');
+        if (Auth::user()->role_id == 3) {
+            $query->forBranch(Auth::user()->branch_id);
+        }
+        return $query->get();
     }
 }

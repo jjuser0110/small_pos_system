@@ -66,13 +66,44 @@ class StaffShiftAccessTest extends TestCase
         $this->assertNotNull(ShiftClosing::openFor($staff), 'shift record opens at login');
     }
 
-    public function test_staff_cannot_log_in_on_another_companys_domain(): void
+    public function test_staff_cannot_log_in_at_a_company_of_another_branch(): void
     {
         $this->travelTo(Carbon::parse('2026-11-08 12:00'));
-        $staff = $this->makeUser(5, $this->companyB, ['shift' => 'AM']);
+        $this->makeCompany($this->makeBranch('North'), 'N', 'north.test');
+        $staff = $this->makeUser(5, $this->companyA, ['shift' => 'AM']);
 
-        $this->loginAt('shopa.test', $staff)->assertRedirect(route('login'))->assertSessionHasErrors();
+        $this->loginAt('north.test', $staff)->assertRedirect(route('login'))->assertSessionHasErrors();
         $this->assertGuest();
+    }
+
+    public function test_staff_can_work_at_another_company_in_their_branch(): void
+    {
+        $this->travelTo(Carbon::parse('2026-11-08 12:00'));
+        $staff = $this->makeUser(5, $this->companyA, ['shift' => 'AM']);   // home company A
+        $itemB = $this->makeProduct($this->companyB, 'B Only Item');
+        $this->makeProduct($this->companyA, 'A Only Item');
+
+        $this->loginAt('shopb.test', $staff)->assertRedirect(route('counter'));
+        $this->assertAuthenticatedAs($staff);
+
+        // attendance and shift are recorded under the company logged in at (B)
+        $this->assertSame($this->companyB->id, (int) StaffAttendance::where('user_id', $staff->id)->value('company_id'));
+        $this->assertSame($this->companyB->id, (int) ShiftClosing::openFor($staff)->company_id);
+
+        // the counter shows company B's items
+        $tiles = collect($this->get('http://shopb.test/counter')->assertOk()->viewData('sellables'));
+        $this->assertSame(['B Only Item'], $tiles->pluck('name')->unique()->values()->all());
+
+        // and the sale belongs to company B
+        \App\Models\PaymentMethod::create(['payment_method_name' => 'Cash']);
+        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        $this->postJson('http://shopb.test/cart/add', ['id' => $itemB->id])->assertOk();
+        $order = $this->postJson('http://shopb.test/cart/placeorder', ['payment_method' => 'Cash', 'amount_received' => 10])
+            ->assertOk()->json('order_id');
+        $this->assertSame($this->companyB->id, (int) \App\Models\Order::find($order)->company_id);
+
+        // home shows where they checked in
+        $this->get('http://shopb.test/home')->assertOk()->assertSee("Today's Check-in", false)->assertSee('Company B');
     }
 
     public function test_www_and_port_are_ignored_for_domain(): void

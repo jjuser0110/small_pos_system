@@ -31,7 +31,8 @@
                     ['Working time', $fmt($minutesWorked)],
                     ['Advances (approved)', money($advanceTotal)],
                     ['Advances (pending)', money($advancePending)],
-                    ['Sales in shifts', money($salesTotal)],
+                    ['Sales in shifts (after refunds)', money($salesTotal)],
+                    ['Refunds', money($refundTotal)],
                 ] as [$label, $value])
                 <div class="col-6 col-md-4 mb-3">
                     <div class="card h-100"><div class="card-body p-3">
@@ -49,12 +50,13 @@
         <div class="table-responsive">
             <table class="table table-bordered mb-0">
                 <thead>
-                    <tr><th>Date</th><th>Shift</th><th>Login</th><th>Logout</th><th>How it ended</th><th>Hours</th><th class="text-end">Sales</th></tr>
+                    <tr><th>Date</th><th>Company</th><th>Shift</th><th>Login</th><th>Logout</th><th>How it ended</th><th>Hours</th><th class="text-end">Sales (after refunds)</th></tr>
                 </thead>
                 <tbody>
                     @forelse($attendance as $a)
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($a->work_date)->format('D d M') }}</td>
+                        <td>{{ $a->company->company_code ?? '' }}</td>
                         <td>{{ $a->shift }}</td>
                         <td>{{ \Carbon\Carbon::parse($a->clock_in)->format('d M H:i') }}</td>
                         <td>{{ $a->clock_out ? \Carbon\Carbon::parse($a->clock_out)->format('d M H:i') : '' }}</td>
@@ -67,10 +69,11 @@
                             @endswitch
                         </td>
                         <td>{{ $a->minutesWorked() !== null ? $fmt($a->minutesWorked()) : '' }}</td>
-                        <td class="text-end">{{ money(($shiftsByDate[\Carbon\Carbon::parse($a->work_date)->toDateString()] ?? collect())->sum('total_order_amount')) }}</td>
+                        @php $dayShifts = $shiftsByDate[\Carbon\Carbon::parse($a->work_date)->toDateString()] ?? collect(); @endphp
+                        <td class="text-end">{{ money($dayShifts->sum('total_order_amount') - $dayShifts->sum('refund_amount')) }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" class="text-muted">No shifts this month.</td></tr>
+                    <tr><td colspan="8" class="text-muted">No shifts this month.</td></tr>
                     @endforelse
                 </tbody>
             </table>

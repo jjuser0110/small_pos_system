@@ -47,8 +47,8 @@ class StaffBorrowController extends Controller
 
         StaffBorrow::create([
             'user_id'          => $login_user->id,
-            'branch_id'        => $login_user->branch_id,
-            'company_id'       => $login_user->company_id,
+            'branch_id'        => $login_user->workingCompany()?->branch_id ?? $login_user->branch_id,
+            'company_id'       => $login_user->workingCompany()?->id ?? $login_user->company_id,
             'shift_closing_id' => ShiftClosing::openFor($login_user)?->id,
             'amount'           => round($request->amount, 2),
             'reason'           => $request->reason,

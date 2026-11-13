@@ -29,6 +29,12 @@ class StaffAttendance extends Model
         return $this->belongsTo('App\Models\User', 'user_id');
     }
 
+    /** The company the staff member logged in at that day. */
+    public function company()
+    {
+        return $this->belongsTo('App\Models\Company', 'company_id');
+    }
+
     /** The day the staff member's current shift started (PM after midnight = yesterday). */
     public static function workDateFor($user): string
     {
@@ -43,8 +49,9 @@ class StaffAttendance extends Model
         $record = self::firstOrCreate(
             ['user_id' => $user->id, 'work_date' => self::workDateFor($user)],
             [
-                'branch_id'  => $user->branch_id,
-                'company_id' => $user->company_id,
+                // the company the staff member logged in at (the login domain)
+                'branch_id'  => $user->workingCompany()?->branch_id ?? $user->branch_id,
+                'company_id' => $user->workingCompany()?->id ?? $user->company_id,
                 'shift'      => $user->shift,
                 'clock_in'   => Carbon::now(),
             ]
@@ -67,8 +74,9 @@ class StaffAttendance extends Model
         $record = self::firstOrCreate(
             ['user_id' => $user->id, 'work_date' => self::workDateFor($user)],
             [
-                'branch_id'  => $user->branch_id,
-                'company_id' => $user->company_id,
+                // the company the staff member logged in at (the login domain)
+                'branch_id'  => $user->workingCompany()?->branch_id ?? $user->branch_id,
+                'company_id' => $user->workingCompany()?->id ?? $user->company_id,
                 'shift'      => $user->shift,
                 'clock_in'   => $fallbackClockIn ?? Carbon::now(),
             ]

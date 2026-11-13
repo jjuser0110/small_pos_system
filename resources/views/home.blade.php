@@ -21,12 +21,29 @@
                 <p class="mb-0">
                 <span class="fw-medium me-1">Username: {{Auth::user()->username??''}}</span><br>
                 <small class="text-muted">Role: {{Auth::user()->role->title??''}}</small><br>
-                <small class="text-muted">Company: {{Auth::user()->company->company_code??''}}</small><br>
+                <small class="text-muted">Company: {{ $workingCompany->company_code ?? '' }}</small><br>
                 <small class="text-muted">Branch: {{Auth::user()->branch->branch_code??''}}</small>
                 </p>
             </div>
             </div>
         </div>
+        @if(Auth::user()->isStaff())
+        <div class="col-sm-6 col-lg-4 mb-4">
+            <div class="card card-border-shadow-primary h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2 pb-1">
+                <h4 class="ms-1 mb-0">Today's Check-in</h4>
+                </div>
+                <p class="mb-1">Checked in at: <b>{{ $workingCompany->company_name ?? '-' }}</b> ({{ $workingCompany->company_code ?? '' }})</p>
+                <p class="mb-1">Login time: <b>{{ $attendance ? \Carbon\Carbon::parse($attendance->clock_in)->format('d M Y, H:i') : '-' }}</b></p>
+                @if($shiftWindow)
+                    <p class="mb-0">Shift: <b>{{ $shiftWindow->shift }}</b> {{ $shiftWindow->start->format('H:i') }} – {{ $shiftWindow->end->format('H:i') }}
+                        <br><small class="text-muted">Auto logout at {{ $shiftWindow->logoutAt->format('H:i') }}</small></p>
+                @endif
+            </div>
+            </div>
+        </div>
+        @endif
     </div>
     <div class="row">
         <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">

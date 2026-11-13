@@ -23,6 +23,17 @@
                     value="{{$supplier->name??''}}" 
                     required/>
                 </div>
+                @if($branches->count())
+                <div class="col-md-6">
+                    <label class="form-label" for="branch_id">Branch</label>
+                    <select name="branch_id" id="branch_id" class="form-select" required>
+                        <option value="">-- Choose branch --</option>
+                        @foreach($branches as $b)
+                            <option value="{{ $b->id }}" @if(old('branch_id', $supplier->branch_id ?? '') == $b->id) selected @endif>{{ $b->branch_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
                 <hr>
                 <div class="col-12">
                     <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>

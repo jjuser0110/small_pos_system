@@ -101,13 +101,10 @@ class User extends Authenticatable
         return !$this->isStaff() || $this->currentShiftWindow($now) !== null;
     }
 
-    /** Staff may only use their own company's domain; others may use any. */
+    /** Staff may use the domain of any company in their branch; others may use any. */
     public function isOnAllowedDomain(?string $host): bool
     {
-        if (!$this->isStaff()) {
-            return true;
-        }
-        return $this->company !== null && $this->company->matchesHost($host);
+        return !$this->isStaff() || $this->workingCompany($host) !== null;
     }
 
     /** Why a staff member may not be logged in here and now, or null if they may. */
@@ -116,11 +113,11 @@ class User extends Authenticatable
         if (!$this->isStaff()) {
             return null;
         }
-        if (!$this->company || !$this->company->domain) {
-            return 'Your company has no domain set yet. Please contact your manager.';
-        }
         if (!$this->isOnAllowedDomain($host)) {
-            return "Please log in at your company's address: " . $this->company->domain;
+            $domains = Company::where('branch_id', $this->branch_id)->whereNotNull('domain')->pluck('domain');
+            return $domains->isEmpty()
+                ? 'No company in your branch has a domain set yet. Please contact your manager.'
+                : 'This address is not a company in your branch. Please log in at: ' . $domains->implode(', ');
         }
         if (!in_array($this->shift, ShiftWindow::shifts(), true)) {
             return 'You have no shift (AM / PM) assigned. Please contact your manager.';
