@@ -451,10 +451,14 @@ function flashSearch() {
 }
 
 // ---------- cart ----------
+// quick taps start several reloads; only the newest one may redraw the cart
+let cartLoadSeq = 0;
 function loadCart() {
+    const seq = ++cartLoadSeq;
     return fetch('/cart/load', { headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(data => {
+            if (seq !== cartLoadSeq) return;   // an older answer arrived late
             cart = data.map(i => ({ id: i.id, name: i.product_name, price: parseFloat(i.single_price), quantity: parseFloat(i.quantity) }));
             renderCart();
         });

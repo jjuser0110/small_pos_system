@@ -58,6 +58,15 @@ class DemoSeeder extends Seeder
 
         $this->stock($beerA, 24, 5.00);
 
+        // Cola: stocked in tins, sold by the tin, by the carton of 24, or 3 for RM10
+        $tin = Uom::firstOrCreate(['uom_name' => 'Tin'], ['uom_unit' => 'tin']);
+        $cola = $this->product($a, 'Demo Cola Tin', '9990003', 2.50, $tin);
+        $cola->allUnits()->firstOrCreate(['name' => 'Carton'], ['base_qty' => 24, 'price' => 50.00, 'barcode' => '9990024']);
+        $cola->allUnits()->firstOrCreate(['name' => '3 for RM10'], ['base_qty' => 3, 'price' => 10.00]);
+        $this->stock($cola, 48, 1.80);
+
+        \App\Models\Supplier::firstOrCreate(['name' => 'Demo Drinks Supplier'], ['branch_id' => $branch->id]);
+
         // whichever shift is running now, so the demo staff can log in straight away
         $shift = collect(ShiftWindow::shifts())->first(fn ($s) => ShiftWindow::current($s) !== null) ?? 'AM';
 
