@@ -40,8 +40,16 @@ $currentRoute = request()->route()->getName();
                 <div>Go to Counter</div>
             </a>
         </li>
+        @if(in_array(auth()->user()->role_id, [1, 2]))
+        <li class="menu-item {{ Str::contains($currentRoute, 'profit_report.') ? 'active' : ''}}">
+            <a href="{{ route('profit_report.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-line-chart"></i>
+                <div>Profit Report</div>
+            </a>
+        </li>
+        @endif
         @if(!$isStaff)
-        <li class="menu-item {{ Str::contains($currentRoute, 'report.index') ? 'active' : ''}}">
+        <li class="menu-item {{ $currentRoute === 'report.index' ? 'active' : ''}}">
             <a href="{{ route('report.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Report</div>

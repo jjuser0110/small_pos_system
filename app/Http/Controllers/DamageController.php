@@ -100,10 +100,16 @@ class DamageController extends Controller
                     throw new RuntimeException('This damage report was already processed.');
                 }
 
-                $stock->stockOut(Product::findOrFail($damage->product_id), (float) $damage->quantity,
+                $slices = $stock->stockOut(Product::findOrFail($damage->product_id), (float) $damage->quantity,
                     'damage', "Damage #{$damage->id}: {$damage->reason}", $damage);
 
-                $damage->update(['status' => 'approved', 'approved_by' => Auth::id(), 'status_at' => Carbon::now()]);
+                $damage->update([
+                    'status'      => 'approved',
+                    'approved_by' => Auth::id(),
+                    'status_at'   => Carbon::now(),
+                    // what the damaged stock cost, for the profit report (stock without a cost counts 0)
+                    'cost_amount' => round(collect($slices)->sum(fn ($s) => ($s['cost_per_unit'] ?? 0) * $s['quantity']), 2),
+                ]);
             });
         } catch (Throwable $e) {
             return back()->withErrors($e->getMessage());

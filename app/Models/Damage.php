@@ -10,7 +10,7 @@ class Damage extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'product_id', 'branch_id', 'company_id', 'shift_closing_id', 'quantity', 'reason',
+        'product_id', 'branch_id', 'company_id', 'shift_closing_id', 'quantity', 'cost_amount', 'reason',
         'status', 'requested_by', 'approved_by', 'status_at', 'reject_reason',
     ];
 

@@ -114,7 +114,7 @@ class ReportPagesTest extends TestCase
             'category.index', 'company.index', 'company.create', 'company_staff.index', 'company_staff.create',
             'stock_transfer.index', 'stock_adjustment.index', 'refund.index', 'damage.index',
             'staff_borrow.index', 'shift_closing.index', 'shift_closing.print', 'report.index', 'order.index',
-            'staff_attendance.index',
+            'staff_attendance.index', 'profit_report.index', 'supplier.index',
         ] as $name) {
             $this->actingAs($admin)->get(route($name))->assertOk();
         }
