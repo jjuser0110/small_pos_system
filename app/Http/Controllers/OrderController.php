@@ -71,10 +71,12 @@ class OrderController extends Controller
             })
             ->with('profit_items')
             ->withSum('profit_items', 'total_earning')
+            ->withSum(['refunds as refunded_amount' => fn ($q) => $q->where('status', 'approved')], 'amount')
             ->orderBy('created_at', 'DESC')
             ->get();
 
-        $total_profit = $order->where('status', 'Active')->sum('profit_items_sum_total_earning');
+        // refunds already shrank the profit rows; voided orders have none left
+        $total_profit = $order->where('status', '!=', 'Voided')->sum('profit_items_sum_total_earning');
 
         // Format for input fields
         $date_from_input = $date_from->format('Y-m-d\TH:i');
@@ -148,7 +150,8 @@ class OrderController extends Controller
         return view('order.index', [
             'order' => $order,
             'activeOrderCount' => $activeOrders->count(),
-            'activeOrderTotal' => $activeOrders->sum('final_total'),
+            // what was actually kept: orders not voided, minus approved refunds
+            'activeOrderTotal' => $order->where('status', '!=', 'Voided')->sum(fn ($o) => $o->final_total - (float) $o->refunded_amount),
             'categoryTotals' => $categoryTotals,
             'categoryProfits' => $categoryProfits,
             'total_profit' => $total_profit,
@@ -218,6 +221,15 @@ class OrderController extends Controller
                 ShiftMethodClosing::where('shift_closing_id', $shift->id)
                     ->where('payment_method', $order->payment_method)
                     ->decrement('amount', round($order->final_total - $refunded, 2));
+
+                // category totals: take off what each item still counted (refunds already took theirs)
+                foreach ($order->items as $item) {
+                    $left = round(((float) $item->quantity - (float) $item->refunded_quantity) * (float) $item->single_price, 2);
+                    if ($left > 0) {
+                        \App\Models\ShiftClosingDetail::where('shift_closing_id', $shift->id)
+                            ->where('category_id', $item->category_id)->decrement('amount', $left);
+                    }
+                }
             }
 
             // pending refunds on a voided order can no longer happen
@@ -250,11 +262,30 @@ class OrderController extends Controller
             'discount' => 'required|numeric|min:0',
         ]);
 
-        $order->update([
-            'discount' => $request->discount,
-            'amount_received' => $order->final_total + $order->change - $request->discount,
-        ]);
+        if ($order->status !== 'Active') {
+            return back()->withErrors('Only active orders can get a discount.');
+        }
+        $refunded = (float) $order->refunds()->where('status', 'approved')->sum('amount');
+        $new = round((float) $request->discount, 2);
+        if ($new > (float) $order->total_price - $refunded + 0.001) {
+            return back()->withErrors('Discount cannot be more than what is left on the order (' . money($order->total_price - $refunded) . ').');
+        }
 
-        return back()->with('success', 'Discount added.');
+        DB::transaction(function () use ($order, $new) {
+            $order = Order::lockForUpdate()->find($order->id);
+            $delta = round($new - (float) $order->discount, 2);   // change in discount (may be negative)
+
+            // the order is now worth less; so are the shift's sales and its payment method
+            $order->update(['discount' => $new, 'final_total' => round($order->total_price - $new, 2)]);
+
+            if ($delta != 0 && ($shift = ShiftClosing::lockForUpdate()->find($order->shift_closing_id))) {
+                $shift->update(['total_order_amount' => round($shift->total_order_amount - $delta, 2)]);
+                ShiftMethodClosing::where('shift_closing_id', $shift->id)
+                    ->where('payment_method', $order->payment_method)
+                    ->decrement('amount', $delta);
+            }
+        });
+
+        return back()->with('success', 'Discount saved.');
     }
 }

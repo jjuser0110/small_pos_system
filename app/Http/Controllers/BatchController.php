@@ -333,18 +333,38 @@ class BatchController extends Controller
     private function batchItemReply(Request $request, bool $ok, string $message, ?BatchItem $row = null)
     {
         if ($request->expectsJson()) {
-            return response()->json(['ok' => $ok, 'message' => $message, 'row' => $row ? $this->rowJson($row) : null], $ok ? 200 : 422);
+            $html = null;
+            if ($row) {
+                $row->load(['product.allUnits', 'product.uom_dt']);
+                $batch = $row->batch;
+                $index = BatchItem::where('batch_id', $batch->id)->where('id', '<', $row->id)->count();
+                $html = view('batch._row', compact('row', 'index', 'batch'))->render();
+            }
+            return response()->json([
+                'ok' => $ok, 'message' => $message,
+                'row' => $row ? $this->rowJson($row) : null,
+                'html' => $html,
+            ], $ok ? 200 : 422);
         }
         return $ok ? back()->withSuccess($message) : back()->withErrors($message);
     }
 
-    public function destroyItem(BatchItem $batch_item)
+    public function destroyItem(Request $request, BatchItem $batch_item)
     {
         $this->authorizeRecord($batch_item);
+        $batch = $batch_item->batch;
+        if ($batch->status !== 'Open') {
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => 'This stock entry is already completed.'], 422)
+                : back()->withErrors('This stock entry is already completed.');
+        }
 
         $batch_item->delete();
+        $this->updateBatchTotals($batch);
 
-        return redirect()->back()->withSuccess('Data deleted');
+        return $request->expectsJson()
+            ? response()->json(['ok' => true])
+            : redirect()->back()->withSuccess('Data deleted');
     }
 
     public function updateBatchItem(Request $request, BatchItem $batchItem)
@@ -393,6 +413,7 @@ class BatchController extends Controller
                 $batchItem->update([
                     'quantity'       => $request->quantity,
                     'cost_per_unit'  => $request->cost_per_unit,
+                    'entry_unit_id' => null, 'entry_unit' => null, 'entry_qty' => $request->quantity, 'entry_cost' => $request->cost_per_unit,
                     'total_cost'     => $request->total_cost,
                 ]);
 
@@ -431,6 +452,7 @@ class BatchController extends Controller
             $batchItem->update([
                 'quantity'       => $request->quantity,
                 'cost_per_unit'  => $request->cost_per_unit,
+                    'entry_unit_id' => null, 'entry_unit' => null, 'entry_qty' => $request->quantity, 'entry_cost' => $request->cost_per_unit,
                 'total_cost'     => $request->total_cost,
                 'balance'        => $balance,
             ]);

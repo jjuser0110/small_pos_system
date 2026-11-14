@@ -48,10 +48,11 @@ class ShiftClosingController extends Controller
         // items sold in this shift (refunded quantities taken off)
         $items = OrderItem::query()
             ->whereHas('order', fn ($q) => $q->where('shift_closing_id', $shift_closing->id)->where('status', '!=', 'Voided'))
-            ->select('product_id',
+            // cartons and tins are listed separately, never added together
+            ->select('product_id', 'unit_name',
                 DB::raw('SUM(quantity - refunded_quantity) as qty'),
                 DB::raw('SUM((quantity - refunded_quantity) * single_price) as amount'))
-            ->groupBy('product_id')
+            ->groupBy('product_id', 'unit_name')
             ->with('product:id,product_name')
             ->orderByDesc('qty')
             ->get();

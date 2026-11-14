@@ -103,7 +103,7 @@ class RecordScopeTest extends TestCase
         $this->expect403(fn () => $c->addBatchItem(Request::create('/', 'POST'), $batch));
         $this->expect403(fn () => $c->downloadTemplate($batch));
         $this->expect403(fn () => $c->import(Request::create('/', 'POST'), $batch));
-        $this->expect403(fn () => $c->destroyItem($item));
+        $this->expect403(fn () => $c->destroyItem(Request::create("/"), $item));
         $this->expect403(fn () => $c->updateBatchItem(Request::create('/', 'POST'), $item));
     }
 

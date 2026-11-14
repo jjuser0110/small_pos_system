@@ -100,22 +100,25 @@ class ReportController extends Controller
             ->when($request->filled('branch_id'), fn ($q) => $q->whereIn('branch_id', $request->branch_id))
             ->when($request->filled('company_id'), fn ($q) => $q->whereIn('company_id', $request->company_id))
             ->whereHas('order', function ($q) use ($date_from, $date_to) {
-                $q->where('status', 'Active')
+                $q->where('status', '!=', 'Voided')
                   ->whereBetween('created_at', [$date_from, $date_to]);
             })
+            // net of refunds; cartons and tins listed separately
             ->select(
                 'product_id',
+                'unit_name',
                 'branch_id',
                 'company_id',
-                DB::raw('SUM(quantity) as total_quantity'),
-                DB::raw('SUM(total_price) as total_amount')
+                DB::raw('SUM(quantity - refunded_quantity) as total_quantity'),
+                DB::raw('SUM((quantity - refunded_quantity) * single_price) as total_amount')
             )
             ->with([
                 'product:id,product_name',
                 'branch:id,branch_name',
                 'company:id,company_name',
             ])
-            ->groupBy('product_id', 'branch_id', 'company_id')
+            ->groupBy('product_id', 'unit_name', 'branch_id', 'company_id')
+            ->havingRaw('SUM(quantity - refunded_quantity) > 0')
             ->orderByDesc('total_quantity')
             ->get();
     }

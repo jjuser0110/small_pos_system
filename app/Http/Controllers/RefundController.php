@@ -155,10 +155,18 @@ class RefundController extends Controller
 
                 // take the money off the shift it was sold in
                 if ($shift = ShiftClosing::lockForUpdate()->find($refund->shift_closing_id)) {
-                    $shift->update(['refund_amount' => round($shift->refund_amount + $refund->amount, 2)]);
+                    $shift->update([
+                        'refund_amount'    => round($shift->refund_amount + $refund->amount, 2),
+                        'total_item_count' => max(0, $shift->total_item_count - $refund->items->sum('quantity')),
+                    ]);
                     ShiftMethodClosing::where('shift_closing_id', $shift->id)
                         ->where('payment_method', $order->payment_method)
                         ->decrement('amount', (float) $refund->amount);
+                    foreach ($refund->items as $line) {
+                        \App\Models\ShiftClosingDetail::where('shift_closing_id', $shift->id)
+                            ->where('category_id', OrderItem::find($line->order_item_id)?->category_id)
+                            ->decrement('amount', (float) $line->amount);
+                    }
                 }
 
                 $fullyRefunded = $order->items()->get()->every(fn ($i) => (float) $i->refunded_quantity >= (float) $i->quantity - 0.00001);

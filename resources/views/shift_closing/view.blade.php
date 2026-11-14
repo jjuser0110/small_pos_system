@@ -52,7 +52,7 @@
                     <thead><tr><th>Item</th><th class="text-end">Qty</th><th class="text-end">Amount</th></tr></thead>
                     <tbody>
                         @forelse($items->where('qty', '>', 0) as $i)
-                            <tr><td>{{ $i->product->product_name ?? '' }}</td><td class="text-end">{{ $i->qty + 0 }}</td><td class="text-end">{{ number_format($i->amount, 2) }}</td></tr>
+                            <tr><td>{{ $i->product->product_name ?? '' }}@if($i->unit_name) ({{ $i->unit_name }})@endif</td><td class="text-end">{{ $i->qty + 0 }}</td><td class="text-end">{{ money($i->amount) }}</td></tr>
                         @empty
                             <tr><td colspan="3" class="text-muted">No items sold</td></tr>
                         @endforelse

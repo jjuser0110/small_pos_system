@@ -50,6 +50,15 @@ class CartController extends Controller
         if (!$product || !$product->is_active) {
             return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
         }
+        $user = auth()->user();
+        if ($user->isStaff() && (int) $product->company_id !== (int) $user->workingCompany()?->id) {
+            return response()->json(['status' => 'error', 'message' => 'This item belongs to another company.'], 422);
+        }
+        $otherCompany = Cart::where('user_id', $user->id)
+            ->whereHas('product', fn ($q) => $q->where('company_id', '!=', $product->company_id))->exists();
+        if ($otherCompany) {
+            return response()->json(['status' => 'error', 'message' => 'One sale can only have items of one company. Checkout or empty the cart first.'], 422);
+        }
 
         $unit = null;
         if ($request->filled('unit_id')) {
@@ -122,13 +131,15 @@ class CartController extends Controller
                     throw new \RuntimeException('Cart is empty.');
                 }
 
-                // staff sell for the company whose domain they logged in on; managers at the
-                // counter sell for the company the items belong to
-                $company = $user->isStaff()
-                    ? $user->workingCompany()
-                    : \App\Models\Company::find(Product::whereIn('id', $carts->pluck('product_id'))->value('company_id'));
-                if (!$company) {
-                    throw new \RuntimeException('Cannot tell which company this sale is for.');
+                // one sale belongs to one company: staff sell for the company whose domain they
+                // logged in on; managers at the counter sell for the company the items belong to
+                $companyIds = Product::whereIn('id', $carts->pluck('product_id'))->pluck('company_id')->unique();
+                if ($companyIds->count() > 1) {
+                    throw new \RuntimeException('One sale can only have items of one company.');
+                }
+                $company = $user->isStaff() ? $user->workingCompany() : \App\Models\Company::find($companyIds->first());
+                if (!$company || (int) $companyIds->first() !== (int) $company->id) {
+                    throw new \RuntimeException('These items do not belong to the company you are selling for.');
                 }
 
                 $shift = ShiftClosing::openOrStart($user, $company);

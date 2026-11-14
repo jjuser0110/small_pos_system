@@ -56,7 +56,7 @@
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $item->branch->branch_name ?? '' }}</td>
                     <td>{{ $item->company->company_name ?? '' }}</td>
-                    <td>{{ $item->product->product_name ?? '' }}</td>
+                    <td>{{ $item->product->product_name ?? '' }}@if($item->unit_name) ({{ $item->unit_name }})@endif</td>
                     <td class="num">{{ $item->total_quantity }}</td>
                     <td class="num">{{ money($item->total_amount) }}</td>
                 </tr>
