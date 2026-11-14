@@ -122,7 +122,7 @@
                                     <td><input type="number" class="form-control form-control-sm" name="units[{{ $i }}][base_qty]" value="{{ $u['base_qty'] ?? '' }}" min="0.0001" step="any" required></td>
                                     <td><input type="number" class="form-control form-control-sm" name="units[{{ $i }}][price]" value="{{ $u['price'] ?? '' }}" min="0" step="0.01" required></td>
                                     <td><input type="text" class="form-control form-control-sm" name="units[{{ $i }}][barcode]" value="{{ $u['barcode'] ?? '' }}"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">&times;</button></td>
+                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger js-remove-unit" title="Remove">&times;</button></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -155,10 +155,16 @@ function addUnitRow() {
         '<td><input type="number" class="form-control form-control-sm" name="units[' + i + '][base_qty]" min="0.0001" step="any" placeholder="24" required></td>' +
         '<td><input type="number" class="form-control form-control-sm" name="units[' + i + '][price]" min="0" step="0.01" placeholder="50.00" required></td>' +
         '<td><input type="text" class="form-control form-control-sm" name="units[' + i + '][barcode]"></td>' +
-        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">&times;</button></td>';
+        '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger js-remove-unit" title="Remove">&times;</button></td>';
     document.querySelector('#unitsTable tbody').appendChild(tr);
     tr.querySelector('input[type=text]').focus();
 }
+
+// remove a sell option row (one handler for existing and new rows)
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-remove-unit');
+    if (btn) btn.closest('tr').remove();
+});
 
 (function () {
     let buffer = '';

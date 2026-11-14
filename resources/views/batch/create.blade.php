@@ -143,43 +143,10 @@
                             </thead>
                             <tbody>
                                 @foreach($batch->batch_items as $index => $row)
-                                @php $baseUnit = $row->product->uom_dt->uom_unit ?? 'units'; @endphp
-                                <tr data-id="{{ $row->id }}" data-url="{{ route('batch.updateOpenItem', $row) }}">
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $row->product->barcode ?? '' }}</td>
-                                    <td>{{ $row->product->product_name ?? '' }}</td>
-                                    @if($batch->status == 'Open')
-                                        <td>
-                                            <select class="form-select no-select2 js-unit">
-                                                <option value="" data-base="1">{{ $row->product->uom_dt->uom_name ?? 'Unit' }}</option>
-                                                @foreach($row->product->allUnits as $unit)
-                                                    <option value="{{ $unit->id }}" data-base="{{ $unit->base_qty + 0 }}" @if($row->entry_unit_id == $unit->id) selected @endif>{{ $unit->name }} ({{ $unit->base_qty + 0 }})</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td><input type="number" class="form-control js-qty" min="0.01" step="any" value="{{ ($row->entry_qty ?? $row->quantity) + 0 }}"></td>
-                                        <td><input type="number" class="form-control js-cost" min="0" step="0.01" value="{{ round($row->entry_cost ?? $row->cost_per_unit, 2) }}"></td>
-                                        <td><input type="number" class="form-control js-total" min="0" step="0.01" value="{{ round($row->total_cost, 2) }}"></td>
-                                        <td class="text-center js-base" data-unit="{{ $baseUnit }}">{{ $row->quantity + 0 }} {{ $baseUnit }} @ {{ money($row->cost_per_unit) }}</td>
-                                    @else
-                                        <td>{{ $row->entry_unit ?? ($row->product->uom_dt->uom_name ?? '') }}</td>
-                                        <td class="text-center">{{ $row->entryLabel() }}</td>
-                                        <td class="text-center">{{ money($row->entry_cost ?? $row->cost_per_unit) }}</td>
-                                        <td class="text-center">{{ money($row->total_cost) }}</td>
-                                        <td class="text-center">{{ $row->quantity + 0 }} {{ $baseUnit }} @ {{ money($row->cost_per_unit) }}</td>
-                                    @endif
-                                    <td class="text-center">{{ $row->balance + 0 }}</td>
-                                    <td class="text-center">
-                                        @if($batch->status == 'Open')
-                                            <a style="color:red;cursor:pointer" title="Remove" onclick="if(confirm('Remove this item?')){showLoading();window.location.href='{{ route('batch.destroyItem',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
-                                        @else
-                                            <a type="button" data-bs-toggle="modal" data-bs-target="#editModal{{ $row->id }}" title="Adjust"><i class="fa fa-pencil"></i></a>
-                                        @endif
-                                    </td>
-                                </tr>
+                                    @include('batch._row', ['row' => $row, 'index' => $index, 'batch' => $batch])
                                 @endforeach
                                 @if($batch->batch_items->isEmpty())
-                                    <tr><td colspan="10" class="text-center text-muted py-4">No items yet. Choose an item above or scan a barcode.</td></tr>
+                                    <tr class="js-empty"><td colspan="10" class="text-center text-muted py-4">No items yet. Choose an item above or scan a barcode.</td></tr>
                                 @endif
                             </tbody>
                             <tfoot>
@@ -339,6 +306,7 @@
     @if(isset($batch) && $batch->status == 'Open')
     (function () {
         const csrf = '{{ csrf_token() }}';
+        const barcodeBox = document.getElementById('barcode');
         const addUrl = '{{ route('batch.addBatchItem', $batch) }}';
         const status = document.getElementById('addStatus');
         const money = v => 'RM ' + Number(v).toFixed(2);
@@ -351,15 +319,39 @@
             }).then(r => r.json().then(j => { if (!r.ok || j.ok === false) throw new Error(j.message || 'Could not save'); return j; }));
         }
 
-        // ---- add an item (picker or scan): reload to show the row, then focus its quantity
+        const tbody = document.querySelector('#mytable tbody');
+
+        // ---- add an item (picker or scan): the server sends back just that row
+        let adding = false;
         function addItem(data) {
+            if (adding) return;
+            adding = true;
             status.textContent = 'Adding...';
             post(addUrl, data)
                 .then(j => {
-                    sessionStorage.setItem('focusBatchRow', j.row.id);
-                    window.location.reload();
+                    const holder = document.createElement('tbody');
+                    holder.innerHTML = j.html.trim();
+                    const fresh = holder.firstElementChild;
+                    const existing = tbody.querySelector('tr[data-id="' + j.row.id + '"]');
+                    if (existing) existing.replaceWith(fresh); else tbody.appendChild(fresh);
+                    tbody.querySelector('.js-empty')?.remove();
+                    renumber();
+                    updateGrandTotal();
+                    fresh.classList.add('saved');
+                    fresh.scrollIntoView({ block: 'nearest' });
+                    fresh.querySelector('.js-qty').select();
+                    status.textContent = j.message;
                 })
-                .catch(err => { status.textContent = ''; alert(err.message); });
+                .catch(err => { status.textContent = ''; alert(err.message); })
+                .finally(() => {
+                    adding = false;
+                    barcodeBox.value = '';
+                    $('#addItemPicker').val('').trigger('change.select2');
+                });
+        }
+
+        function renumber() {
+            tbody.querySelectorAll('tr[data-id]').forEach((tr, i) => tr.querySelector('.js-no').textContent = i + 1);
         }
 
         $('#addItemPicker').on('change', function () {
@@ -368,7 +360,6 @@
             addItem({ product_id: productId, unit_id: unitId || null });
         });
 
-        const barcodeBox = document.getElementById('barcode');
         barcodeBox.addEventListener('keydown', e => {
             if (e.key !== 'Enter') return;
             e.preventDefault();
@@ -429,24 +420,32 @@
             document.getElementById('grandTotal').textContent = money(sum);
         }
 
-        document.querySelectorAll('#mytable tbody tr[data-id]').forEach(tr => {
-            tr.querySelector('.js-qty').addEventListener('input', () => recalc(tr, 'qty'));
-            tr.querySelector('.js-cost').addEventListener('input', () => recalc(tr, 'cost'));
-            tr.querySelector('.js-total').addEventListener('input', () => recalc(tr, 'total'));
-            tr.querySelector('.js-qty').addEventListener('change', () => save(tr, 'qty'));
-            tr.querySelector('.js-cost').addEventListener('change', () => save(tr, 'cost'));
-            tr.querySelector('.js-total').addEventListener('change', () => save(tr, 'total'));
-            tr.querySelector('.js-unit').addEventListener('change', () => save(tr, 'unit'));
-            tr.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } }));
+        // one handler for every row, including rows added later
+        tbody.addEventListener('input', e => {
+            const tr = e.target.closest('tr[data-id]');
+            if (!tr) return;
+            if (e.target.classList.contains('js-qty')) recalc(tr, 'qty');
+            if (e.target.classList.contains('js-cost')) recalc(tr, 'cost');
+            if (e.target.classList.contains('js-total')) recalc(tr, 'total');
         });
-
-        // after adding: focus the new row's quantity
-        const focusId = sessionStorage.getItem('focusBatchRow');
-        if (focusId) {
-            sessionStorage.removeItem('focusBatchRow');
-            const tr = document.querySelector('#mytable tr[data-id="' + focusId + '"]');
-            if (tr) { tr.scrollIntoView({ block: 'center' }); tr.querySelector('.js-qty').select(); tr.classList.add('saved'); }
-        }
+        tbody.addEventListener('change', e => {
+            const tr = e.target.closest('tr[data-id]');
+            if (!tr) return;
+            const map = { 'js-qty': 'qty', 'js-cost': 'cost', 'js-total': 'total', 'js-unit': 'unit' };
+            for (const cls in map) if (e.target.classList.contains(cls)) save(tr, map[cls]);
+        });
+        tbody.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target.matches('tr[data-id] input')) { e.preventDefault(); e.target.blur(); }
+        });
+        tbody.addEventListener('click', e => {
+            const link = e.target.closest('.js-remove');
+            if (!link || !confirm('Remove this item?')) return;
+            const tr = link.closest('tr');
+            fetch(link.dataset.url, { headers: { 'Accept': 'application/json' } })
+                .then(r => r.json().then(j => { if (!r.ok || j.ok === false) throw new Error(j.message || 'Could not remove'); }))
+                .then(() => { tr.remove(); renumber(); updateGrandTotal(); })
+                .catch(err => alert(err.message));
+        });
     })();
     @endif
 
