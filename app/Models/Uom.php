@@ -12,6 +12,7 @@ class Uom extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'branch_id',
         'uom_name',
         'uom_unit',
     ];
@@ -19,5 +20,16 @@ class Uom extends Model
     public function products()
     {
         return $this->hasMany('App\Models\Product','uom');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /** Units a branch may use: its own, plus shared ones (no branch). */
+    public function scopeForBranch($query, $branchId)
+    {
+        return $query->where(fn ($q) => $q->where('branch_id', $branchId)->orWhereNull('branch_id'));
     }
 }

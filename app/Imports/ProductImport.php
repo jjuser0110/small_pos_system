@@ -52,10 +52,9 @@ class ProductImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
             ]
         );
 
-        $uom = Uom::firstOrCreate(
-            ['uom_name' => trim($uomRaw)],
-            ['uom_unit' => strtolower(trim($uomRaw))]
-        );
+        // the branch's own unit or a shared one; otherwise create it for this branch
+        $uom = Uom::forBranch($this->branch_id)->where('uom_name', trim($uomRaw))->orderByDesc('branch_id')->first()
+            ?? Uom::create(['uom_name' => trim($uomRaw), 'uom_unit' => strtolower(trim($uomRaw)), 'branch_id' => $this->branch_id]);
 
         return new Product([
             'branch_id'     => $this->branch_id,

@@ -66,7 +66,7 @@ class ProductTemplateExport implements WithHeadings, WithEvents
                         ->map(fn($category) => $category->category_name . ' (' . $category->company->company_name . ')')
                         ->toArray();
                 }
-                $uoms       = Uom::pluck('uom_name')->toArray();
+                $uoms       = Uom::when($login_user->role_id == 3, fn ($q) => $q->forBranch($login_user->branch_id))->pluck('uom_name')->unique()->values()->toArray();
                 // $products   = Product::where('branch_id', $login_user->branch_id)->pluck('product_name')->toArray();
 
                 $dropdownSheet->fromArray(

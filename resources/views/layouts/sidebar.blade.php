@@ -161,6 +161,18 @@ $currentRoute = request()->route()->getName();
                 <div>Supplier</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'uom.index') ? 'active' : ''}}">
+            <a href="{{ route('uom.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>UOM</div>
+            </a>
+        </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'receipt_setting.index') ? 'active' : ''}}">
+            <a href="{{ route('receipt_setting.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
+                <div>Receipt Setting</div>
+            </a>
+        </li>
         @if(auth()->user()->role_id == 1)
         <li class="menu-item {{ Str::contains($currentRoute, 'company_staff.index') ? 'active' : ''}}">
             <a href="{{ route('company_staff.index') }}" class="menu-link">
@@ -184,22 +196,10 @@ $currentRoute = request()->route()->getName();
                 <div>Branch</div>
             </a>
         </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'uom.index') ? 'active' : ''}}">
-            <a href="{{ route('uom.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>UOM</div>
-            </a>
-        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'payment_method.index') ? 'active' : ''}}">
             <a href="{{ route('payment_method.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
                 <div>Payment Method</div>
-            </a>
-        </li>
-        <li class="menu-item {{ Str::contains($currentRoute, 'receipt_setting.index') ? 'active' : ''}}">
-            <a href="{{ route('receipt_setting.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-spreadsheet"></i>
-                <div>Receipt Setting</div>
             </a>
         </li>
         @endif

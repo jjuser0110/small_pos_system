@@ -39,7 +39,14 @@ class ProductController extends Controller
     {
         return view('product.create')
             ->with('category', $this->formCategories())
-            ->with('uom', Uom::all());
+            ->with('uom', $this->formUoms());
+    }
+
+    /** Units for the item form: a branch manager sees their branch's and shared ones. */
+    private function formUoms($itemBranchId = null)
+    {
+        $branchId = Auth::user()->role_id == 3 ? Auth::user()->branch_id : $itemBranchId;
+        return Uom::with('branch')->when($branchId, fn ($q) => $q->forBranch($branchId))->orderBy('uom_name')->get();
     }
 
     /** Categories the user may put items in (their branch for a branch manager). */
@@ -98,7 +105,7 @@ class ProductController extends Controller
         return view('product.create')
             ->with('product', $product->load('allUnits'))
             ->with('category', $this->formCategories())
-            ->with('uom', Uom::all());
+            ->with('uom', $this->formUoms($product->branch_id));
     }
 
     public function update(Request $request, Product $product)

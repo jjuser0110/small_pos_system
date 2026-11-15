@@ -131,7 +131,7 @@ class BatchController extends Controller
         $product = Product::with(['units', 'uom_dt'])->where('company_id', $batch->company_id)->where('is_active', 1)->orderBy('product_name')->get();
         $batch->load(['batch_items.product.allUnits', 'batch_items.product.uom_dt', 'supplier']);
 
-        $receipt = \App\Models\ReceiptSetting::first();
+        $receipt = \App\Models\ReceiptSetting::forBranch($batch->branch_id);
 
         return view('batch.create')->with('batch',$batch)->with('company',$company)->with('product',$product)
             ->with('receipt', $receipt)

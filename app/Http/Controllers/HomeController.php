@@ -158,7 +158,7 @@ class HomeController extends Controller
         // staff may reprint their own receipts; managers within their scope
         $this->authorizeRecord($order, 'user_id');
 
-        $receipt_setting = ReceiptSetting::find(1);
+        $receipt_setting = ReceiptSetting::forBranch($order->branch_id);
         return view('receipt')->with('order',$order)->with('receipt_setting',$receipt_setting);
     }
 

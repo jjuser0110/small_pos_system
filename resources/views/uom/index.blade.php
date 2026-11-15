@@ -28,6 +28,7 @@
                             <th>No</th>
                             <th>Uom Name</th>
                             <th>Uom Unit</th>
+                            <th>Branch</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -37,6 +38,7 @@
                             <td>{{$index+1??""}}</td>
                             <td>{{$row->uom_name??""}}</td>
                             <td>{{$row->uom_unit??""}}</td>
+                            <td>{{ $row->branch->branch_name ?? 'All branches' }}</td>
                             <td>
                                 <a href="{{ route('uom.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('uom.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>
