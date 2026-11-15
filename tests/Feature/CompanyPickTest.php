@@ -71,4 +71,29 @@ class CompanyPickTest extends TestCase
         $this->withoutMiddleware(\App\Http\Middleware\CheckStaffAccess::class);
         $this->actingAs($staff)->post(route('company_pick'), ['company_id' => $this->a->id])->assertForbidden();
     }
+
+    public function test_form_dropdowns_follow_the_pick(): void
+    {
+        $boss = $this->makeUser(1);
+        $this->actingAs($boss)->post(route('company_pick'), ['company_id' => $this->a->id]);
+
+        $ids = fn ($list) => $list->pluck('id')->sort()->values()->all();
+
+        $this->actingAs($boss)->get(route('product.create'))
+            ->assertViewHas('category', fn ($list) => $list->pluck('company_id')->unique()->values()->all() === [$this->a->id]);
+        $this->actingAs($boss)->get(route('category.create'))
+            ->assertViewHas('company', fn ($list) => $ids($list) === [$this->a->id]);
+        $this->actingAs($boss)->get(route('batch.create'))
+            ->assertViewHas('company', fn ($list) => $ids($list) === [$this->a->id]);
+
+        // the picked company starts selected
+        $selected = '<option value="' . $this->a->id . '" selected';
+        $this->actingAs($boss)->get(route('damage.index'))->assertSee($selected, false);
+        $this->actingAs($boss)->get(route('stock_transfer.index'))->assertSee($selected, false);
+
+        // editing a Company B item keeps its own category in the list
+        $bItem = \App\Models\Product::where('product_name', 'Banana Milk')->first();
+        $this->actingAs($boss)->get(route('product.edit', $bItem))
+            ->assertViewHas('category', fn ($list) => $list->contains('id', $bItem->category_id));
+    }
 }

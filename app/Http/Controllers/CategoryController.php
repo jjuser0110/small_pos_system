@@ -38,6 +38,7 @@ class CategoryController extends Controller
         }else{
             $company = Company::all();
         }
+        $company = $this->pickFilterCompanies($company);
         return view('category.create')->with('company',$company);
     }
 

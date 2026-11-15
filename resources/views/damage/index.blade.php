@@ -18,7 +18,7 @@
                     <select name="company_id" id="damage_company" class="form-select" required>
                         <option value="">-- Choose company --</option>
                         @foreach($companies as $c)
-                            <option value="{{ $c->id }}">{{ $c->company_name }} ({{ $c->company_code }})</option>
+                            <option value="{{ $c->id }}" @selected(\App\Support\CompanyPick::id() === $c->id)>{{ $c->company_name }} ({{ $c->company_code }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -121,6 +121,8 @@ $(function(){
         });
         $(select).trigger('change.select2');
     });
+    // company already chosen (top bar pick): fill its items straight away
+    if ($('#damage_company').val()) $('#damage_company').trigger('change');
     @endif
 
     $('#mytable').DataTable({

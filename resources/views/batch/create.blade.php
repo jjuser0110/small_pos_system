@@ -26,7 +26,7 @@
                     <label class="form-label">Company</label>
                     <select name="company_id" class="form-select" @if(isset($batch)) disabled @endif>
                         @foreach($company as $com)
-                            <option value="{{ $com->id }}" @if((isset($batch) && $batch->company_id == $com->id) || old('company_id') == $com->id) selected @endif>{{ $com->company_name ?? '' }}</option>
+                            <option value="{{ $com->id }}" @if((isset($batch) && $batch->company_id == $com->id) || old('company_id') == $com->id || (!isset($batch) && !old('company_id') && \App\Support\CompanyPick::id() == $com->id)) selected @endif>{{ $com->company_name ?? '' }}</option>
                         @endforeach
                     </select>
                 </div>

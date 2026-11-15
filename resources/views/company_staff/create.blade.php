@@ -27,7 +27,7 @@
                     <label for="select2Basic" class="form-label">Company</label>
                     <select id="select2Basic" name="company_id" class="select2 form-select" data-allow-clear="true">
                         @foreach($company as $com)
-                            <option value="{{ $com->id }}" @if(isset($company_staff) && $company_staff->company_id == $com->id) selected @endif>
+                            <option value="{{ $com->id }}" @if(isset($company_staff) ? $company_staff->company_id == $com->id : \App\Support\CompanyPick::id() == $com->id) selected @endif>
                                 {{ $com->company_name ?? '' }}
                             </option>
                         @endforeach

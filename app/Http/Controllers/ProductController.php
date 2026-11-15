@@ -50,12 +50,20 @@ class ProductController extends Controller
         return Uom::with('branch')->when($branchId, fn ($q) => $q->forBranch($branchId))->orderBy('uom_name')->get();
     }
 
-    /** Categories the user may put items in (their branch for a branch manager). */
-    private function formCategories()
+    /**
+     * Categories the user may put items in (their branch for a branch manager,
+     * and only the company picked in the top bar). An item being edited keeps
+     * its current category in the list.
+     */
+    private function formCategories($keepCategoryId = null)
     {
         $query = Category::with('company')->orderBy('category_name');
         if (Auth::user()->role_id == 3) {
             $query->where('branch_id', Auth::user()->branch_id);
+        }
+        if ($picked = $this->pickedCompanyId()) {
+            $query->where(fn ($q) => $q->where('company_id', $picked)
+                ->when($keepCategoryId, fn ($q) => $q->orWhere('id', $keepCategoryId)));
         }
         return $query->get();
     }
@@ -105,7 +113,7 @@ class ProductController extends Controller
 
         return view('product.create')
             ->with('product', $product->load('allUnits'))
-            ->with('category', $this->formCategories())
+            ->with('category', $this->formCategories($product->category_id))
             ->with('uom', $this->formUoms($product->branch_id));
     }
 

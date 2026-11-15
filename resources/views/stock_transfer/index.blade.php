@@ -20,7 +20,7 @@
                     <select id="from_company" class="form-select" required>
                         <option value="">-- Select --</option>
                         @foreach($fromCompanies as $c)
-                            <option value="{{ $c->id }}">{{ $c->company_name }} ({{ $c->company_code }})</option>
+                            <option value="{{ $c->id }}" @selected(\App\Support\CompanyPick::id() === $c->id)>{{ $c->company_name }} ({{ $c->company_code }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -164,6 +164,8 @@ $(function(){
 
     $('#from_company').on('change', function () { fill('from_product', this.value, true); $('#from_stock').text(''); });
     $('#to_company').on('change', function () { fill('to_product', this.value, false); });
+    // the top bar company starts as the sending company
+    if ($('#from_company').val()) $('#from_company').trigger('change');
     $('#from_product').on('change', function () {
         var stock = $(this).find('option:selected').data('stock');
         $('#from_stock').text(stock !== undefined ? 'In stock: ' + stock : '');

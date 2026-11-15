@@ -48,7 +48,7 @@ class DamageController extends Controller
             'canApprove' => (int) $user->role_id === self::APPROVER_ROLE,
             'companies'  => $canReport ? $this->scopedCompanies() : collect(),
             'products'   => $canReport
-                ? Product::where('is_active', 1)->where('branch_id', $user->branch_id)->orderBy('product_name')
+                ? $this->applyCompanyPick(Product::where('is_active', 1)->where('branch_id', $user->branch_id))->orderBy('product_name')
                     ->get(['id', 'company_id', 'product_name', 'barcode', 'stock_quantity'])
                 : collect(),
         ]);

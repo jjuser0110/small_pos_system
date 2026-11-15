@@ -45,6 +45,7 @@ class BatchController extends Controller
         }else{
             $company = Company::all();
         }
+        $company = $this->pickFilterCompanies($company);
 
         $year = Carbon::now()->year;
         $month = Carbon::now()->month;
