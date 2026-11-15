@@ -78,7 +78,6 @@ class RecordScopeTest extends TestCase
 
         $this->expect403(fn () => app(OrderController::class)->view($order));
         $this->expect403(fn () => app(OrderController::class)->void(Request::create('/', 'POST', ['voided_reason' => 'x']), $order));
-        $this->expect403(fn () => app(OrderController::class)->discount(Request::create('/', 'POST', ['discount' => 1]), $order));
     }
 
     public function test_staff_cannot_open_someone_elses_shift(): void

@@ -105,11 +105,10 @@ class RoleAccessTest extends TestCase
         $this->get('/cart/load')->assertRedirect('/login');
     }
 
-    public function test_staff_cannot_set_discount(): void
+    public function test_order_discount_is_gone(): void
     {
-        $this->actingAs($this->userWithRole(5));
-        $this->expectHttp403(fn () => app(\App\Http\Controllers\OrderController::class)
-            ->discount(request(), new \App\Models\Order()));
+        $this->assertNull(Route::getRoutes()->getByName('order.discount'));
+        $this->assertFalse(method_exists(\App\Http\Controllers\OrderController::class, 'discount'));
     }
 
     public function test_company_manager_routes_are_gone(): void

@@ -113,7 +113,8 @@ class SecurityHardeningTest extends TestCase
         $this->postJson('http://shopa.test/cart/add', ['id' => $item->id]);
         $order = Order::find($this->postJson('http://shopa.test/cart/placeorder', ['payment_method' => 'Cash', 'amount_received' => 20])->json('order_id'));
 
-        $this->actingAs($this->makeUser(3, $this->company))->post(route('order.discount', $order), ['discount' => 4]);   // paid 16 for 2
+        // an older order that was given a discount before the feature was removed: paid 16 for 2
+        $order->update(['discount' => 4, 'final_total' => 16]);
 
         $this->actingAs($staff)->post('http://shopa.test' . route('refund.store', [], false), [
             'order_id' => $order->id, 'qty' => [$order->items->first()->id => 1], 'reason' => 'x',

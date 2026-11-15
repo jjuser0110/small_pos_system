@@ -254,43 +254,4 @@ class OrderController extends Controller
 
         return back()->with('success', 'Order voided successfully.');
     }
-
-    public function discount(Request $request, Order $order)
-    {
-        // same roles that see the discount column on the order list
-        if (!in_array(auth()->user()->role_id, [1, 2, 3])) {
-            abort(403, 'Access denied');
-        }
-        $this->authorizeRecord($order);
-
-        $request->validate([
-            'discount' => 'required|numeric|min:0',
-        ]);
-
-        if ($order->status !== 'Active') {
-            return back()->withErrors('Only active orders can get a discount.');
-        }
-        $refunded = (float) $order->refunds()->where('status', 'approved')->sum('amount');
-        $new = round((float) $request->discount, 2);
-        if ($new > (float) $order->total_price - $refunded + 0.001) {
-            return back()->withErrors('Discount cannot be more than what is left on the order (' . money($order->total_price - $refunded) . ').');
-        }
-
-        DB::transaction(function () use ($order, $new) {
-            $order = Order::lockForUpdate()->find($order->id);
-            $delta = round($new - (float) $order->discount, 2);   // change in discount (may be negative)
-
-            // the order is now worth less; so are the shift's sales and its payment method
-            $order->update(['discount' => $new, 'final_total' => round($order->total_price - $new, 2)]);
-
-            if ($delta != 0 && ($shift = ShiftClosing::lockForUpdate()->find($order->shift_closing_id))) {
-                $shift->update(['total_order_amount' => round($shift->total_order_amount - $delta, 2)]);
-                ShiftMethodClosing::where('shift_closing_id', $shift->id)
-                    ->where('payment_method', $order->payment_method)
-                    ->decrement('amount', $delta);
-            }
-        });
-
-        return back()->with('success', 'Discount saved.');
-    }
 }

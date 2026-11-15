@@ -62,31 +62,6 @@ class ReviewFixesTest extends TestCase
         return $this->cola->allUnits()->first()->id;
     }
 
-    public function test_discount_reduces_order_shift_and_payment_method(): void
-    {
-        $order = $this->sell([[null, 4]], 10);                 // 4 tins = RM10
-        $manager = $this->makeUser(3, $this->company);
-
-        $this->actingAs($manager)->post(route('order.discount', $order), ['discount' => 2])->assertSessionHasNoErrors();
-        $order->refresh();
-        $shift = ShiftClosing::find($order->shift_closing_id);
-        $this->assertEquals(8.00, $order->final_total);
-        $this->assertEquals(8.00, $shift->total_order_amount);
-        $this->assertEquals(8.00, $shift->items()->value('amount'));
-
-        // changing the discount adjusts by the difference only
-        $this->actingAs($manager)->post(route('order.discount', $order), ['discount' => 1]);
-        $this->assertEquals(9.00, $shift->fresh()->total_order_amount);
-
-        // more than the order is refused
-        $this->actingAs($manager)->post(route('order.discount', $order), ['discount' => 50])->assertSessionHasErrors();
-
-        // void after a discount takes back exactly what was kept
-        $this->actingAs($manager)->post(route('order.void', $order), ['voided_reason' => 'x']);
-        $this->assertEquals(0, $shift->fresh()->total_order_amount);
-        $this->assertEquals(0, $shift->items()->value('amount'));
-    }
-
     public function test_refund_reduces_items_and_category_totals(): void
     {
         $order = $this->sell([[null, 3]], 7.50);
