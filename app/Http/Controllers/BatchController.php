@@ -26,11 +26,11 @@ class BatchController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $batch = Batch::with('supplier')->where('branch_id',$login_user->branch_id)->orderBy('created_at','DESC')->get();
+            $batch = $this->applyCompanyPick(Batch::with('supplier')->where('branch_id',$login_user->branch_id))->orderBy('created_at','DESC')->get();
         }else if($login_user->role_id == 4){
             $batch = Batch::where('company_id',$login_user->company_id)->orderBy('created_at','DESC')->get();
         }else{
-            $batch = Batch::with('supplier')->orderBy('created_at','DESC')->get();
+            $batch = $this->applyCompanyPick(Batch::with('supplier'))->orderBy('created_at','DESC')->get();
         }
         return view('batch.index')->with('batch',$batch);
     }

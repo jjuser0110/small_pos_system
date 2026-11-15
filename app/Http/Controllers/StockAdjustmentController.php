@@ -29,6 +29,7 @@ class StockAdjustmentController extends Controller
         if ($login_user->role_id == 3) {
             $query->where('branch_id', $login_user->branch_id);
         }
+        $this->applyCompanyPick($query);
 
         return view('stock_adjustment.index')->with('adjustments', $query->get());
     }

@@ -18,9 +18,9 @@ class CompanyController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $company = Company::where('branch_id',$login_user->branch_id)->get();
+            $company = $this->applyCompanyPick(Company::where('branch_id',$login_user->branch_id), 'id')->get();
         }else{
-            $company = Company::all();
+            $company = $this->applyCompanyPick(Company::query(), 'id')->get();
         }
 
         return view('company.index')->with('company',$company);

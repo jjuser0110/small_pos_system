@@ -22,6 +22,10 @@ class ReportController extends Controller
 
         [$date_from, $date_to] = $this->dateRange($request);
         [$branches, $companies] = $this->filterOptions($login_user);
+        $companies = $this->pickFilterCompanies($companies);
+        if ($picked = $this->pickedCompanyId()) {
+            $request->merge(['company_id' => [$picked]]);
+        }
 
         $itemTotals = $this->itemTotals($request, $login_user, $date_from, $date_to);
 
@@ -41,6 +45,10 @@ class ReportController extends Controller
 
         [$date_from, $date_to] = $this->dateRange($request);
         [$branches, $companies] = $this->filterOptions($login_user);
+        $companies = $this->pickFilterCompanies($companies);
+        if ($picked = $this->pickedCompanyId()) {
+            $request->merge(['company_id' => [$picked]]);
+        }
 
         $itemTotals = $this->itemTotals($request, $login_user, $date_from, $date_to);
 

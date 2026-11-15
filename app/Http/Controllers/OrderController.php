@@ -49,6 +49,11 @@ class OrderController extends Controller
             $companies = Company::all();
         }
 
+        $companies = $this->pickFilterCompanies($companies);
+        if ($picked = $this->pickedCompanyId()) {
+            $request->merge(['company_id' => [$picked]]);
+        }
+
         $query = Order::query();
 
         // Filter by role

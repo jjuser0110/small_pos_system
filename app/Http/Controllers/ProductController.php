@@ -28,6 +28,7 @@ class ProductController extends Controller
             // branch manager: own branch only
             $query->where('branch_id', Auth::user()->branch_id);
         }
+        $this->applyCompanyPick($query);
 
         return view('product.index', [
             'product'   => $query->orderBy('product_name')->get(),

@@ -31,6 +31,9 @@ class ProfitReportController extends Controller
 {
     public function index(Request $request)
     {
+        if ($picked = $this->pickedCompanyId()) {
+            $request->merge(['company_id' => $picked]);
+        }
         $from = $request->date_from ?: Carbon::now()->startOfMonth()->toDateString();
         $to = $request->date_to ?: Carbon::now()->toDateString();
 
@@ -71,7 +74,7 @@ class ProfitReportController extends Controller
             'date_from'  => $from,
             'date_to'    => $to,
             'branches'   => Branch::orderBy('branch_name')->get(),
-            'companies'  => Company::orderBy('company_name')->get(),
+            'companies'  => $this->pickFilterCompanies(Company::orderBy('company_name')->get()),
             'rows'       => $rows,
             'byCompany'  => $byCompany,
             'byBranch'   => $byBranch,

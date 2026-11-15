@@ -34,6 +34,7 @@ class StaffAttendanceController extends Controller
             $query->where('branch_id', $request->branch_id);   // roles 1, 2
         }
 
+        $this->applyCompanyPick($query);
         $records = $query->get();
 
         // summary per staff

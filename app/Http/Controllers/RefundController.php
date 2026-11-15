@@ -37,6 +37,9 @@ class RefundController extends Controller
             default => abort(403),
         };
 
+        if ($user->role_id != 5) {
+            $this->applyCompanyPick($query);
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }

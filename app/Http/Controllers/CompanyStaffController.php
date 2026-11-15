@@ -23,6 +23,7 @@ class CompanyStaffController extends Controller
         if ($login_user->role_id == 3) {
             $query->where('branch_id', $login_user->branch_id);
         }
+        $this->applyCompanyPick($query);
 
         return view('company_staff.index')->with('company_staff', $query->get());
     }

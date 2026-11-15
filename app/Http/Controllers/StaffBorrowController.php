@@ -22,6 +22,9 @@ class StaffBorrowController extends Controller
         } elseif ($login_user->role_id == 3) {
             $query->where('branch_id', $login_user->branch_id); // manager: own branch
         }                                                       // others: everything
+        if ($login_user->role_id != 5) {
+            $this->applyCompanyPick($query);
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

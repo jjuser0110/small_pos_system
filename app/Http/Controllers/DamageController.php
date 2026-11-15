@@ -33,6 +33,9 @@ class DamageController extends Controller
             5       => $query->where('company_id', $user->workingCompany()?->id),
             default => abort(403),
         };
+        if ($user->role_id != 5) {
+            $this->applyCompanyPick($query);
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }

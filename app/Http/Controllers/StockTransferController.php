@@ -39,6 +39,10 @@ class StockTransferController extends Controller
         } elseif (!in_array($user->role_id, [1, 2])) {
             abort(403);
         }
+        // a picked company sees transfers it sends or receives
+        if ($user->role_id != 5 && ($picked = $this->pickedCompanyId())) {
+            $query->where(fn ($q) => $q->where('from_company_id', $picked)->orWhere('to_company_id', $picked));
+        }
 
         if ($request->filled('status')) {
             $request->status === 'pending'
@@ -48,7 +52,7 @@ class StockTransferController extends Controller
 
         $canSend = in_array($user->role_id, self::SENDER_ROLES);
         // a branch manager moves stock between companies of their own branch
-        $companies = $canSend ? $this->scopedCompanies() : collect();
+        $companies = $canSend ? $this->transferCompanies() : collect();
 
         return view('stock_transfer.index', [
             'transfers'     => $query->get(),
@@ -60,6 +64,15 @@ class StockTransferController extends Controller
                     ->get(['id', 'company_id', 'product_name', 'barcode', 'stock_quantity'])
                 : collect(),
         ]);
+    }
+
+    /** Both ends of a transfer: every company the user may use, ignoring the top bar pick. */
+    private function transferCompanies()
+    {
+        $user = Auth::user();
+        return $user->role_id == 3
+            ? \App\Models\Company::where('branch_id', $user->branch_id)->get()
+            : \App\Models\Company::all();
     }
 
     public function store(Request $request)

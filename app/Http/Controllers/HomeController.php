@@ -92,6 +92,10 @@ class HomeController extends Controller
         if ($login_user->role_id == 3) {
             $categoryQuery->where('branch_id', $login_user->branch_id);
             $productQuery->where('branch_id', $login_user->branch_id);
+        }
+        if ($login_user->role_id != 5) {
+            $this->applyCompanyPick($categoryQuery);
+            $this->applyCompanyPick($productQuery);
         } elseif ($login_user->role_id == 5) {
             $company = $login_user->workingCompany();
             $categoryQuery->where('company_id', $company?->id);

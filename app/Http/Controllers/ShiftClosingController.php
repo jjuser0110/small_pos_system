@@ -80,6 +80,9 @@ class ShiftClosingController extends Controller
             5       => $query->where('user_id', $login_user->id),
             default => abort(403),
         };
+        if ($login_user->role_id != 5 && ($picked = $this->pickedCompanyId())) {
+            $request->merge(['company_id' => $picked]);
+        }
 
         if ($request->filled('company_id')) {
             $query->where('company_id', $request->company_id);

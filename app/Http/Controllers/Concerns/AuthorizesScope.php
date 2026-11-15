@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Models\Category;
 use App\Models\Company;
+use App\Support\CompanyPick;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -45,16 +46,41 @@ trait AuthorizesScope
         }
     }
 
-    /** Companies the logged-in user may create or move records into. */
+    /** Companies the logged-in user may create or move records into (only the picked one, if any). */
     protected function scopedCompanies()
     {
         $user = Auth::user();
 
-        return match ((int) $user->role_id) {
+        $companies = match ((int) $user->role_id) {
             1, 2    => Company::all(),
             3       => Company::where('branch_id', $user->branch_id)->get(),
             default => collect(),
         };
+
+        $picked = CompanyPick::id();
+        return $picked ? $companies->where('id', $picked)->values() : $companies;
+    }
+
+    /** The company chosen in the top bar picker, or null for all companies. */
+    protected function pickedCompanyId(): ?int
+    {
+        return CompanyPick::id();
+    }
+
+    /** Limit a query to the picked company (does nothing when "All companies"). */
+    protected function applyCompanyPick($query, string $column = 'company_id')
+    {
+        if ($picked = CompanyPick::id()) {
+            $query->where($column, $picked);
+        }
+        return $query;
+    }
+
+    /** Company dropdown options for filters: the picked company only, if one is picked. */
+    protected function pickFilterCompanies($companies)
+    {
+        $picked = CompanyPick::id();
+        return $picked ? $companies->where('id', $picked)->values() : $companies;
     }
 
     /** Abort with 403 unless the given company id is one the user may use. */

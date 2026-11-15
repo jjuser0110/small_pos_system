@@ -20,6 +20,21 @@
                 </div> -->
                 <!-- /Search -->
 
+                @if(\App\Support\CompanyPick::available())
+                @php($pickedCompany = \App\Support\CompanyPick::company())
+                <form method="post" action="{{ route('company_pick') }}" class="company-pick d-flex align-items-center me-3">
+                  @csrf
+                  <i class="bx bx-buildings bx-sm text-primary me-2 d-none d-sm-inline"></i>
+                  <select name="company_id" class="form-select form-select-lg no-select2 fw-semibold {{ $pickedCompany ? 'border-primary text-primary' : '' }}"
+                          onchange="this.form.submit()" aria-label="Show company">
+                    <option value="">All companies</option>
+                    @foreach(\App\Support\CompanyPick::options() as $c)
+                      <option value="{{ $c->id }}" @selected($pickedCompany?->id === $c->id)>{{ $c->company_name }}</option>
+                    @endforeach
+                  </select>
+                </form>
+                @endif
+
                 <ul class="navbar-nav flex-row align-items-center ms-auto">
                   <!-- Language -->
                   <!-- <li class="nav-item dropdown-language dropdown me-2 me-xl-0">

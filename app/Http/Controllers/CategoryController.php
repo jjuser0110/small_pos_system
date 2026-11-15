@@ -18,11 +18,11 @@ class CategoryController extends Controller
     {
         $login_user = Auth::user();
         if($login_user->role_id == 3){
-            $category = Category::where('branch_id',$login_user->branch_id)->get();
+            $category = $this->applyCompanyPick(Category::where('branch_id',$login_user->branch_id))->get();
         }else if($login_user->role_id == 4){
             $category = Category::where('company_id',$login_user->company_id)->get();
         }else{
-            $category = Category::all();
+            $category = $this->applyCompanyPick(Category::query())->get();
         }
 
         return view('category.index')->with('category',$category);
