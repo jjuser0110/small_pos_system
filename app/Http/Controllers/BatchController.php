@@ -371,6 +371,11 @@ class BatchController extends Controller
     {
         $this->authorizeRecord($batchItem);
 
+        // open entries are edited inline (no stock yet); this adjusts stock already added
+        if ($batchItem->batch->status !== 'Completed') {
+            return back()->withErrors('This stock entry is not completed yet. Edit the row in the table instead.');
+        }
+
         $request->validate([
             'quantity'      => 'required',
             'cost_per_unit' => 'required',
@@ -484,8 +489,11 @@ class BatchController extends Controller
         $this->authorizeRecord($batch);
 
         $request->validate([
-            'file'       => 'required|mimes:xlsx,csv',
+            'file'       => 'required|mimes:xlsx,csv|max:5120',   // 5 MB
         ]);
+        if ($batch->status !== 'Open') {
+            return back()->withErrors('This stock entry is already completed.');
+        }
 
         Excel::import(new StockImport($batch), $request->file('file'));
 

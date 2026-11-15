@@ -35,6 +35,11 @@ class LoginController extends Controller
 
     public function authenticated(Request $request, $user)
     {
+        // only the roles FsMart knows (superadmin, admin, branch manager, staff)
+        if (!in_array((int) $user->role_id, [1, 2, 3, 5], true)) {
+            return $this->refuse($request, 'This account has no access. Please contact your Boss!');
+        }
+
         if ($user->is_active != 1) {
             return $this->refuse($request, 'Your account has been locked. Please contact your Boss!');
         }

@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
                 'name'     => 'Superadmin',
                 'username'     => 'superadmin',
                 'email'     => 'superadmin@gmail.com',
-                'password'     => Hash::make('admin99999'),
+                'password'     => Hash::make($this->initialPassword()),
                 'role_id'     => $role->id,
                 'is_active'     => 1,
             ];
@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
                 'name'     => 'Admin',
                 'username'     => 'admin',
                 'email'     => 'admin@gmail.com',
-                'password'     => Hash::make('admin99999'),
+                'password'     => Hash::make($this->initialPassword()),
                 'role_id'     => $role->id,
                 'is_active'     => 1,
             ];
@@ -50,5 +50,21 @@ class UserSeeder extends Seeder
         $abilities = Bouncer::ability()->all()->pluck('id');
         $bouncerRole = $user->getRoles()->first();
         Bouncer::allow($bouncerRole)->to($abilities);
+    }
+
+    /**
+     * Password for newly created admin accounts: SEED_ADMIN_PASSWORD from .env,
+     * otherwise a random one shown once in the console. Never hard-coded.
+     */
+    private function initialPassword(): string
+    {
+        static $password = null;
+        if ($password === null) {
+            $password = env('SEED_ADMIN_PASSWORD') ?: \Illuminate\Support\Str::password(14, symbols: false);
+            if (!env('SEED_ADMIN_PASSWORD')) {
+                $this->command?->warn("New admin accounts get password: $password  (change it after logging in)");
+            }
+        }
+        return $password;
     }
 }

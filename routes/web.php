@@ -17,7 +17,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Auth::routes();
+// login and logout only: accounts are created by managers, and public sign-up /
+// password-reset pages are not used (they also trusted the Host header for links)
+Auth::routes(['register' => false, 'reset' => false, 'confirm' => false, 'verify' => false]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::post('/change_password', [App\Http\Controllers\HomeController::class, 'change_password'])->name('change_password');

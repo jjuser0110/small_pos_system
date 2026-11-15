@@ -31,7 +31,7 @@ class BranchManagerController extends Controller
         $validator = Validator::make($request->all(), [
             'name'      => 'required|string|max:255',
             'username'  => 'required|unique:users,username,NULL,id,deleted_at,NULL',
-            'password'  => 'required|string',
+            'password'  => 'required|string|min:6',
             'branch_id' => 'required|exists:branches,id',
         ]);
         if ($validator->fails()) {
@@ -67,6 +67,7 @@ class BranchManagerController extends Controller
             'name'      => 'required|string|max:255',
             'branch_id' => 'required|exists:branches,id',
             'is_active' => 'nullable|in:0,1',
+            'password'  => 'nullable|string|min:6',
         ]);
 
         $data = [

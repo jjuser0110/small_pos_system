@@ -37,7 +37,7 @@ class CompanyStaffController extends Controller
         $validator = Validator::make($request->all(), [
             'name'       => 'required|string|max:255',
             'username'   => 'required|unique:users,username,NULL,id,deleted_at,NULL',
-            'password'   => 'required|string',
+            'password'   => 'required|string|min:6',
             'company_id' => ['required', Rule::in($this->scopedCompanies()->pluck('id')->all())],
             'shift'      => ['required', Rule::in(ShiftWindow::shifts())],
         ]);
@@ -121,6 +121,7 @@ class CompanyStaffController extends Controller
             'company_id' => ['required', Rule::in($this->scopedCompanies()->pluck('id')->all())],
             'shift'      => ['required', Rule::in(ShiftWindow::shifts())],
             'is_active'  => 'nullable|in:0,1',
+            'password'   => 'nullable|string|min:6',
         ]);
 
         $company = Company::findOrFail($request->company_id);

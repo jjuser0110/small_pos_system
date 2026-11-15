@@ -105,9 +105,11 @@ class RefundController extends Controller
                 'requested_by'     => $user->id,
             ]);
 
+            // if the order had a discount, each item was paid that much less
+            $paidRatio = (float) $order->total_price > 0 ? (float) $order->final_total / (float) $order->total_price : 1;
             $total = 0;
             foreach ($lines as [$item, $qty]) {
-                $amount = round($item->single_price * $qty, 2);
+                $amount = round($item->single_price * $qty * $paidRatio, 2);
                 $total += $amount;
                 RefundItem::create([
                     'refund_id'     => $refund->id,

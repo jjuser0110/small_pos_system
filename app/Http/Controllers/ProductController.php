@@ -174,7 +174,7 @@ class ProductController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file'       => 'required|mimes:xlsx,csv',
+            'file'       => 'required|mimes:xlsx,csv|max:5120',   // 5 MB
             'company_id' => 'required',
         ]);
 

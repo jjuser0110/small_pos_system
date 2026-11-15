@@ -192,7 +192,7 @@
     <div class="receipt">
         <!-- Header -->
         <div class="receipt-header">
-            {!! $receipt_setting->header !!}
+            {!! nl2br(e($receipt_setting->header ?? '')) !!}
         </div>
 
         <!-- Receipt Title -->
@@ -264,7 +264,7 @@
 
         <!-- Footer -->
         <div class="receipt-footer">
-            {!! $receipt_setting->footer !!}
+            {!! nl2br(e($receipt_setting->footer ?? '')) !!}
         </div>
     </div>
 @include('layouts.shift-timer')
