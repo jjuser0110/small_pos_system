@@ -131,6 +131,12 @@ $currentRoute = request()->route()->getName();
                 <div>Stock</div>
             </a>
         </li>
+        <li class="menu-item {{ Str::contains($currentRoute, 'expiring_stock.') ? 'active' : ''}}">
+            <a href="{{ route('expiring_stock.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-time-five"></i>
+                <div>Expiring Stock</div>
+            </a>
+        </li>
         <li class="menu-item {{ Str::contains($currentRoute, 'product.') ? 'active' : ''}}">
             <a href="{{ route('product.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-spreadsheet"></i>

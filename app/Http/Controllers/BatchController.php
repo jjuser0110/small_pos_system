@@ -287,8 +287,10 @@ class BatchController extends Controller
             'entry_qty'  => 'required|numeric|gt:0',
             'entry_cost' => 'nullable|numeric|min:0',
             'total_cost' => 'nullable|numeric|min:0',
-            'changed'    => 'nullable|in:qty,cost,total,unit',
+            'changed'    => 'nullable|in:qty,cost,total,unit,expiry',
+            'expiry_date' => 'nullable|date',
         ]);
+        $batch_item->expiry_date = $request->expiry_date ?: null;
 
         $unit = $request->filled('unit_id') ? $batch_item->product->allUnits()->where('id', $request->unit_id)->first() : null;
         $qty = (float) $request->entry_qty;
@@ -301,6 +303,16 @@ class BatchController extends Controller
         $this->updateBatchTotals($batch_item->batch);
 
         return response()->json(['ok' => true, 'row' => $this->rowJson($batch_item->fresh())]);
+    }
+
+    /** Expiry date of a row in a completed entry (does not touch stock). */
+    public function updateExpiry(Request $request, BatchItem $batch_item)
+    {
+        $this->authorizeRecord($batch_item);
+        $request->validate(['expiry_date' => 'nullable|date']);
+        $batch_item->update(['expiry_date' => $request->expiry_date ?: null]);
+
+        return response()->json(['ok' => true]);
     }
 
     /** Keyed-in quantity/cost -> base units. 10 Carton (24) at RM48 = 240 base at RM2.00. */

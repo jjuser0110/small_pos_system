@@ -14,6 +14,7 @@ Route::prefix('/batch')->as('batch.')->middleware(['auth', 'role:1,2,3'])->group
     Route::post('/addBatchItem/{batch}', 'BatchController@addBatchItem')->name('addBatchItem');
     Route::post('/updateBatchItem/{batch_item}', 'BatchController@updateBatchItem')->name('updateBatchItem');
     Route::post('/updateOpenItem/{batch_item}', 'BatchController@updateOpenItem')->name('updateOpenItem');
+    Route::post('/update-expiry/{batch_item}', 'BatchController@updateExpiry')->name('updateExpiry');
     Route::get('/destroyItem/{batch_item}', 'BatchController@destroyItem')->name('destroyItem');
     Route::get('/download-template/{batch}', 'BatchController@downloadTemplate')->name('downloadTemplate');
     Route::post('/import/{batch}', 'BatchController@import')->name('import');

@@ -8,6 +8,26 @@
     #mytable input.form-control, #mytable select.form-select { font-size: 12px; padding: 3px 6px; min-width: 80px; }
     #mytable tr.saving { background: #fffbe6; }
     #mytable tr.saved { background: #e8f7ee; transition: background .6s; }
+    #mytable input[type=date] { min-width: 130px; }
+    .stock-table-wrap { overflow-x: auto; }
+
+    /* phone: every item becomes a card, one field per line with its name on the left */
+    @media (max-width: 767.98px) {
+        .stock-table-wrap { overflow: visible; white-space: normal; }
+        #mytable, #mytable tbody, #mytable tfoot, #mytable tr, #mytable td, #mytable th { display: block; width: 100%; }
+        #mytable thead { display: none; }
+        #mytable { border: 0; }
+        #mytable tbody tr { border: 1px solid #dfe3e7; border-radius: 10px; margin-bottom: 12px; padding: 8px 12px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+        #mytable tbody td { border: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 14px; text-align: right !important; }
+        #mytable tbody td::before { content: attr(data-label); flex: 0 0 38%; text-align: left; font-weight: 600; color: #6f7f8f; font-size: 13px; }
+        #mytable tbody td.cell-item { font-weight: 700; font-size: 15px; }
+        #mytable tbody td > input, #mytable tbody td > select { flex: 1 1 auto; max-width: 62%; min-width: 0; font-size: 16px !important; padding: 6px 10px !important; }
+        #mytable tbody tr.js-empty td { display: block; text-align: center !important; }
+        #mytable tbody tr.js-empty td::before { content: none; }
+        #mytable tfoot tr { display: flex; justify-content: space-between; border: 0; padding: 4px 2px; font-size: 15px; }
+        #mytable tfoot th { border: 0; width: auto; padding: 0; }
+        #mytable tfoot th:empty { display: none; }
+    }
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
@@ -125,7 +145,7 @@
                     </div>
                     @endif
 
-                    <div class="card-datatable text-nowrap">
+                    <div class="card-datatable text-nowrap stock-table-wrap">
                         <table class="table table-bordered" id="mytable">
                             <thead>
                                 <tr>
@@ -137,6 +157,7 @@
                                     <th>Cost per unit</th>
                                     <th>Total Cost</th>
                                     <th>In base units</th>
+                                    <th>Expiry date</th>
                                     <th>Balance</th>
                                     <th>Actions</th>
                                 </tr>
@@ -146,14 +167,14 @@
                                     @include('batch._row', ['row' => $row, 'index' => $index, 'batch' => $batch])
                                 @endforeach
                                 @if($batch->batch_items->isEmpty())
-                                    <tr class="js-empty"><td colspan="10" class="text-center text-muted py-4">No items yet. Choose an item above or scan a barcode.</td></tr>
+                                    <tr class="js-empty"><td colspan="11" class="text-center text-muted py-4">No items yet. Choose an item above or scan a barcode.</td></tr>
                                 @endif
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th colspan="6" style="text-align:right">Total:</th>
                                     <th id="grandTotal">{{ money($batch->batch_items->sum('total_cost')) }}</th>
-                                    <th colspan="3"></th>
+                                    <th colspan="4"></th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -403,6 +424,7 @@
                 entry_qty: qty,
                 entry_cost: parseFloat(tr.querySelector('.js-cost').value) || 0,
                 total_cost: parseFloat(tr.querySelector('.js-total').value) || 0,
+                expiry_date: tr.querySelector('.js-expiry').value || null,
                 changed: changed,
             }).then(j => {
                 tr.classList.remove('saving');
@@ -431,7 +453,7 @@
         tbody.addEventListener('change', e => {
             const tr = e.target.closest('tr[data-id]');
             if (!tr) return;
-            const map = { 'js-qty': 'qty', 'js-cost': 'cost', 'js-total': 'total', 'js-unit': 'unit' };
+            const map = { 'js-qty': 'qty', 'js-cost': 'cost', 'js-total': 'total', 'js-unit': 'unit', 'js-expiry': 'expiry' };
             for (const cls in map) if (e.target.classList.contains(cls)) save(tr, map[cls]);
         });
         tbody.addEventListener('keydown', e => {
@@ -448,6 +470,21 @@
         });
     })();
     @endif
+
+    // completed entry: fixing an expiry date saves straight away
+    document.addEventListener('change', function (e) {
+        const input = e.target.closest('.js-expiry-done');
+        if (!input) return;
+        const tr = input.closest('tr');
+        tr.classList.remove('saved'); tr.classList.add('saving');
+        fetch(input.dataset.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ expiry_date: input.value || null }),
+        }).then(r => r.json().then(j => { if (!r.ok || j.ok === false) throw new Error(j.message || 'Could not save'); }))
+          .then(() => { tr.classList.remove('saving'); tr.classList.add('saved'); })
+          .catch(err => { tr.classList.remove('saving'); alert(err.message); });
+    });
 
     function printReceipt() {
         const content = document.getElementById('receiptContent');

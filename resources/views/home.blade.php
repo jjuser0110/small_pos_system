@@ -27,6 +27,21 @@
             </div>
             </div>
         </div>
+        @if($expiry && ($expiry[0] || $expiry[1]))
+        <div class="col-sm-6 col-lg-3 mb-4">
+            <a href="{{ route('expiring_stock.index') }}" class="card card-border-shadow-{{ $expiry[0] ? 'danger' : 'warning' }} h-100 text-body">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2 pb-1">
+                    <i class="bx bx-time-five bx-sm me-2 text-{{ $expiry[0] ? 'danger' : 'warning' }}"></i>
+                    <h4 class="mb-0">Expiring Stock</h4>
+                </div>
+                @if($expiry[0])<p class="mb-1 text-danger fw-semibold">{{ $expiry[0] }} stock {{ Str::plural('row', $expiry[0]) }} already expired</p>@endif
+                @if($expiry[1])<p class="mb-1">{{ $expiry[1] }} expiring within {{ \App\Http\Controllers\ExpiringStockController::DEFAULT_DAYS }} days</p>@endif
+                <small class="text-muted">Tap to see the list</small>
+            </div>
+            </a>
+        </div>
+        @endif
         @if(Auth::user()->isStaff())
         <div class="col-sm-6 col-lg-4 mb-4">
             <div class="card card-border-shadow-primary h-100">

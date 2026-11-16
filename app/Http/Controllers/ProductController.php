@@ -40,7 +40,8 @@ class ProductController extends Controller
     {
         return view('product.create')
             ->with('category', $this->formCategories())
-            ->with('uom', $this->formUoms());
+            ->with('uom', $this->formUoms())
+            ->with('averageCost', null);
     }
 
     /** Units for the item form: a branch manager sees their branch's and shared ones. */
@@ -71,13 +72,14 @@ class ProductController extends Controller
     /** Fields a user may set from the product form. */
     private const FORM_FIELDS = [
         'product_name', 'product_code', 'barcode', 'arrangement', 'uom',
-        'selling_price', 'is_active',
+        'selling_price', 'margin', 'is_active',
     ];
 
     public function store(Request $request)
     {
         $this->validateItem($request);
         $category = $this->authorizeCategoryId($request->category_id);
+        $this->assertBarcodesFree($request, $category->company_id);
 
         $initial = $request->initial ?? 0;
         $product = Product::create(array_merge($request->only(self::FORM_FIELDS), [
@@ -114,7 +116,8 @@ class ProductController extends Controller
         return view('product.create')
             ->with('product', $product->load('allUnits'))
             ->with('category', $this->formCategories($product->category_id))
-            ->with('uom', $this->formUoms($product->branch_id));
+            ->with('uom', $this->formUoms($product->branch_id))
+            ->with('averageCost', $product->averageCost());
     }
 
     public function update(Request $request, Product $product)
@@ -122,6 +125,7 @@ class ProductController extends Controller
         $this->authorizeRecord($product);
         $this->validateItem($request, $product);
         $category = $this->authorizeCategoryId($request->category_id ?? $product->category_id);
+        $this->assertBarcodesFree($request, $category->company_id, $product);
 
         $data = array_merge($request->only(self::FORM_FIELDS), [
             'category_id' => $category->id,
@@ -182,6 +186,12 @@ class ProductController extends Controller
         return view('product.viewlog')->with('product',$product);
     }
 
+    /** A new in-store barcode (EAN-13 starting with 20) that no item or sell option uses yet. */
+    public function newBarcode()
+    {
+        return response()->json(['barcode' => \App\Support\BarcodeGenerator::unique()]);
+    }
+
     public function downloadTemplate()
     {
         return Excel::download(new ProductTemplateExport, 'product_template.xlsx');
@@ -206,6 +216,7 @@ class ProductController extends Controller
         $request->validate([
             'product_name'     => 'required|string|max:255',
             'selling_price'    => 'required|numeric|min:0',
+            'margin'           => 'nullable|numeric|min:-100|max:100000',
             'units'            => 'nullable|array',
             'units.*.name'     => 'required|string|max:100',
             'units.*.base_qty' => 'required|numeric|gt:0',
@@ -221,6 +232,31 @@ class ProductController extends Controller
             ->map(fn ($c) => trim((string) $c))->filter();
         if ($codes->duplicates()->isNotEmpty()) {
             throw \Illuminate\Validation\ValidationException::withMessages(['barcode' => 'The same barcode is used twice on this item.']);
+        }
+    }
+
+    /** Every barcode on the form must be unused by other items / sell options of the same company. */
+    private function assertBarcodesFree(Request $request, $companyId, ?Product $product = null): void
+    {
+        $codes = collect($request->input('units', []))->pluck('barcode')->push($request->barcode)
+            ->map(fn ($c) => trim((string) $c))->filter()->unique()->values();
+        if ($codes->isEmpty()) {
+            return;
+        }
+
+        $item = Product::where('company_id', $companyId)->whereIn('barcode', $codes)
+            ->when($product, fn ($q) => $q->where('id', '!=', $product->id))->first(['product_name', 'barcode']);
+        $unit = $item ? null : \App\Models\ProductUnit::whereIn('barcode', $codes)
+            ->whereHas('product', fn ($q) => $q->where('company_id', $companyId)
+                ->when($product, fn ($q) => $q->where('id', '!=', $product->id)))
+            ->with('product:id,product_name')->first();
+
+        if ($item || $unit) {
+            $used = $item ? $item->product_name : ($unit->product->product_name . ' - ' . $unit->name);
+            $code = $item ? $item->barcode : $unit->barcode;
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'barcode' => "Barcode $code is already used by $used in this company.",
+            ]);
         }
     }
 

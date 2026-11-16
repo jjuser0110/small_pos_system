@@ -87,11 +87,11 @@ class StockService
      * Add $qty to $product. With a $batch and a cost the stock goes into a new batch
      * item (so later sales know its cost); otherwise it is unbatched stock.
      */
-    public function stockIn(Product $product, float $qty, string $type, string $description, Model $source, ?float $costPerUnit = null, ?Batch $batch = null): ?BatchItem
+    public function stockIn(Product $product, float $qty, string $type, string $description, Model $source, ?float $costPerUnit = null, ?Batch $batch = null, $expiryDate = null): ?BatchItem
     {
         $this->assertPositive($qty);
 
-        return DB::transaction(function () use ($product, $qty, $type, $description, $source, $costPerUnit, $batch) {
+        return DB::transaction(function () use ($product, $qty, $type, $description, $source, $costPerUnit, $batch, $expiryDate) {
             $product = Product::lockForUpdate()->findOrFail($product->id);
 
             $batchItem = null;
@@ -106,6 +106,7 @@ class StockService
                     'balance'       => $qty,
                     'cost_per_unit' => round($costPerUnit, 4),
                     'total_cost'    => round($costPerUnit * $qty, 2),
+                    'expiry_date'   => $expiryDate,
                 ]);
             }
 

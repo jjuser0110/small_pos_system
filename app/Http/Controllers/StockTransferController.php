@@ -172,7 +172,8 @@ class StockTransferController extends Controller
                 $inDesc = "$label from {$transfer->fromCompany->company_code}";
                 foreach ($slices as $slice) {
                     $stock->stockIn($to, (float) $slice['quantity'], 'transfer_in', $inDesc, $transfer,
-                        $slice['cost_per_unit'], $slice['cost_per_unit'] !== null ? $batch : null);
+                        $slice['cost_per_unit'], $slice['cost_per_unit'] !== null ? $batch : null,
+                        $slice['batch_item']?->expiry_date);
                 }
 
                 $transfer->update([

@@ -125,6 +125,19 @@ class StockTransferTest extends TestCase
         $this->assertEquals(2, $this->itemB->fresh()->stock_quantity);
     }
 
+    public function test_received_stock_keeps_its_expiry_date(): void
+    {
+        \App\Models\BatchItem::where('product_id', $this->itemA->id)->update(['expiry_date' => '2027-05-01']);
+        $this->send(4, $this->makeUser(3, $this->a));
+        $t = StockTransfer::first();
+        $boss = $this->makeUser(1);
+        $this->actingAs($boss)->post(route('stock_transfer.approve', $t));
+        $this->actingAs($boss)->post(route('stock_transfer.approve', $t));
+
+        $received = \App\Models\BatchItem::where('product_id', $this->itemB->id)->first();
+        $this->assertSame('2027-05-01', substr($received->expiry_date, 0, 10));
+    }
+
     public function test_confirm_fails_cleanly_if_sender_ran_out(): void
     {
         $this->send(8, $this->makeUser(3, $this->a));

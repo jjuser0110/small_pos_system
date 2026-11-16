@@ -12,5 +12,6 @@ Route::prefix('/product')->as('product.')->middleware(['auth', 'role:1,2,3'])->g
     Route::post('/update/{product}', 'ProductController@update')->name('update');
     Route::get('/destroy/{product}', 'ProductController@destroy')->name('destroy');
     Route::get('/download-template', 'ProductController@downloadTemplate')->name('downloadTemplate');
+    Route::get('/new-barcode', 'ProductController@newBarcode')->name('newBarcode');
     Route::post('/import', 'ProductController@import')->name('import');
 });

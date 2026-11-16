@@ -18,6 +18,7 @@ class BatchItem extends Model
         'category_id',
         'product_id',
         'entry_unit_id',
+        'expiry_date',
         'entry_unit',
         'entry_qty',
         'entry_cost',

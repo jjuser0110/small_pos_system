@@ -55,6 +55,8 @@ class HomeController extends Controller
             'attendance'     => $attendance,
             'workingCompany' => $user->workingCompany(),
             'shiftWindow'    => $user->isStaff() ? $user->currentShiftWindow() : null,
+            // managers and admins: expired / expiring soon stock
+            'expiry'         => in_array($user->role_id, [1, 2, 3]) ? ExpiringStockController::counts() : null,
         ]);
     }
 

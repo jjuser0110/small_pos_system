@@ -19,6 +19,7 @@ class Product extends Model
         'product_code',
         'barcode',
         'selling_price',
+        'margin',
         'uom',
         'initial',
         'stock_quantity',
@@ -83,5 +84,25 @@ class Product extends Model
     public function allUnits()
     {
         return $this->hasMany(ProductUnit::class)->orderBy('base_qty');
+    }
+
+    /**
+     * Average cost per base unit of the stock on hand (completed stock entries,
+     * weighted by what is left). With nothing left, the average of everything
+     * ever received. Null when the item has no costed stock at all.
+     */
+    public function averageCost(): ?float
+    {
+        $rows = BatchItem::where('product_id', $this->id)
+            ->whereHas('batch', fn ($q) => $q->where('status', 'Completed'));
+
+        $onHand = (clone $rows)->where('balance', '>', 0)
+            ->selectRaw('SUM(balance * cost_per_unit) as cost, SUM(balance) as qty')->first();
+        if ($onHand && (float) $onHand->qty > 0) {
+            return round((float) $onHand->cost / (float) $onHand->qty, 4);
+        }
+
+        $all = $rows->selectRaw('SUM(total_cost) as cost, SUM(quantity) as qty')->first();
+        return $all && (float) $all->qty > 0 ? round((float) $all->cost / (float) $all->qty, 4) : null;
     }
 }
