@@ -22,7 +22,7 @@ class StockTransfer extends Model
     public const REJECTED = 'rejected';
 
     protected $fillable = [
-        'from_branch_id', 'from_company_id', 'from_product_id',
+        'transfer_no', 'from_branch_id', 'from_company_id', 'from_product_id',
         'to_branch_id', 'to_company_id', 'to_product_id',
         'quantity', 'reason', 'status',
         'requested_by', 'sender_confirmed_by', 'sender_confirmed_at',
@@ -34,6 +34,7 @@ class StockTransfer extends Model
     public function toCompany()       { return $this->belongsTo(Company::class, 'to_company_id'); }
     public function fromProduct()     { return $this->belongsTo(Product::class, 'from_product_id')->withTrashed(); }
     public function toProduct()       { return $this->belongsTo(Product::class, 'to_product_id')->withTrashed(); }
+    public function items()           { return $this->hasMany(StockTransferItem::class); }
     public function requester()       { return $this->belongsTo(User::class, 'requested_by'); }
     public function senderConfirmer() { return $this->belongsTo(User::class, 'sender_confirmed_by'); }
     public function approver()        { return $this->belongsTo(User::class, 'approved_by'); }
@@ -59,6 +60,16 @@ class StockTransfer extends Model
         return $this->status === self::PENDING_SENDER
             ? (int) $working === (int) $this->from_company_id
             : (int) $working === (int) $this->to_company_id;
+    }
+
+    /** Next suggested transfer no (TRF00001, TRF00002, ...). */
+    public static function nextNumber(): string
+    {
+        $n = (int) self::withTrashed()->max('id') + 1;
+        do {
+            $no = 'TRF' . str_pad($n++, 5, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('transfer_no', $no)->exists());
+        return $no;
     }
 
     /** Label of the step waiting, for buttons and lists. */

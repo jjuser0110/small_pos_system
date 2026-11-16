@@ -36,11 +36,12 @@ class StockTransferTest extends TestCase
         $this->travelTo(Carbon::parse('2026-11-08 12:00'));
     }
 
-    private function send(float $qty, $as)
+    private function send(float $qty, $as, array $extra = [])
     {
-        return $this->actingAs($as)->post(route('stock_transfer.store'), [
-            'from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id,
-            'quantity' => $qty, 'reason' => 'restock B',
+        return $this->actingAs($as)->post(route('stock_transfer.store'), $extra + [
+            'from_company_id' => $this->a->id, 'to_company_id' => $this->b->id,
+            'items' => [['from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id, 'quantity' => $qty]],
+            'reason' => 'restock B',
         ]);
     }
 
@@ -57,6 +58,8 @@ class StockTransferTest extends TestCase
 
         $t = StockTransfer::first();
         $this->assertSame(StockTransfer::PENDING_SENDER, $t->status);
+        $this->assertSame('TRF' . str_pad($t->id, 5, '0', STR_PAD_LEFT), $t->transfer_no, 'blank transfer no gets a number');
+        $this->assertSame(1, $t->items()->count());
         $this->assertEquals(10, $this->itemA->fresh()->stock_quantity);
         $this->assertEquals(0, $this->itemB->fresh()->stock_quantity);
     }
@@ -65,7 +68,8 @@ class StockTransferTest extends TestCase
     {
         $this->actingAs($this->makeUser(5, $this->a, ['shift' => 'AM']))
             ->post('http://shopa.test' . route('stock_transfer.store', [], false), [
-                'from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id, 'quantity' => 1,
+                'from_company_id' => $this->a->id, 'to_company_id' => $this->b->id,
+                'items' => [['from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id, 'quantity' => 1]],
             ])->assertForbidden();
         $this->assertSame(0, StockTransfer::count());
     }
@@ -76,7 +80,8 @@ class StockTransferTest extends TestCase
         $farItem = $this->makeProduct($far, 'Far Beer');
 
         $this->actingAs($this->makeUser(3, $this->a))->post(route('stock_transfer.store'), [
-            'from_product_id' => $this->itemA->id, 'to_product_id' => $farItem->id, 'quantity' => 1,
+            'from_company_id' => $this->a->id, 'to_company_id' => $far->id,
+            'items' => [['from_product_id' => $this->itemA->id, 'to_product_id' => $farItem->id, 'quantity' => 1]],
         ])->assertForbidden();
     }
 
@@ -108,6 +113,71 @@ class StockTransferTest extends TestCase
         $this->assertSame('Completed', Batch::find($t->received_batch_id)->status);
         $this->assertSame(1, StockLog::where('type', 'transfer_out')->where('product_id', $this->itemA->id)->count());
         $this->assertSame(1, StockLog::where('type', 'transfer_in')->where('product_id', $this->itemB->id)->count());
+    }
+
+    public function test_one_transfer_moves_many_items_with_its_own_transfer_no(): void
+    {
+        $colaA = $this->makeProduct($this->a, 'Cola 330ml');
+        $colaB = $this->makeProduct($this->b, 'Coke Can');
+        $this->stockBatch($colaA, 20, 1.50, 'SB2');
+
+        $this->send(0, $this->makeUser(3, $this->a), [
+            'transfer_no' => 'SLIP-778',
+            'items' => [
+                ['from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id, 'quantity' => 4],
+                ['from_product_id' => $colaA->id, 'to_product_id' => $colaB->id, 'quantity' => 12],
+            ],
+            'reason' => 'weekend stock for B',
+        ])->assertSessionHasNoErrors();
+
+        $t = StockTransfer::first();
+        $this->assertSame('SLIP-778', $t->transfer_no);
+        $this->assertSame('weekend stock for B', $t->reason);
+        $this->assertSame(2, $t->items()->count());
+
+        $boss = $this->makeUser(1);
+        $this->actingAs($boss)->post(route('stock_transfer.approve', $t));
+        $this->actingAs($boss)->post(route('stock_transfer.approve', $t))->assertSessionHasNoErrors();
+
+        $this->assertEquals(6, $this->itemA->fresh()->stock_quantity);
+        $this->assertEquals(4, $this->itemB->fresh()->stock_quantity);
+        $this->assertEquals(8, $colaA->fresh()->stock_quantity);
+        $this->assertEquals(12, $colaB->fresh()->stock_quantity);
+
+        // one stock entry at B named after the transfer, holding both lines at A's cost
+        $batch = Batch::find($t->fresh()->received_batch_id);
+        $this->assertSame('SLIP-778', $batch->batch_no);
+        $this->assertEquals(16, $batch->total_item);
+        $this->assertEquals(4 * 3.00 + 12 * 1.50, $batch->total_cost);
+        $this->assertSame(2, BatchItem::where('batch_id', $batch->id)->count());
+
+        $this->actingAs($boss)->get(route('stock_transfer.index'))->assertSee('SLIP-778')->assertSee('Coke Can');
+    }
+
+    public function test_transfer_no_must_be_unique_and_lines_must_match_the_companies(): void
+    {
+        $manager = $this->makeUser(3, $this->a);
+        $this->send(1, $manager, ['transfer_no' => 'T-1'])->assertSessionHasNoErrors();
+        $this->send(1, $manager, ['transfer_no' => 'T-1'])->assertSessionHasErrors('transfer_no');
+
+        // an item of the receiving company on the sending side is refused
+        $this->send(0, $manager, ['items' => [
+            ['from_product_id' => $this->itemB->id, 'to_product_id' => $this->itemA->id, 'quantity' => 1],
+        ]])->assertSessionHasErrors();
+        // same company on both ends, or no lines at all
+        $this->send(1, $manager, ['to_company_id' => $this->a->id])->assertSessionHasErrors('to_company_id');
+        $this->send(0, $manager, ['items' => []])->assertSessionHasErrors('items');
+
+        $this->assertSame(1, StockTransfer::count());
+    }
+
+    public function test_same_item_on_two_lines_counts_against_its_stock(): void
+    {
+        $this->send(0, $this->makeUser(3, $this->a), ['items' => [
+            ['from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id, 'quantity' => 6],
+            ['from_product_id' => $this->itemA->id, 'to_product_id' => $this->itemB->id, 'quantity' => 6],
+        ]])->assertSessionHasErrors();
+        $this->assertSame(0, StockTransfer::count());
     }
 
     public function test_branch_manager_cannot_confirm_but_superadmin_can_do_both_steps(): void

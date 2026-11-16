@@ -15,8 +15,9 @@ use RuntimeException;
 use Throwable;
 
 /**
- * The branch manager sends stock from company A's item to company B's item
- * (the two may be named differently). Company A staff confirm it was sent
+ * The branch manager sends stock from company A to company B in one transfer
+ * (with its own transfer no). Each line moves A's item to B's item - the two may
+ * be named differently. Company A staff confirm it was sent
  * correctly, then company B staff confirm it was received - only then does
  * stock leave A and arrive at B (at A's cost). The superadmin may confirm
  * either step.
@@ -28,7 +29,7 @@ class StockTransferController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = StockTransfer::with(['fromCompany', 'toCompany', 'fromProduct', 'toProduct', 'requester', 'senderConfirmer', 'approver'])
+        $query = StockTransfer::with(['fromCompany', 'toCompany', 'items.fromProduct', 'items.toProduct', 'requester', 'senderConfirmer', 'approver'])
             ->orderByDesc('id');
 
         if ($user->role_id == 3) {
@@ -57,6 +58,7 @@ class StockTransferController extends Controller
         return view('stock_transfer.index', [
             'transfers'     => $query->get(),
             'canSend'       => $canSend,
+            'nextNumber'    => $canSend ? StockTransfer::nextNumber() : null,
             'fromCompanies' => $companies,
             'toCompanies'   => $companies,
             'products'      => $canSend
@@ -83,40 +85,87 @@ class StockTransferController extends Controller
         }
 
         $request->validate([
-            'from_product_id' => 'required|exists:products,id',
-            'to_product_id'   => 'required|exists:products,id|different:from_product_id',
-            'quantity'        => 'required|numeric|min:0.01|max:99999999',
-            'reason'          => 'nullable|string|max:500',
+            'transfer_no'             => 'nullable|string|max:50|unique:stock_transfers,transfer_no',
+            'from_company_id'         => 'required|exists:companies,id',
+            'to_company_id'           => 'required|exists:companies,id|different:from_company_id',
+            'items'                   => 'required|array|min:1|max:200',
+            'items.*.from_product_id' => 'required|exists:products,id',
+            'items.*.to_product_id'   => 'required|exists:products,id',
+            'items.*.quantity'        => 'required|numeric|min:0.01|max:99999999',
+            'reason'                  => 'nullable|string|max:500',
+        ], [
+            'transfer_no.unique'      => 'This transfer no is already used.',
+            'to_company_id.different' => 'Choose a different company to receive the stock.',
+            'items.required'          => 'Add at least one item to transfer.',
         ]);
 
-        $from = Product::findOrFail($request->from_product_id);
-        $to = Product::findOrFail($request->to_product_id);
+        $fromCompany = $this->authorizeCompanyId($request->from_company_id);
+        $toCompany = $this->authorizeCompanyId($request->to_company_id);
 
-        // both sides must be inside the sender's scope (branch manager: own branch)
-        $this->authorizeRecord($from);
-        $this->authorizeRecord($to);
-        if ($from->company_id == $to->company_id) {
-            return back()->withErrors('Choose an item in a different company to receive the stock.')->withInput();
-        }
-        if ($request->quantity > $from->stock_quantity) {
-            return back()->withErrors("Only {$from->stock_quantity} of {$from->product_name} in stock.")->withInput();
+        // every line: A's item -> B's item, both inside the sender's scope
+        $lines = [];
+        $needed = [];
+        foreach (array_values($request->items) as $i => $line) {
+            $from = Product::findOrFail($line['from_product_id']);
+            $to = Product::findOrFail($line['to_product_id']);
+            $this->authorizeRecord($from);
+            $this->authorizeRecord($to);
+            $n = $i + 1;
+            if ($from->company_id != $fromCompany->id) {
+                return back()->withErrors("Line $n: {$from->product_name} is not in {$fromCompany->company_code}.")->withInput();
+            }
+            if ($to->company_id != $toCompany->id) {
+                return back()->withErrors("Line $n: {$to->product_name} is not in {$toCompany->company_code}.")->withInput();
+            }
+            $qty = round((float) $line['quantity'], 4);
+            $needed[$from->id] = ($needed[$from->id] ?? 0) + $qty;
+            $lines[] = ['from' => $from, 'to' => $to, 'quantity' => $qty];
         }
 
-        StockTransfer::create([
-            'from_branch_id'  => $from->branch_id,
-            'from_company_id' => $from->company_id,
-            'from_product_id' => $from->id,
-            'to_branch_id'    => $to->branch_id,
-            'to_company_id'   => $to->company_id,
-            'to_product_id'   => $to->id,
-            'quantity'        => round($request->quantity, 4),
-            'reason'          => $request->reason,
-            'status'          => StockTransfer::PENDING_SENDER,
-            'requested_by'    => $user->id,
-        ]);
+        // enough stock for each item (the same item may be on several lines)
+        foreach ($lines as $line) {
+            $from = $line['from'];
+            if ($needed[$from->id] - $from->stock_quantity > 0.00001) {
+                return back()->withErrors("Only {$from->stock_quantity} of {$from->product_name} in stock.")->withInput();
+            }
+        }
+
+        $transfer = DB::transaction(function () use ($request, $fromCompany, $toCompany, $lines, $user) {
+            $transfer = StockTransfer::create([
+                'transfer_no'     => trim((string) $request->transfer_no) ?: null,
+                'from_branch_id'  => $fromCompany->branch_id,
+                'from_company_id' => $fromCompany->id,
+                'to_branch_id'    => $toCompany->branch_id,
+                'to_company_id'   => $toCompany->id,
+                'reason'          => $request->reason,
+                'status'          => StockTransfer::PENDING_SENDER,
+                'requested_by'    => $user->id,
+            ]);
+            if (!$transfer->transfer_no) {
+                $transfer->update(['transfer_no' => 'TRF' . str_pad($transfer->id, 5, '0', STR_PAD_LEFT)]);
+            }
+            foreach ($lines as $line) {
+                $transfer->items()->create([
+                    'from_product_id' => $line['from']->id,
+                    'to_product_id'   => $line['to']->id,
+                    'quantity'        => $line['quantity'],
+                ]);
+            }
+            return $transfer;
+        });
 
         return redirect()->route('stock_transfer.index')
-            ->withSuccess('Transfer created. The sending company\'s staff must confirm it, then the receiving company\'s staff.');
+            ->withSuccess("Transfer {$transfer->transfer_no} created. The sending company's staff must confirm it, then the receiving company's staff.");
+    }
+
+    /** How much of each sending item the transfer needs, keyed by product id. */
+    private function neededStock(StockTransfer $transfer): array
+    {
+        $needed = [];
+        foreach ($transfer->items as $line) {
+            $needed[$line->from_product_id] = ($needed[$line->from_product_id] ?? 0) + (float) $line->quantity;
+        }
+        return $needed;
     }
 
     /** Confirm the step the transfer is waiting for. */
@@ -132,9 +181,11 @@ class StockTransferController extends Controller
 
                 if ($transfer->status === StockTransfer::PENDING_SENDER) {
                     // step 1: the sending company confirms what is going out is correct
-                    $from = Product::findOrFail($transfer->from_product_id);
-                    if ($transfer->quantity - $from->stock_quantity > 0.00001) {
-                        throw new RuntimeException("Only {$from->stock_quantity} of {$from->product_name} in stock now.");
+                    foreach ($this->neededStock($transfer) as $productId => $qty) {
+                        $from = Product::findOrFail($productId);
+                        if ($qty - $from->stock_quantity > 0.00001) {
+                            throw new RuntimeException("Only {$from->stock_quantity} of {$from->product_name} in stock now.");
+                        }
                     }
                     $transfer->update([
                         'status'              => StockTransfer::PENDING_RECEIVER,
@@ -148,33 +199,41 @@ class StockTransferController extends Controller
                     throw new RuntimeException('This transfer was already processed.');
                 }
 
-                // step 2: received - now the stock moves
-                $from = Product::findOrFail($transfer->from_product_id);
-                $to = Product::findOrFail($transfer->to_product_id);
-                $qty = (float) $transfer->quantity;
-                $label = "Transfer #{$transfer->id}";
+                // step 2: received - now the stock moves, line by line
+                $label = "Transfer {$transfer->transfer_no}";
+                $outDesc = "$label to {$transfer->toCompany->company_code}";
+                $inDesc = "$label from {$transfer->fromCompany->company_code}";
 
-                // out of A, oldest batch first (fails if A no longer has enough)
-                $slices = $stock->stockOut($from, $qty, 'transfer_out', "$label to {$transfer->toCompany->company_code}", $transfer);
-
-                // into B: a completed stock entry carrying A's cost, so B's profit stays right
+                // into B: one completed stock entry carrying A's cost, so B's profit stays right
                 $batch = Batch::create([
-                    'branch_id'     => $to->branch_id,
-                    'company_id'    => $to->company_id,
-                    'batch_no'      => 'TRF' . str_pad($transfer->id, 5, '0', STR_PAD_LEFT),
+                    'branch_id'     => $transfer->to_branch_id,
+                    'company_id'    => $transfer->to_company_id,
+                    'batch_no'      => $transfer->transfer_no,
                     'batch_date'    => Carbon::today(),
                     'status'        => 'Completed',
-                    'total_product' => 1,
-                    'total_item'    => $qty,
-                    'total_cost'    => round(collect($slices)->sum(fn ($s) => ($s['cost_per_unit'] ?? 0) * $s['quantity']), 2),
+                    'total_product' => $transfer->items->pluck('to_product_id')->unique()->count(),
+                    'total_item'    => 0,
+                    'total_cost'    => 0,
                 ]);
 
-                $inDesc = "$label from {$transfer->fromCompany->company_code}";
-                foreach ($slices as $slice) {
-                    $stock->stockIn($to, (float) $slice['quantity'], 'transfer_in', $inDesc, $transfer,
-                        $slice['cost_per_unit'], $slice['cost_per_unit'] !== null ? $batch : null,
-                        $slice['batch_item']?->expiry_date);
+                $totalQty = 0;
+                $totalCost = 0;
+                foreach ($transfer->items as $line) {
+                    $from = Product::findOrFail($line->from_product_id);
+                    $to = Product::findOrFail($line->to_product_id);
+                    $qty = (float) $line->quantity;
+
+                    // out of A, oldest batch first (fails if A no longer has enough)
+                    $slices = $stock->stockOut($from, $qty, 'transfer_out', $outDesc, $transfer);
+                    foreach ($slices as $slice) {
+                        $stock->stockIn($to, (float) $slice['quantity'], 'transfer_in', $inDesc, $transfer,
+                            $slice['cost_per_unit'], $slice['cost_per_unit'] !== null ? $batch : null,
+                            $slice['batch_item']?->expiry_date);
+                        $totalCost += ($slice['cost_per_unit'] ?? 0) * $slice['quantity'];
+                    }
+                    $totalQty += $qty;
                 }
+                $batch->update(['total_item' => $totalQty, 'total_cost' => round($totalCost, 2)]);
 
                 $transfer->update([
                     'status'            => StockTransfer::APPROVED,
