@@ -30,6 +30,8 @@ class User extends Authenticatable
         'shift',
         'shift_start',
         'shift_end',
+        'locale',   // en / ms / zh_CN
+        'theme',    // light / dark
     ];
 
 

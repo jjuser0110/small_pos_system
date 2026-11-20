@@ -9,7 +9,7 @@
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('product.index') }}">Product /</a> Stock Adjustment
+        <a class="text-muted fw-light" href="{{ route('product.index') }}">{{ __('Product') }} /</a> {{ __('Stock Adjustment') }}
     </h4>
 
     @if($errors->any())
@@ -18,19 +18,19 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Stock Adjustments</h5>
+            <h5 class="mb-0">{{ __('Stock Adjustments') }}</h5>
         </div>
         <div class="card-datatable text-nowrap">
             <table class="dt-column-search table table-bordered" id="mytable">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Product</th>
-                        <th>Type</th>
-                        <th>Qty</th>
-                        <th>Company</th>
-                        <th>Reason</th>
-                        <th>Adjusted By</th>
+                        <th>{{ __('Date') }}</th>
+                        <th>{{ __('Product') }}</th>
+                        <th>{{ __('Type') }}</th>
+                        <th>{{ __('Qty') }}</th>
+                        <th>{{ __('Company') }}</th>
+                        <th>{{ __('Reason') }}</th>
+                        <th>{{ __('Adjusted By') }}</th>
                     </tr>
                 </thead>
                 <tbody>

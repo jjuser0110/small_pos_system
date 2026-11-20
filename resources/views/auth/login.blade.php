@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 
 <html
-  lang="en"
-  class="light-style layout-wide customizer-hide"
+  lang="{{ \App\Support\Preferences::htmlLang() }}"
+  class="{{ \App\Support\Preferences::dark() ? 'dark-style' : 'light-style' }} layout-wide customizer-hide"
   dir="ltr"
   data-theme="theme-default"
   data-assets-path="../../assets/"
@@ -33,8 +33,9 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icons.css') }}" />
 
     <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core.css') }}?v=2" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default.css') }}?v=2" />
+    @php $themeSuffix = \App\Support\Preferences::dark() ? '-dark' : ''; @endphp
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core' . $themeSuffix . '.css') }}?v=3" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default' . $themeSuffix . '.css') }}?v=3" />
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
     <!-- Vendors CSS -->
@@ -68,22 +69,23 @@
               <!-- Logo -->
               <div class="app-brand justify-content-center">
                 <a href="{{route('home')}}" class="app-brand-link gap-2">
-                  <img src="{{ asset('assets/logo-fsmart.svg') }}?v=2" alt="Logo" style="width:80%; display:block; margin:0 auto;" />
+                  <img src="{{ asset('assets/logo-fsmart.svg') }}?v=2" alt="{{ __('Logo') }}" style="width:80%; display:block; margin:0 auto;" />
                 </a>
               </div>
               <!-- /Logo -->
+              <div class="d-flex justify-content-center mb-3">@include('layouts.pref-switch', ['variant' => 'plain'])</div>
               <!-- <h4 class="mb-2">Welcome to Frest! 👋</h4>
               <p class="mb-4">Please sign-in to your account and start the adventure</p> -->
 
               <form class="mb-3" action="{{ route('login') }}" method="POST">
                 @csrf
                 <div class="mb-3">
-                  <label for="email" class="form-label">Username</label>
-                  <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" autofocus />
+                  <label for="email" class="form-label">{{ __('Username') }}</label>
+                  <input type="text" class="form-control" id="username" name="username" placeholder="{{ __('Enter your username') }}" autofocus />
                 </div>
                 <div class="mb-3 form-password-toggle">
                   <div class="d-flex justify-content-between">
-                    <label class="form-label" for="password">Password</label>
+                    <label class="form-label" for="password">{{ __('Password') }}</label>
                     <!-- <a href="auth-forgot-password-basic.html">
                       <small>Forgot Password?</small>
                     </a> -->
@@ -121,7 +123,7 @@
                     </script>
                 @endif
                 <div class="mb-3">
-                  <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
+                  <button class="btn btn-primary d-grid w-100" type="submit">{{ __('Sign in') }}</button>
                 </div>
               </form>
 

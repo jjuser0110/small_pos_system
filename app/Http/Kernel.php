@@ -39,6 +39,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CheckStaffAccess::class,
             \App\Http\Middleware\BlockCrossSiteActions::class,
+            \App\Http\Middleware\ApplyPreferences::class,
         ],
 
         'api' => [

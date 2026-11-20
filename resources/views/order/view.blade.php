@@ -3,7 +3,7 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Order</span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Order') }}</span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
@@ -17,11 +17,11 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>No.</th>
-                            <th>Product</th>
-                            <th>Unit Price</th>
-                            <th>Quantity</th>
-                            <th>Total Price</th>
+                            <th>{{ __('No.') }}</th>
+                            <th>{{ __('Product') }}</th>
+                            <th>{{ __('Unit Price') }}</th>
+                            <th>{{ __('Quantity') }}</th>
+                            <th>{{ __('Total Price') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,7 +37,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="4" class="text-end">Total:</th>
+                            <th colspan="4" class="text-end">{{ __('Total') }}:</th>
                             <th>{{ money($order->items->sum('total_price')) }}</th>
                         </tr>
                     </tfoot>
@@ -47,15 +47,15 @@
                 <table class="dt-column-search table table-bordered" id="mytable2">
                     <thead>
                         <tr>
-                            <th>No.</th>
-                            <th>Product</th>
-                            <th>Batch</th>
-                            <th>Cost Price</th>
-                            <th>Selling Price</th>
-                            <th>Quantity</th>
-                            <th>Total Cost Price</th>
-                            <th>Total Selling Price</th>
-                            <th>Total Profit</th>
+                            <th>{{ __('No.') }}</th>
+                            <th>{{ __('Product') }}</th>
+                            <th>{{ __('Batch') }}</th>
+                            <th>{{ __('Cost Price') }}</th>
+                            <th>{{ __('Selling Price') }}</th>
+                            <th>{{ __('Quantity') }}</th>
+                            <th>{{ __('Total Cost Price') }}</th>
+                            <th>{{ __('Total Selling Price') }}</th>
+                            <th>{{ __('Total Profit') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,7 +75,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="6" class="text-end">Total:</th>
+                            <th colspan="6" class="text-end">{{ __('Total') }}:</th>
                             <th>{{ money($order->profit_items->sum('total_cost_price')) }}</th>
                             <th>{{ money($order->profit_items->sum('total_selling_price')) }}</th>
                             <th>{{ money($order->profit_items->sum('total_earning')) }}</th>

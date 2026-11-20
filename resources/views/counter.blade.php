@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ \App\Support\Preferences::htmlLang() }}" class="{{ \App\Support\Preferences::dark() ? 'dark-style' : 'light-style' }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POS Counter System</title>
+<title>{{ __('POS Counter System') }}</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -271,16 +271,20 @@ h1 { color: #16a34a; margin-bottom: 15px; font-size: 18px; }
 @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
 @keyframes slideIn { from {transform: translateY(-50px);} to {transform: translateY(0);} }
 </style>
+@include('layouts.pos-dark')
 </head>
 <body>
 <div class="container">
     <div class="left-panel">
-        <h1>Select Items</h1>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:15px">
+            <h1 style="margin:0">{{ __('Select Items') }}</h1>
+            @include('layouts.pref-switch', ['variant' => 'plain'])
+        </div>
         <div class="barcode-scanner">
-            <input type="text" id="barcode" class="barcode-input" placeholder="Scan barcode or type item name..." autocomplete="off">
+            <input type="text" id="barcode" class="barcode-input" placeholder="{{ __('Scan barcode or type item name...') }}" autocomplete="off">
         </div>
         <div class="categories" id="categories">
-            <button class="category-btn active" data-category="all">All</button>
+            <button class="category-btn active" data-category="all">{{ __('All') }}</button>
             @foreach($category as $cat)
             <button class="category-btn" data-category="{{ $cat->id }}">{{ $cat->category_name }}</button>
             @endforeach
@@ -294,23 +298,23 @@ h1 { color: #16a34a; margin-bottom: 15px; font-size: 18px; }
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
             </svg>
-            <h1>Cart</h1>
+            <h1>{{ __('Cart') }}</h1>
         </div>
         <div class="cart-items" id="cartItems">
-            <div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Cart is empty</p></div>
+            <div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>{{ __('Cart is empty') }}</p></div>
         </div>
 
         <div class="cart-summary">
-            <div class="summary-row"><span>Subtotal:</span><span id="subtotal">RM 0.00</span></div>
-            <div class="summary-row total-row"><span>Total:</span><span id="total">RM 0.00</span></div>
+            <div class="summary-row"><span>{{ __('Subtotal') }}:</span><span id="subtotal">{{ __('RM 0.00') }}</span></div>
+            <div class="summary-row total-row"><span>{{ __('Total') }}:</span><span id="total">{{ __('RM 0.00') }}</span></div>
 
-            <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to empty shopping cart?')){window.location.href='{{ route('empty_cart') }}'}">Empty Cart</a>
-            <button class="checkout-btn" onclick="checkout()">Checkout</button>
+            <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to empty shopping cart?')){window.location.href='{{ route('empty_cart') }}'}">{{ __('Empty Cart') }}</a>
+            <button class="checkout-btn" onclick="checkout()">{{ __('Checkout') }}</button>
             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px">
-                <button class="side-btn" onclick="window.location.href='{{ route('refund.create') }}'">Refund</button>
-                <button class="side-btn" onclick="window.location.href='{{ route('staff_borrow.index') }}'">Advance</button>
+                <button class="side-btn" onclick="window.location.href='{{ route('refund.create') }}'">{{ __('Refund') }}</button>
+                <button class="side-btn" onclick="window.location.href='{{ route('staff_borrow.index') }}'">{{ __('Advance') }}</button>
             </div>
-            <button class="home-btn" onclick="window.location.href='{{ route('home') }}'">Home</button>
+            <button class="home-btn" onclick="window.location.href='{{ route('home') }}'">{{ __('Home') }}</button>
         </div>
     </div>
 </div>
@@ -335,7 +339,7 @@ function post(url, data) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
         body: JSON.stringify(data),
-    }).then(r => r.json().then(j => { if (!r.ok) throw new Error(j.message || 'Request failed'); return j; }));
+    }).then(r => r.json().then(j => { if (!r.ok) throw new Error(j.message || @json(__('Request failed'))); return j; }));
 }
 
 // ---------- item grid ----------
@@ -355,7 +359,7 @@ function renderGrid() {
     grid.innerHTML = '';
     const list = visibleSellables();
     if (!list.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;color:#999;padding:20px;text-align:center">No items found</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1;color:#999;padding:20px;text-align:center">' + @json(__('No items found')) + '</div>';
         return;
     }
     list.forEach(s => {
@@ -384,7 +388,7 @@ function renderGrid() {
         const stock = document.createElement('div');
         stock.className = s.stock <= 0 ? 'out-of-stock' : 'product-stock';
         stock.style.fontSize = '11px';
-        stock.innerText = 'Stock: ' + fmtQty(s.stock);
+        stock.innerText = @json(__('Stock')) + ': ' + fmtQty(s.stock);
         card.appendChild(stock);
 
         grid.appendChild(card);
@@ -479,7 +483,7 @@ function setQuantity(lineId, qty) {
 function renderCart() {
     const box = document.getElementById('cartItems');
     if (!cart.length) {
-        box.innerHTML = '<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Cart is empty</p></div>';
+        box.innerHTML = '<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>' + @json(__('Cart is empty')) + '</p></div>';
     } else {
         box.innerHTML = '';
         cart.forEach(item => {
@@ -511,7 +515,7 @@ function renderCart() {
 }
 
 function checkout() {
-    if (!cart.length) { alert('Cart empty'); return; }
+    if (!cart.length) { alert(@json(__('Cart is empty'))); return; }
     window.location.href = '{{ route('checkout') }}';
 }
 

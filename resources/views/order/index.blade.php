@@ -3,29 +3,29 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Order </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Order') }} </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label" style="margin-bottom:10px">
-                    <h5 class="card-title mb-0">Order Listing</h5>
+                    <h5 class="card-title mb-0">{{ __('Order Listing') }}</h5>
                 </div>
                 <div class="col-md-12 col-12 mb-4">
                     <form method="GET">
                         <div class="row g-2 align-items-end">
 
                             <div class="col-md-6">
-                                <label>Date</label>
+                                <label>{{ __('Date') }}</label>
                                 <div class="input-group input-daterange" >
                                     <input type="datetime-local" class="form-control" name="date_from" value="{{$date_from??''}}"/>
-                                <span class="input-group-text">to</span>
+                                <span class="input-group-text">{{ __('to') }}</span>
                                 <input type="datetime-local" class="form-control" name="date_to" value="{{$date_to??''}}"/>
                                 </div>
                             </div>
 
                             <div class="col-md-3">
-                                <label>Branches</label>
+                                <label>{{ __('Branches') }}</label>
                                 <select name="branch_id[]" class="form-select select2" multiple>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}" {{ collect(request('branch_id'))->contains($branch->id) ? 'selected' : '' }}>
@@ -36,7 +36,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label>Companies</label>
+                                <label>{{ __('Companies') }}</label>
                                 <select name="company_id[]" class="form-select select2" multiple>
                                     @foreach ($companies as $company)
                                         <option value="{{ $company->id }}" {{ collect(request('company_id'))->contains($company->id) ? 'selected' : '' }}>
@@ -47,7 +47,7 @@
                             </div>
 
                             <div class="col-md-12 text-end mt-2">
-                                <button class="btn btn-primary">Filter</button>
+                                <button class="btn btn-primary">{{ __('Filter') }}</button>
                             </div>
 
                         </div>
@@ -58,7 +58,7 @@
                         <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showOrdersTable()">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2 pb-1">
-                            <h4 class="ms-1 mb-0">Total Order</h4>
+                            <h4 class="ms-1 mb-0">{{ __('Total Order') }}</h4>
                             </div>
                             <p class="mb-1" style="margin:10px;font-size:18px">{{ $activeOrderCount }}</p>
                         </div>
@@ -68,7 +68,7 @@
                         <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showAmountTable()">
                         <div class="card-body">
                             <div class="d-flex align-items-center mb-2 pb-1">
-                            <h4 class="ms-1 mb-0">Total Amount</h4>
+                            <h4 class="ms-1 mb-0">{{ __('Total Amount') }}</h4>
                             </div>
                             <p class="mb-1" style="margin:10px;font-size:18px">{{ money($activeOrderTotal) }}</p>
                         </div>
@@ -78,7 +78,7 @@
                         <div class="card card-border-shadow-primary h-100 cursor-pointer" onclick="showProfitTable()">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2 pb-1">
-                                <h4 class="ms-1 mb-0">Total Profit</h4>
+                                <h4 class="ms-1 mb-0">{{ __('Total Profit') }}</h4>
                                 </div>
                                 <p class="mb-1" style="margin:10px;font-size:18px">{{ money($total_profit ?? 0) }}</p>
                             </div>
@@ -90,18 +90,18 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>No</th>
-                            <th>Order No</th>
-                            <th>Order Date</th>
-                            <th>Cashier</th>
-                            <th>Total Product</th>
-                            <th>Total Quantity</th>
-                            <th>Total Price</th>
-                            <th>Payment Method</th>
-                            <th>Received Amount</th>
-                            <th>Change</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('Order No') }}</th>
+                            <th>{{ __('Order Date') }}</th>
+                            <th>{{ __('Cashier') }}</th>
+                            <th>{{ __('Total Product') }}</th>
+                            <th>{{ __('Total Quantity') }}</th>
+                            <th>{{ __('Total Price') }}</th>
+                            <th>{{ __('Payment Method') }}</th>
+                            <th>{{ __('Received Amount') }}</th>
+                            <th>{{ __('Change') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -141,12 +141,12 @@
                 <table class="dt-column-search table table-bordered" id="mytable2">
                     <thead>
                         <tr>
-                            <th>No.</th>
-                            <th>Branch</th>
-                            <th>Company</th>
-                            <th>Category</th>
-                            <th>Number of Transactions</th>
-                            <th>Total Amount</th>
+                            <th>{{ __('No.') }}</th>
+                            <th>{{ __('Branch') }}</th>
+                            <th>{{ __('Company') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Number of Transactions') }}</th>
+                            <th>{{ __('Total Amount') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,7 +163,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="5" class="text-end">Total:</th>
+                            <th colspan="5" class="text-end">{{ __('Total') }}:</th>
                             <th>{{ money($categoryTotals->sum('total_amount') ?? 0) }}</th>
                         </tr>
                     </tfoot>
@@ -173,11 +173,11 @@
                 <table class="dt-column-search table table-bordered" id="mytable3">
                     <thead>
                         <tr>
-                            <th>No.</th>
-                            <th>Branch</th>
-                            <th>Company</th>
-                            <th>Category</th>
-                            <th>Total Profit</th>
+                            <th>{{ __('No.') }}</th>
+                            <th>{{ __('Branch') }}</th>
+                            <th>{{ __('Company') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Total Profit') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -193,7 +193,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="4" class="text-end">Total:</th>
+                            <th colspan="4" class="text-end">{{ __('Total') }}:</th>
                             <th>{{ money($categoryProfits->sum('total_amount') ?? 0) }}</th>
                         </tr>
                     </tfoot>
@@ -208,26 +208,26 @@
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title text-danger">Void Order</h5>
+                        <h5 class="modal-title text-danger">{{ __('Void Order') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
-                        <p class="mb-2">Please provide a reason for voiding this order:</p>
+                        <p class="mb-2">{{ __('Please provide a reason for voiding this order') }}:</p>
 
                         <textarea name="voided_reason"
                                 class="form-control"
                                 rows="4"
-                                required
-                                placeholder="E.g. Wrong item, payment mistake, duplicate order"></textarea>
+                                {{ __('required') }}
+                                placeholder="{{ __('E.g. Wrong item, payment mistake, duplicate order') }}"></textarea>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            Cancel
+                            {{ __('Cancel') }}
                         </button>
                         <button type="submit" class="btn btn-danger">
-                            Confirm Void
+                            {{ __('Confirm Void') }}
                         </button>
                     </div>
                 </div>

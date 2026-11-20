@@ -6,7 +6,7 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <span class="text-muted fw-light">Home
+        <span class="text-muted fw-light">{{ __('Home') }}
     </h4>
 
     <!-- Card Border Shadow -->
@@ -15,7 +15,7 @@
             <div class="card card-border-shadow-primary h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2 pb-1">
-                <h4 class="ms-1 mb-0">User Profile</h4>
+                <h4 class="ms-1 mb-0">{{ __('User Profile') }}</h4>
                 </div>
                 <p class="mb-1">Name: {{Auth::user()->name??''}}</p>
                 <p class="mb-0">
@@ -33,11 +33,11 @@
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2 pb-1">
                     <i class="bx bx-time-five bx-sm me-2 text-{{ $expiry[0] ? 'danger' : 'warning' }}"></i>
-                    <h4 class="mb-0">Expiring Stock</h4>
+                    <h4 class="mb-0">{{ __('Expiring Stock') }}</h4>
                 </div>
                 @if($expiry[0])<p class="mb-1 text-danger fw-semibold">{{ $expiry[0] }} stock {{ Str::plural('row', $expiry[0]) }} already expired</p>@endif
                 @if($expiry[1])<p class="mb-1">{{ $expiry[1] }} expiring within {{ \App\Http\Controllers\ExpiringStockController::DEFAULT_DAYS }} days</p>@endif
-                <small class="text-muted">Tap to see the list</small>
+                <small class="text-muted">{{ __('Tap to see the list') }}</small>
             </div>
             </a>
         </div>
@@ -47,12 +47,12 @@
             <div class="card card-border-shadow-primary h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2 pb-1">
-                <h4 class="ms-1 mb-0">Today's Check-in</h4>
+                <h4 class="ms-1 mb-0">{{ __('Today\'s Check-in') }}</h4>
                 </div>
-                <p class="mb-1">Checked in at: <b>{{ $workingCompany->company_name ?? '-' }}</b> ({{ $workingCompany->company_code ?? '' }})</p>
-                <p class="mb-1">Login time: <b>{{ $attendance ? \Carbon\Carbon::parse($attendance->clock_in)->format('d M Y, H:i') : '-' }}</b></p>
+                <p class="mb-1">{{ __('Checked in at') }}: <b>{{ $workingCompany->company_name ?? '-' }}</b> ({{ $workingCompany->company_code ?? '' }})</p>
+                <p class="mb-1">{{ __('Login time') }}: <b>{{ $attendance ? \Carbon\Carbon::parse($attendance->clock_in)->format('d M Y, H:i') : '-' }}</b></p>
                 @if($shiftWindow)
-                    <p class="mb-0">Shift: <b>{{ $shiftWindow->shift }}</b> {{ $shiftWindow->start->format('H:i') }} – {{ $shiftWindow->end->format('H:i') }}
+                    <p class="mb-0">{{ __('Shift') }}: <b>{{ $shiftWindow->shift }}</b> {{ $shiftWindow->start->format('H:i') }} – {{ $shiftWindow->end->format('H:i') }}
                         <br><small class="text-muted">Auto logout at {{ $shiftWindow->logoutAt->format('H:i') }}</small></p>
                 @endif
             </div>
@@ -62,17 +62,17 @@
     </div>
     <div class="row">
         <div class="col-sm-12 col-lg-12 mb-12" style="margin-bottom:20px">
-            <button class="btn btn-primary" style="float:right;" onclick="confirmClosing()">Closing</button>
+            <button class="btn btn-primary" style="float:right;" onclick="confirmClosing()">{{ __('Closing') }}</button>
 
             @if(Auth::user()->isStaff())
-                <a class="btn btn-warning" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">Advance</a>
+                <a class="btn btn-warning" style="float:right;margin-right:10px" href="{{ route('staff_borrow.index') }}">{{ __('Advance') }}</a>
             @endif
         </div>
 
             @foreach(\App\Http\Controllers\NotificationController::itemsFor(Auth::user()) as $note)
                 <div class="col-12"><div class="alert alert-warning d-flex justify-content-between align-items-center">
                     <span><i class="bx bx-bell me-1"></i> {{ $note['text'] }}</span>
-                    <a href="{{ $note['url'] }}" class="btn btn-sm btn-warning">Open</a>
+                    <a href="{{ $note['url'] }}" class="btn btn-sm btn-warning">{{ __('Open') }}</a>
                 </div></div>
             @endforeach
 

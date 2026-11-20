@@ -103,7 +103,7 @@ class StaffShiftAccessTest extends TestCase
         $this->assertSame($this->companyB->id, (int) \App\Models\Order::find($order)->company_id);
 
         // home shows where they checked in
-        $this->get('http://shopb.test/home')->assertOk()->assertSee("Today's Check-in", false)->assertSee('Company B');
+        $this->get('http://shopb.test/home')->assertOk()->assertSee("Today's Check-in")->assertSee('Company B');
     }
 
     public function test_www_and_port_are_ignored_for_domain(): void

@@ -265,6 +265,10 @@ class StockTransferController extends Controller
                 'reject_reason' => $request->reject_reason,
             ]);
 
+        if ($updated) {
+            \App\Support\ActivityLogger::log('rejected', $stock_transfer, ['status' => [$stock_transfer->status, 'rejected']],
+                'Rejected transfer' . ($request->reject_reason ? ': ' . $request->reject_reason : ''));
+        }
         return $updated
             ? back()->withSuccess('Transfer rejected.')
             : back()->withErrors('This transfer was already processed.');

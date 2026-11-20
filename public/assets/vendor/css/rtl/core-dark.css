@@ -1,7 +1,7 @@
 @charset "UTF-8";
 :root,
 [data-bs-theme=light] {
-  --bs-blue: #5a8dee;
+  --bs-blue: #16a34a;
   --bs-indigo: #6610f2;
   --bs-purple: #6f42c1;
   --bs-pink: #e83e8c;
@@ -17,7 +17,7 @@
   --bs-gray-dark: rgba(0, 0, 0, 0.45);
   --bs-gray-25: rgba(255, 255, 255, 0.015);
   --bs-gray-50: rgba(255, 255, 255, 0.03);
-  --bs-primary: #5a8dee;
+  --bs-primary: #16a34a;
   --bs-secondary: #69809a;
   --bs-success: #39da8a;
   --bs-info: #00cfdd;
@@ -26,7 +26,7 @@
   --bs-light: #434c5f;
   --bs-dark: #717784;
   --bs-gray: rgba(255, 255, 255, 0.75);
-  --bs-primary-rgb: 90, 141, 238;
+  --bs-primary-rgb: 22, 163, 74;
   --bs-secondary-rgb: 105, 128, 154;
   --bs-success-rgb: 57, 218, 138;
   --bs-info-rgb: 0, 207, 221;
@@ -35,7 +35,7 @@
   --bs-light-rgb: 67, 76, 95;
   --bs-dark-rgb: 113, 119, 132;
   --bs-gray-rgb: 255, 255, 255;
-  --bs-primary-text-emphasis: rgb(36, 56.4, 95.2);
+  --bs-primary-text-emphasis: rgb(9, 65, 30);
   --bs-secondary-text-emphasis: rgb(42, 51.2, 61.6);
   --bs-success-text-emphasis: rgb(22.8, 87.2, 55.2);
   --bs-info-text-emphasis: rgb(0, 82.8, 88.4);
@@ -43,7 +43,7 @@
   --bs-danger-text-emphasis: rgb(102, 36.4, 36.8);
   --bs-light-text-emphasis: rgba(0, 0, 0, 0.15);
   --bs-dark-text-emphasis: rgba(0, 0, 0, 0.15);
-  --bs-primary-bg-subtle: rgb(222, 232.2, 251.6);
+  --bs-primary-bg-subtle: rgb(208, 237, 219);
   --bs-secondary-bg-subtle: rgb(225, 229.6, 234.8);
   --bs-success-bg-subtle: rgb(215.4, 247.6, 231.6);
   --bs-info-bg-subtle: rgb(204, 245.4, 248.2);
@@ -51,7 +51,7 @@
   --bs-danger-bg-subtle: rgb(255, 222.2, 222.4);
   --bs-light-bg-subtle: rgba(255, 255, 255, 0.875);
   --bs-dark-bg-subtle: rgba(255, 255, 255, 0.2);
-  --bs-primary-border-subtle: rgb(189, 209.4, 248.2);
+  --bs-primary-border-subtle: rgb(162, 218, 183);
   --bs-secondary-border-subtle: rgb(195, 204.2, 214.6);
   --bs-success-border-subtle: rgb(175.8, 240.2, 208.2);
   --bs-info-border-subtle: rgb(153, 235.8, 241.4);
@@ -84,11 +84,11 @@
   --bs-tertiary-bg: rgba(255, 255, 255, 0.75);
   --bs-tertiary-bg-rgb: 255, 255, 255;
   --bs-heading-color: rgb(216, 222, 233.5);
-  --bs-link-color: #5a8dee;
-  --bs-link-color-rgb: 90, 141, 238;
+  --bs-link-color: #16a34a;
+  --bs-link-color-rgb: 22, 163, 74;
   --bs-link-decoration: none;
-  --bs-link-hover-color: rgb(81, 126.9, 214.2);
-  --bs-link-hover-color-rgb: 81, 127, 214;
+  --bs-link-hover-color: rgb(20, 147, 67);
+  --bs-link-hover-color-rgb: 20, 147, 67;
   --bs-code-color: #e83e8c;
   --bs-highlight-color: rgb(161.4, 175.8, 203.4);
   --bs-highlight-bg: rgb(254.6, 238.4, 217);
@@ -1870,7 +1870,7 @@ progress {
 
 .table-primary {
   --bs-table-color: #000;
-  --bs-table-bg: rgb(222, 232.2, 251.6);
+  --bs-table-bg: rgb(208, 237, 219);
   --bs-table-border-color: rgb(177.6, 185.76, 201.28);
   --bs-table-striped-bg: rgb(208.68, 218.268, 236.504);
   --bs-table-striped-color: #000;
@@ -2735,7 +2735,7 @@ textarea.form-control-lg {
   --bs-btn-disabled-color: rgba(0, 0, 0, 0.1);
   --bs-btn-disabled-border-color: transparent;
   --bs-btn-box-shadow: 0 0 0 #000;
-  --bs-btn-focus-shadow-rgb: 115, 158, 241;
+  --bs-btn-focus-shadow-rgb: 57, 177, 101;
   text-decoration: none;
 }
 .btn-link:focus-visible {
@@ -2844,8 +2844,8 @@ textarea.form-control-lg {
   --bs-dropdown-link-color: rgb(161.4, 175.8, 203.4);
   --bs-dropdown-link-hover-color: rgb(161.4, 175.8, 203.4);
   --bs-dropdown-link-hover-bg: rgba(99, 123, 169, 0.08);
-  --bs-dropdown-link-active-color: #5a8dee;
-  --bs-dropdown-link-active-bg: rgba(90, 141, 238, 0.08);
+  --bs-dropdown-link-active-color: #16a34a;
+  --bs-dropdown-link-active-bg: rgba(22, 163, 74, 0.08);
   --bs-dropdown-link-disabled-color: rgb(130.2, 149.4, 186.2);
   --bs-dropdown-item-padding-x: 1rem;
   --bs-dropdown-item-padding-y: 0.5rem;
@@ -3112,8 +3112,8 @@ textarea.form-control-lg {
   --bs-dropdown-link-hover-color: #fff;
   --bs-dropdown-divider-bg: rgba(255, 255, 255, 0.09);
   --bs-dropdown-link-hover-bg: rgba(255, 255, 255, 0.15);
-  --bs-dropdown-link-active-color: #5a8dee;
-  --bs-dropdown-link-active-bg: rgba(90, 141, 238, 0.08);
+  --bs-dropdown-link-active-color: #16a34a;
+  --bs-dropdown-link-active-bg: rgba(22, 163, 74, 0.08);
   --bs-dropdown-link-disabled-color: #637ba9;
   --bs-dropdown-header-color: #637ba9;
 }
@@ -4361,7 +4361,7 @@ textarea.form-control-lg {
   --bs-progress-border-radius: 10rem;
   --bs-progress-box-shadow: var(--bs-box-shadow-inset);
   --bs-progress-bar-color: #fff;
-  --bs-progress-bar-bg: #5a8dee;
+  --bs-progress-bar-bg: #16a34a;
   --bs-progress-bar-transition: width 0.6s ease;
   display: flex;
   height: var(--bs-progress-height);
@@ -12437,7 +12437,7 @@ html:not(.dark-style) .toast.bs-toast .toast-header:not([class*=bg-]) .btn-close
 }
 
 .border-primary {
-  border-color: #5a8dee !important;
+  border-color: #16a34a !important;
 }
 
 .border-secondary {
@@ -22652,7 +22652,7 @@ html:not([dir=rtl]) .switches-stacked .switch {
 }
 .timeline .timeline-item .timeline-indicator i,
 .timeline .timeline-item .timeline-indicator-advanced i {
-  color: #5a8dee;
+  color: #16a34a;
   font-size: 0.85rem !important;
 }
 .timeline .timeline-item .timeline-point {
@@ -22664,7 +22664,7 @@ html:not([dir=rtl]) .switches-stacked .switch {
   height: 0.75rem;
   width: 0.75rem;
   border-radius: 50%;
-  background-color: #5a8dee;
+  background-color: #16a34a;
 }
 .timeline .timeline-item.timeline-item-transparent .timeline-event {
   top: -1.4rem;
@@ -23195,7 +23195,7 @@ html:not([dir=rtl]) .timeline-item {
 }
 
 :root {
-  --bs-facebook: #3b5998;
+  --bs-facebook: #0e682f;
   --bs-twitter: #1da1f2;
   --bs-google-plus: #dd4b39;
   --bs-instagram: #e1306c;
@@ -23210,39 +23210,39 @@ html:not([dir=rtl]) .timeline-item {
 }
 
 .bg-facebook {
-  background-color: #3b5998 !important;
+  background-color: #0e682f !important;
 }
 
 a.bg-facebook:hover, a.bg-facebook:focus {
-  background-color: rgb(56.05, 84.55, 144.4) !important;
+  background-color: rgb(13, 99, 45) !important;
 }
 
 .dropdown-notifications-item:not(.mark-as-read) .dropdown-notifications-read span {
-  background-color: #3b5998;
+  background-color: #0e682f;
 }
 
 .bg-label-facebook {
   background-color: rgb(42.704, 55.568, 81.104) !important;
-  color: #3b5998 !important;
+  color: #0e682f !important;
 }
 
 .bg-label-hover-facebook {
   background-color: rgb(42.704, 55.568, 81.104) !important;
-  color: #3b5998 !important;
+  color: #0e682f !important;
 }
 .bg-label-hover-facebook:hover {
-  background-color: #3b5998 !important;
+  background-color: #0e682f !important;
   color: #fff !important;
 }
 
 .border-label-facebook {
-  border: 3px solid rgb(44.25, 66.75, 114);
+  border: 3px solid rgb(11, 78, 35);
 }
 
 .btn-facebook, .btn-facebook[data-trigger=hover].dropdown-toggle:not(.show) {
   color: #fff;
-  background-color: #3b5998;
-  border-color: #3b5998;
+  background-color: #0e682f;
+  border-color: #0e682f;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
 }
 .btn-facebook:hover, .btn-facebook[data-trigger=hover].show.dropdown-toggle:hover {
@@ -23253,61 +23253,61 @@ a.bg-facebook:hover, a.bg-facebook:focus {
 }
 .btn-check:focus + .btn-facebook, .btn-facebook:focus, .btn-facebook.focus {
   color: #fff;
-  background-color: rgb(50.15, 75.65, 129.2);
-  border-color: rgb(50.15, 75.65, 129.2);
+  background-color: rgb(12, 88, 40);
+  border-color: rgb(12, 88, 40);
   box-shadow: none;
 }
 .btn-check:checked + .btn-facebook, .btn-check:active + .btn-facebook, .btn-facebook:active, .btn-facebook.active, .btn-facebook.show.dropdown-toggle, .show > .btn-facebook.dropdown-toggle {
   color: #fff !important;
-  background-color: rgb(50.15, 75.65, 129.2) !important;
-  border-color: rgb(50.15, 75.65, 129.2) !important;
+  background-color: rgb(12, 88, 40) !important;
+  border-color: rgb(12, 88, 40) !important;
 }
 .btn-check:checked + .btn-facebook:focus, .btn-check:active + .btn-facebook:focus, .btn-facebook:active:focus, .btn-facebook.active:focus, .btn-facebook.show.dropdown-toggle:focus, .show > .btn-facebook.dropdown-toggle:focus {
   box-shadow: none;
 }
 .btn-facebook.disabled, .btn-facebook:disabled {
   color: #fff !important;
-  background-color: #3b5998 !important;
-  border-color: #3b5998 !important;
+  background-color: #0e682f !important;
+  border-color: #0e682f !important;
   box-shadow: none !important;
 }
 
 .btn-group .btn-facebook,
 .input-group .btn-facebook {
-  border-right: var(--bs-border-width) solid rgb(50.15, 75.65, 129.2);
-  border-left: var(--bs-border-width) solid rgb(50.15, 75.65, 129.2);
+  border-right: var(--bs-border-width) solid rgb(12, 88, 40);
+  border-left: var(--bs-border-width) solid rgb(12, 88, 40);
 }
 
 .btn-group-vertical .btn-facebook {
-  border-top-color: rgb(50.15, 75.65, 129.2);
-  border-bottom-color: rgb(50.15, 75.65, 129.2);
+  border-top-color: rgb(12, 88, 40);
+  border-bottom-color: rgb(12, 88, 40);
 }
 
 .btn-label-facebook {
-  color: #3b5998;
+  color: #0e682f;
   border-color: transparent;
   background: rgb(42.704, 55.568, 81.104);
 }
 .btn-label-facebook:hover {
   border-color: transparent !important;
-  background: #3b5998 !important;
+  background: #0e682f !important;
   color: #fff !important;
 }
 .btn-label-facebook:focus, .btn-label-facebook.focus {
   color: #fff;
-  background: rgb(50.15, 75.65, 129.2);
+  background: rgb(12, 88, 40);
   box-shadow: none !important;
 }
 .btn-label-facebook:active, .btn-label-facebook.active, .btn-label-facebook.show.dropdown-toggle, .show > .btn-label-facebook.dropdown-toggle {
   color: #fff !important;
-  background-color: rgb(50.15, 75.65, 129.2) !important;
+  background-color: rgb(12, 88, 40) !important;
   border-color: transparent !important;
 }
 .btn-label-facebook:active:focus, .btn-label-facebook.active:focus, .btn-label-facebook.show.dropdown-toggle:focus, .show > .btn-label-facebook.dropdown-toggle:focus {
   box-shadow: none;
 }
 .btn-label-facebook.disabled, .btn-label-facebook:disabled {
-  color: #3b5998 !important;
+  color: #0e682f !important;
   border-color: transparent !important;
   background: rgb(42.704, 55.568, 81.104) !important;
   box-shadow: none !important;
@@ -23315,47 +23315,47 @@ a.bg-facebook:hover, a.bg-facebook:focus {
 
 .btn-group .btn-label-facebook,
 .input-group .btn-label-facebook {
-  border-right: var(--bs-border-width) solid rgb(50.15, 75.65, 129.2);
-  border-left: var(--bs-border-width) solid rgb(50.15, 75.65, 129.2);
+  border-right: var(--bs-border-width) solid rgb(12, 88, 40);
+  border-left: var(--bs-border-width) solid rgb(12, 88, 40);
 }
 
 .btn-group-vertical .btn-label-facebook {
-  border-top-color: rgb(50.15, 75.65, 129.2);
-  border-bottom-color: rgb(50.15, 75.65, 129.2);
+  border-top-color: rgb(12, 88, 40);
+  border-bottom-color: rgb(12, 88, 40);
 }
 
 .btn-outline-facebook {
-  color: #3b5998;
-  border-color: #3b5998;
+  color: #0e682f;
+  border-color: #0e682f;
   background: transparent;
 }
 .btn-outline-facebook:hover {
   color: #fff !important;
-  background-color: #3b5998 !important;
-  border-color: #3b5998 !important;
+  background-color: #0e682f !important;
+  border-color: #0e682f !important;
 }
 .btn-check:focus + .btn-outline-facebook, .btn-outline-facebook:focus {
   color: #fff;
-  background-color: rgb(50.15, 75.65, 129.2);
-  border-color: rgb(50.15, 75.65, 129.2);
+  background-color: rgb(12, 88, 40);
+  border-color: rgb(12, 88, 40);
   box-shadow: none;
 }
 .btn-check:checked + .btn-outline-facebook, .btn-check:active + .btn-outline-facebook, .btn-outline-facebook:active, .btn-outline-facebook.active, .btn-outline-facebook.dropdown-toggle.show {
   color: #fff !important;
-  background-color: rgb(50.15, 75.65, 129.2) !important;
-  border-color: rgb(50.15, 75.65, 129.2) !important;
+  background-color: rgb(12, 88, 40) !important;
+  border-color: rgb(12, 88, 40) !important;
 }
 .btn-check:checked + .btn-outline-facebook:focus, .btn-check:active + .btn-outline-facebook:focus, .btn-outline-facebook:active:focus, .btn-outline-facebook.active:focus, .btn-outline-facebook.dropdown-toggle.show:focus {
   box-shadow: none;
 }
 .btn-outline-facebook.disabled, .btn-outline-facebook:disabled {
-  color: #3b5998 !important;
+  color: #0e682f !important;
   background-color: transparent !important;
 }
 
 .btn-outline-facebook .badge {
-  background: #3b5998;
-  border-color: #3b5998;
+  background: #0e682f;
+  border-color: #0e682f;
   color: #fff;
 }
 
@@ -23366,7 +23366,7 @@ a.bg-facebook:hover, a.bg-facebook:focus {
 .show > .btn-outline-facebook.dropdown-toggle .badge {
   background: #fff;
   border-color: #fff;
-  color: #3b5998;
+  color: #0e682f;
 }
 
 .bg-twitter {

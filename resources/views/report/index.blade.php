@@ -3,29 +3,29 @@
 <!-- Content -->
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Report </span></h4>
+    <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Report') }} </span></h4>
 
     <!-- DataTable with Buttons -->
     <div class="card">
         <div class="card-header flex-column flex-md-row">
             <div class="head-label"  style="margin-bottom:10px">
-                <h5 class="card-title mb-0">Report</h5>
+                <h5 class="card-title mb-0">{{ __('Report') }}</h5>
             </div>
             <div class="col-md-12 col-12 mb-4">
                 <form method="GET">
                     <div class="row g-2 align-items-end">
 
                         <div class="col-md-6">
-                            <label>Date</label>
+                            <label>{{ __('Date') }}</label>
                             <div class="input-group input-daterange" >
                                 <input type="datetime-local" class="form-control" name="date_from" value="{{$date_from??''}}"/>
-                            <span class="input-group-text">to</span>
+                            <span class="input-group-text">{{ __('to') }}</span>
                             <input type="datetime-local" class="form-control" name="date_to" value="{{$date_to??''}}"/>
                             </div>
                         </div>
 
                         <div class="col-md-3">
-                            <label>Branches</label>
+                            <label>{{ __('Branches') }}</label>
                             <select name="branch_id[]" class="form-select select2" multiple>
                                 @foreach ($branches as $branch)
                                     <option value="{{ $branch->id }}" {{ collect(request('branch_id'))->contains($branch->id) ? 'selected' : '' }}>
@@ -36,7 +36,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label>Companies</label>
+                            <label>{{ __('Companies') }}</label>
                             <select name="company_id[]" class="form-select select2" multiple>
                                 @foreach ($companies as $company)
                                     <option value="{{ $company->id }}" {{ collect(request('company_id'))->contains($company->id) ? 'selected' : '' }}>
@@ -47,9 +47,9 @@
                         </div>
 
                         <div class="col-md-12 text-end mt-2">
-                            <button class="btn btn-primary">Filter</button>
+                            <button class="btn btn-primary">{{ __('Filter') }}</button>
                             <a href="{{ route('report.print', request()->query()) }}" target="_blank" class="btn btn-secondary">
-                                <i class="bx bx-printer me-1"></i> Print Report
+                                <i class="bx bx-printer me-1"></i> {{ __('Print Report') }}
                             </a>
                         </div>
 
@@ -62,11 +62,11 @@
             <table class="dt-column-search table table-bordered" id="mytable">
                 <thead>
                     <tr>
-                        <th>Branch</th>
-                        <th>Company</th>
-                        <th>Product</th>
-                        <th>Total Quantity</th>
-                        <th>Total Amount</th>
+                        <th>{{ __('Branch') }}</th>
+                        <th>{{ __('Company') }}</th>
+                        <th>{{ __('Product') }}</th>
+                        <th>{{ __('Total Quantity') }}</th>
+                        <th>{{ __('Total Amount') }}</th>
                     </tr>
                 </thead>
                 <tbody>

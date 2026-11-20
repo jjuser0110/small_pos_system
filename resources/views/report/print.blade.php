@@ -28,26 +28,26 @@
 </head>
 <body>
     <div class="no-print">
-        <button onclick="window.print()">Print</button>
-        <button onclick="window.close()">Close</button>
+        <button onclick="window.print()">{{ __('Print') }}</button>
+        <button onclick="window.close()">{{ __('Close') }}</button>
     </div>
 
-    <h2>Sales Report</h2>
+    <h2>{{ __('Sales Report') }}</h2>
     <div class="meta">
-        <div><span>Date:</span> {{ $date_from->format('d/m/Y h:i A') }} - {{ $date_to->format('d/m/Y h:i A') }}</div>
-        <div><span>Branches:</span> {{ $selectedBranches }}</div>
-        <div><span>Companies:</span> {{ $selectedCompanies }}</div>
+        <div><span>{{ __('Date') }}:</span> {{ $date_from->format('d/m/Y h:i A') }} - {{ $date_to->format('d/m/Y h:i A') }}</div>
+        <div><span>{{ __('Branches') }}:</span> {{ $selectedBranches }}</div>
+        <div><span>{{ __('Companies') }}:</span> {{ $selectedCompanies }}</div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th style="width:40px">No</th>
-                <th>Branch</th>
-                <th>Company</th>
-                <th>Product</th>
-                <th class="num">Total Quantity</th>
-                <th class="num">Total Amount</th>
+                <th style="width:40px">{{ __('No') }}</th>
+                <th>{{ __('Branch') }}</th>
+                <th>{{ __('Company') }}</th>
+                <th>{{ __('Product') }}</th>
+                <th class="num">{{ __('Total Quantity') }}</th>
+                <th class="num">{{ __('Total Amount') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -62,14 +62,14 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align:center">No data found</td>
+                    <td colspan="6" style="text-align:center">{{ __('No data found') }}</td>
                 </tr>
             @endforelse
         </tbody>
         @if($itemTotals->count())
         <tfoot>
             <tr>
-                <td colspan="4" class="num">Grand Total</td>
+                <td colspan="4" class="num">{{ __('Grand Total') }}</td>
                 <td class="num">{{ $grandQuantity }}</td>
                 <td class="num">{{ money($grandAmount) }}</td>
             </tr>

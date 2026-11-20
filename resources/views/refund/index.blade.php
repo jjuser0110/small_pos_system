@@ -4,19 +4,19 @@
 <style>#mytable th, #mytable td { padding: 10px; }</style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Refunds
+        <a class="text-muted fw-light" href="{{ route('home') }}">{{ __('Home') }} /</a> {{ __('Refunds') }}
     </h4>
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Refund Requests</h5>
+            <h5 class="mb-0">{{ __('Refund Requests') }}</h5>
             <div class="d-flex gap-2">
                 @if(Auth::user()->isStaff())
-                    <a href="{{ route('refund.create') }}" class="btn btn-warning">New Refund</a>
+                    <a href="{{ route('refund.create') }}" class="btn btn-warning">{{ __('New Refund') }}</a>
                 @endif
                 <form method="get">
                     <select name="status" class="form-select no-select2" onchange="this.form.submit()">
-                        <option value="">All</option>
+                        <option value="">{{ __('All') }}</option>
                         @foreach(['pending','approved','rejected'] as $s)
                             <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                         @endforeach
@@ -28,8 +28,8 @@
             <table class="dt-column-search table table-bordered" id="mytable">
                 <thead>
                     <tr>
-                        <th>#</th><th>Date</th><th>Order</th><th>Company</th><th>Items</th><th>Amount</th>
-                        <th>Reason</th><th>Requested By</th><th>Status</th><th>Processed By</th><th>Action</th>
+                        <th>#</th><th>{{ __('Date') }}</th><th>{{ __('Order') }}</th><th>{{ __('Company') }}</th><th>{{ __('Items') }}</th><th>{{ __('Amount') }}</th>
+                        <th>{{ __('Reason') }}</th><th>{{ __('Requested By') }}</th><th>{{ __('Status') }}</th><th>{{ __('Processed By') }}</th><th>{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,9 +48,9 @@
                         <td>{{ $r->reason }}</td>
                         <td>{{ $r->requester->name ?? '' }}</td>
                         <td>
-                            @if($r->status == 'pending') <span style="color:orange">Pending</span>
-                            @elseif($r->status == 'approved') <span style="color:green">Approved</span>
-                            @else <span style="color:red">Rejected</span>@if($r->reject_reason)<br><small>{{ $r->reject_reason }}</small>@endif
+                            @if($r->status == 'pending') <span style="color:orange">{{ __('Pending') }}</span>
+                            @elseif($r->status == 'approved') <span style="color:green">{{ __('Approved') }}</span>
+                            @else <span style="color:red">{{ __('Rejected') }}</span>@if($r->reject_reason)<br><small>{{ $r->reject_reason }}</small>@endif
                             @endif
                         </td>
                         <td>{{ $r->approver->name ?? '' }}<br><small>{{ $r->status_at }}</small></td>
@@ -59,12 +59,12 @@
                                 <div class="d-flex gap-2">
                                     <form method="post" action="{{ route('refund.approve', $r) }}" class="m-0" onsubmit="return confirm('Approve this refund of {{ money($r->amount) }}? Stock is returned and the amount is taken off the shift.')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                        <button type="submit" class="btn btn-sm btn-success">{{ __('Approve') }}</button>
                                     </form>
                                     <form method="post" action="{{ route('refund.reject', $r) }}" class="m-0" onsubmit="var x = prompt('Reject reason (optional):'); if (x === null) return false; this.reject_reason.value = x; return true;">
                                         @csrf
                                         <input type="hidden" name="reject_reason">
-                                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ __('Reject') }}</button>
                                     </form>
                                 </div>
                             @endif

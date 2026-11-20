@@ -199,6 +199,9 @@ class RefundController extends Controller
             'reject_reason' => $request->reject_reason,
         ]);
 
+        if ($updated) {
+            \App\Support\ActivityLogger::log('rejected', $refund, ['status' => [$refund->status, 'rejected']], 'Rejected refund' . ($request->reject_reason ? ': ' . $request->reject_reason : ''));
+        }
         return $updated ? back()->withSuccess('Refund rejected.') : back()->withErrors('This refund was already processed.');
     }
 }

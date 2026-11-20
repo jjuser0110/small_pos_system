@@ -9,7 +9,7 @@
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Staff Attendance
+        <a class="text-muted fw-light" href="{{ route('home') }}">{{ __('Home') }} /</a> {{ __('Staff Attendance') }}
     </h4>
 
     <div class="card mb-4">
@@ -20,14 +20,14 @@
                 @if($branches->count())
                 <div class="col-auto">
                     <select name="branch_id" class="form-select">
-                        <option value="">All Branches</option>
+                        <option value="">{{ __('All Branches') }}</option>
                         @foreach($branches as $b)
                             <option value="{{ $b->id }}" {{ request('branch_id') == $b->id ? 'selected' : '' }}>{{ $b->branch_code ?? $b->id }}</option>
                         @endforeach
                     </select>
                 </div>
                 @endif
-                <div class="col-auto"><button class="btn btn-primary" type="submit">Search</button></div>
+                <div class="col-auto"><button class="btn btn-primary" type="submit">{{ __('Search') }}</button></div>
             </form>
         </div>
     </div>
@@ -35,17 +35,17 @@
     <div class="card mb-4">
         <div class="card-header flex-column flex-md-row">
             <div class="head-label">
-                <h5 class="card-title mb-0">Summary</h5>
+                <h5 class="card-title mb-0">{{ __('Summary') }}</h5>
             </div>
         </div>
         <div class="card-datatable text-nowrap">
             <table class="dt-column-search table table-bordered" id="summaryTable">
                 <thead>
                     <tr>
-                        <th>Staff</th>
-                        <th>Days Worked</th>
-                        <th>Total Hours</th>
-                        <th>Forgot to Close (days)</th>
+                        <th>{{ __('Staff') }}</th>
+                        <th>{{ __('Days Worked') }}</th>
+                        <th>{{ __('Total Hours') }}</th>
+                        <th>{{ __('Forgot to Close (days)') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,18 +71,18 @@
     <div class="card">
         <div class="card-header flex-column flex-md-row">
             <div class="head-label">
-                <h5 class="card-title mb-0">Daily Records</h5>
+                <h5 class="card-title mb-0">{{ __('Daily Records') }}</h5>
             </div>
         </div>
         <div class="card-datatable text-nowrap">
             <table class="dt-column-search table table-bordered" id="dailyTable">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Staff</th>
-                        <th>Clock In</th>
-                        <th>Clock Out (Closing)</th>
-                        <th>Hours</th>
+                        <th>{{ __('Date') }}</th>
+                        <th>{{ __('Staff') }}</th>
+                        <th>{{ __('Clock In') }}</th>
+                        <th>{{ __('Clock Out (Closing)') }}</th>
+                        <th>{{ __('Hours') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -93,7 +93,7 @@
                         <td>{{ $r->clock_in }}</td>
                         <td>
                             @if($r->clock_out) {{ $r->clock_out }}
-                            @else <span style="color:red">Not closed</span> @endif
+                            @else <span style="color:red">{{ __('Not closed') }}</span> @endif
                         </td>
                         <td>
                             @if($r->clock_out)

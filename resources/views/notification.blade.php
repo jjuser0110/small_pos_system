@@ -3,7 +3,7 @@
 @section('content')
 <section role="main" class="content-body">
     <header class="page-header">
-        <h2>Notification</h2>
+        <h2>{{ __('Notification') }}</h2>
     </header>
 
     @include('layouts.flash-message')
@@ -11,19 +11,19 @@
         <div class="col-xl-6">
             <section class="card">
                 <header class="card-header card-header-transparent">
-                    <h2 class="card-title">Package Invoice</h2>
+                    <h2 class="card-title">{{ __('Package Invoice') }}</h2>
                 </header>
                 <div class="card-body">
                     <table class="table table-responsive-md table-striped mb-0" id="datatable-packageinvoice">
                         <thead>
                             <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Package</th>
-                                <th>P.Price</th>
-                                <th>From Date</th>
-                                <th>Expiry Date</th>
-                                <th>Days to Due</th>
+                                <th>{{ __('Code') }}</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('Package') }}</th>
+                                <th>{{ __('P.Price') }}</th>
+                                <th>{{ __('From Date') }}</th>
+                                <th>{{ __('Expiry Date') }}</th>
+                                <th>{{ __('Days to Due') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -46,17 +46,17 @@
         <div class="col-xl-6">
             <section class="card">
                 <header class="card-header card-header-transparent">
-                    <h2 class="card-title">User Wallet</h2>
+                    <h2 class="card-title">{{ __('User Wallet') }}</h2>
                 </header>
                 <div class="card-body">
                     <table class="table table-responsive-md table-striped mb-0" id="datatable-userwallet">
                         <thead>
                             <tr>
-                                <th>Code</th>
-                                <th>Name</th>
-                                <th>Wallet</th>
-                                <th>Last Invoice Total</th>
-                                <th>Wallet to Total Rate</th>
+                                <th>{{ __('Code') }}</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('Wallet') }}</th>
+                                <th>{{ __('Last Invoice Total') }}</th>
+                                <th>{{ __('Wallet to Total Rate') }}</th>
                             </tr>
                         </thead>
                         <tbody>

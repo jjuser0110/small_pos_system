@@ -3,31 +3,31 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('supplier.index')}}">Supplier /</a> 
-         @if (isset($supplier)) Edit @else Create @endif
+        <a class="text-muted fw-light" href="{{route('supplier.index')}}">{{ __('Supplier') }} /</a> 
+         @if (isset($supplier)) {{ __('Edit') }} @else {{ __('Create') }} @endif
     </h4>
     <div class="row">
         <div class="col-12">
             <div class="card">
-            <h5 class="card-header">Supplier Details</h5>
+            <h5 class="card-header">{{ __('Supplier Details') }}</h5>
             <div class="card-body">
                 <form class="row g-3" enctype="multipart/form-data" @if (isset($supplier)) method="post" action="{{ route('supplier.update',$supplier) }}" @else method="post" action="{{ route('supplier.store') }}" @endif onsubmit="showLoading()">
                 @csrf
                 <div class="col-md-6">
-                    <label class="form-label" for="name">Supplier Name</label>
+                    <label class="form-label" for="name">{{ __('Supplier Name') }}</label>
                     <input
                     type="text"
                     class="form-control"
-                    placeholder="Supplier Name"
+                    placeholder="{{ __('Supplier Name') }}"
                     name="name"
                     value="{{$supplier->name??''}}" 
                     required/>
                 </div>
                 @if($branches->count())
                 <div class="col-md-6">
-                    <label class="form-label" for="branch_id">Branch</label>
+                    <label class="form-label" for="branch_id">{{ __('Branch') }}</label>
                     <select name="branch_id" id="branch_id" class="form-select" required>
-                        <option value="">-- Choose branch --</option>
+                        <option value="">{{ __('-- Choose branch --') }}</option>
                         @foreach($branches as $b)
                             <option value="{{ $b->id }}" @if(old('branch_id', $supplier->branch_id ?? '') == $b->id) selected @endif>{{ $b->branch_name }}</option>
                         @endforeach
@@ -36,7 +36,7 @@
                 @endif
                 <hr>
                 <div class="col-12">
-                    <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>
+                    <button type="submit" name="submitButton" class="btn btn-primary">{{ __('Submit') }}</button>
                 </div>
                 </form>
             </div>

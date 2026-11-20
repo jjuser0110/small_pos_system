@@ -132,6 +132,9 @@ class DamageController extends Controller
             'reject_reason' => $request->reject_reason,
         ]);
 
+        if ($updated) {
+            \App\Support\ActivityLogger::log('rejected', $damage, ['status' => [$damage->status, 'rejected']], 'Rejected damage report' . ($request->reject_reason ? ': ' . $request->reject_reason : ''));
+        }
         return $updated ? back()->withSuccess('Damage report rejected.') : back()->withErrors('This damage report was already processed.');
     }
 }

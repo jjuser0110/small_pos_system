@@ -4,7 +4,7 @@
 <tr data-id="{{ $row->id }}" data-url="{{ route('batch.updateOpenItem', $row) }}">
     <td class="js-no" data-label="No">{{ $index + 1 }}</td>
     <td data-label="Barcode">{{ $row->product->barcode ?? '' }}</td>
-    <td data-label="Item" class="cell-item">{{ $row->product->product_name ?? 'Unknown item' }}@if($row->product?->trashed()) <span class="badge bg-label-danger">deleted</span>@endif</td>
+    <td data-label="Item" class="cell-item">{{ $row->product->product_name ?? 'Unknown item' }}@if($row->product?->trashed()) <span class="badge bg-label-danger">{{ __('deleted') }}</span>@endif</td>
     @if($batch->status == 'Open')
         <td data-label="Unit">
             <select class="form-select no-select2 js-unit">
@@ -33,10 +33,10 @@
     <td data-label="Balance" class="text-center">{{ $row->balance + 0 }}</td>
     <td data-label="Actions" class="text-center">
         @if($batch->status == 'Open')
-            <a style="color:red;cursor:pointer" title="Remove" class="js-remove" data-url="{{ route('batch.destroyItem', $row) }}"><i class="fa-solid fa-trash"></i> <span class="d-md-none">Remove</span></a>
+            <a style="color:red;cursor:pointer" title="{{ __('Remove') }}" class="js-remove" data-url="{{ route('batch.destroyItem', $row) }}"><i class="fa-solid fa-trash"></i> <span class="d-md-none">{{ __('Remove') }}</span></a>
         @elseif(auth()->user()->role_id == 1)
             {{-- only the superadmin adjusts stock that was already added --}}
-            <a type="button" data-bs-toggle="modal" data-bs-target="#editModal{{ $row->id }}" title="Adjust"><i class="fa fa-pencil"></i> <span class="d-md-none">Adjust</span></a>
+            <a type="button" data-bs-toggle="modal" data-bs-target="#editModal{{ $row->id }}" title="{{ __('Adjust') }}"><i class="fa fa-pencil"></i> <span class="d-md-none">{{ __('Adjust') }}</span></a>
         @endif
     </td>
 </tr>

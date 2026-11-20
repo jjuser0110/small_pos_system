@@ -4,7 +4,7 @@
 
     <div class="container-xxl flex-grow-1 container-p-y">
         <h4 class="py-3 breadcrumb-wrapper mb-4">
-            <a class="text-muted fw-light" href="{{ route('product.index') }}">Item List /</a> {{ $product->product_name }}
+            <a class="text-muted fw-light" href="{{ route('product.index') }}">{{ __('Item List') }} /</a> {{ $product->product_name }}
         </h4>
 
         @php
@@ -19,26 +19,26 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <h5 class="mb-2">{{ $product->product_name }}</h5>
-                        <div>Company: <b>{{ $product->company->company_name ?? '' }}</b> ({{ $product->company->company_code ?? '' }})</div>
+                        <div>{{ __('Company') }}: <b>{{ $product->company->company_name ?? '' }}</b> ({{ $product->company->company_code ?? '' }})</div>
                         <div>Branch: {{ $product->branch->branch_name ?? '' }}</div>
                         <div>Category: {{ $product->category->category_name ?? '' }}</div>
                         <div>Barcode: {{ $product->barcode ?: '-' }}</div>
                         <div>Status: {!! $product->is_active ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>' !!}</div>
                     </div>
                     <div class="col-md-4">
-                        <div>Base unit: <b>{{ $product->uom_dt->uom_name ?? '-' }}</b></div>
-                        <div>Price: <b>{{ money($product->selling_price) }}</b> per {{ $product->uom_dt->uom_unit ?? 'unit' }}</div>
-                        <div class="mt-2">Sell options:</div>
+                        <div>{{ __('Base unit') }}: <b>{{ $product->uom_dt->uom_name ?? '-' }}</b></div>
+                        <div>{{ __('Price') }}: <b>{{ money($product->selling_price) }}</b> per {{ $product->uom_dt->uom_unit ?? 'unit' }}</div>
+                        <div class="mt-2">{{ __('Sell options') }}:</div>
                         @forelse($product->units as $unit)
                             <div class="ms-2">· {{ $unit->name }} = {{ $unit->base_qty + 0 }} {{ $product->uom_dt->uom_unit ?? 'units' }} for {{ money($unit->price) }}@if($unit->barcode) <small class="text-muted">[{{ $unit->barcode }}]</small>@endif</div>
                         @empty
-                            <div class="ms-2 text-muted">none</div>
+                            <div class="ms-2 text-muted">{{ __('none') }}</div>
                         @endforelse
                     </div>
                     <div class="col-md-4">
-                        <div class="fs-6">Stock now</div>
+                        <div class="fs-6">{{ __('Stock now') }}</div>
                         <div class="fs-3 fw-semibold @if($product->stock_quantity < 0) text-danger @endif">{{ $product->stock_quantity + 0 }} <small class="fs-6">{{ $product->uom_dt->uom_unit ?? '' }}</small></div>
-                        <div class="mt-2">Stock value at cost: <b>{{ money($remainingValue) }}</b></div>
+                        <div class="mt-2">{{ __('Stock value at cost') }}: <b>{{ money($remainingValue) }}</b></div>
                         @if($costedQty < $product->stock_quantity)
                             <small class="text-warning">{{ $product->stock_quantity - $costedQty + 0 }} have no cost recorded (initial stock / manual adjustment).</small>
                         @endif
@@ -51,21 +51,21 @@
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Stock Movements</h5>
+                    <h5 class="card-title mb-0">{{ __('Stock Movements') }}</h5>
                 </div>
             </div>
             <div class="card-datatable text-nowrap">
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Company</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Before</th>
-                            <th>Stock</th>
-                            <th>After</th>
-                            <th>By</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Company') }}</th>
+                            <th>{{ __('Type') }}</th>
+                            <th>{{ __('Description') }}</th>
+                            <th>{{ __('Before') }}</th>
+                            <th>{{ __('Stock') }}</th>
+                            <th>{{ __('After') }}</th>
+                            <th>{{ __('By') }}</th>
                         </tr>
                     </thead>
                     <tbody>

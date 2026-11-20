@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 
 <html
-  lang="en"
-  class="light-style layout-navbar-fixed layout-menu-fixed layout-compact"
+  lang="{{ \App\Support\Preferences::htmlLang() }}"
+  class="{{ \App\Support\Preferences::dark() ? 'dark-style' : 'light-style' }} layout-navbar-fixed layout-menu-fixed layout-compact"
   dir="ltr">
   <head>
     
@@ -49,32 +49,32 @@
               <form enctype="multipart/form-data" method="post" action="{{ route('change_password') }}" onsubmit="showLoading()">
                 @csrf
               <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel1">Change Password</h5>
+                <h5 class="modal-title" id="exampleModalLabel1">{{ __('Change Password') }}</h5>
                 <button
                   type="button"
                   class="btn-close"
                   data-bs-dismiss="modal"
-                  aria-label="Close"></button>
+                  aria-label="{{ __('Close') }}"></button>
               </div>
               <div class="modal-body">
                 <div class="row">
                   <div class="col mb-3">
-                    <label class="col-form-label">Password</label>
-                    <input class="form-control" type="password" name="new_password" placeholder="password" autocomplete='false' required>
+                    <label class="col-form-label">{{ __('Password') }}</label>
+                    <input class="form-control" type="password" name="new_password" placeholder="{{ __('password') }}" autocomplete='false' required>
                   </div>
                 </div>
                 <div class="row">
                   <div class="col mb-3">
-                    <label class="col-form-label">Confirm Password</label>
-                    <input class="form-control" type="password" name="new_password_confirmation" placeholder="confirm password" autocomplete='false' required>
+                    <label class="col-form-label">{{ __('Confirm Password') }}</label>
+                    <input class="form-control" type="password" name="new_password_confirmation" placeholder="{{ __('confirm password') }}" autocomplete='false' required>
                   </div>
                 </div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
-                  Close
+                  {{ __('Close') }}
                 </button>
-                <button type="submit" class="btn btn-primary">Save changes</button>
+                <button type="submit" class="btn btn-primary">{{ __('Save changes') }}</button>
               </div>
               </form>
             </div>

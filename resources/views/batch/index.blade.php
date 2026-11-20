@@ -3,19 +3,19 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Stock </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Stock') }} </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Stock Listing</h5>
+                    <h5 class="card-title mb-0">{{ __('Stock Listing') }}</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
                     <div class="dt-buttons">
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('batch.create')}}" onclick="showLoading()">
                             <span><i class="bx bx-plus me-sm-1"></i>
-                                <span class="d-none d-sm-inline-block">Add Stock</span>
+                                <span class="d-none d-sm-inline-block">{{ __('Add Stock') }}</span>
                             </span>
                         </a>
                     </div>
@@ -25,18 +25,18 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>No</th>
-                            <th>Branch</th>
-                            <th>Company</th>
-                            <th>Stock No</th>
-                            <th>Stock Date</th>
-                            <th>Supplier</th>
-                            <th>Supplier Inv.</th>
-                            <th>Total Product</th>
-                            <th>Total Item</th>
-                            <th>Total Cost</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('Branch') }}</th>
+                            <th>{{ __('Company') }}</th>
+                            <th>{{ __('Stock No') }}</th>
+                            <th>{{ __('Stock Date') }}</th>
+                            <th>{{ __('Supplier') }}</th>
+                            <th>{{ __('Supplier Inv.') }}</th>
+                            <th>{{ __('Total Product') }}</th>
+                            <th>{{ __('Total Item') }}</th>
+                            <th>{{ __('Total Cost') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>

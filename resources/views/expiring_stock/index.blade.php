@@ -3,14 +3,14 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('batch.index') }}">Stock /</a> Expiring Stock
+        <a class="text-muted fw-light" href="{{ route('batch.index') }}">{{ __('Stock') }} /</a> {{ __('Expiring Stock') }}
     </h4>
 
     <div class="card">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <h5 class="mb-0">Expired and expiring within {{ $days }} days</h5>
             <form method="get" class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0 text-nowrap">Within</label>
+                <label class="form-label mb-0 text-nowrap">{{ __('Within') }}</label>
                 <select name="days" class="form-select no-select2" onchange="this.form.submit()">
                     @foreach([7, 14, 30, 60, 90, 180] as $d)
                         <option value="{{ $d }}" @selected($days == $d)>{{ $d }} days</option>
@@ -22,13 +22,13 @@
             <table class="table table-bordered" id="mytable">
                 <thead>
                     <tr>
-                        <th>Expiry date</th>
-                        <th>Days left</th>
-                        <th>Item</th>
-                        <th>Company</th>
-                        <th>Stock entry</th>
-                        <th>Left</th>
-                        <th>Cost value</th>
+                        <th>{{ __('Expiry date') }}</th>
+                        <th>{{ __('Days left') }}</th>
+                        <th>{{ __('Item') }}</th>
+                        <th>{{ __('Company') }}</th>
+                        <th>{{ __('Stock entry') }}</th>
+                        <th>{{ __('Left') }}</th>
+                        <th>{{ __('Cost value') }}</th>
                     </tr>
                 </thead>
                 <tbody>

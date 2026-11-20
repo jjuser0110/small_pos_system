@@ -20,22 +20,22 @@
 </head>
 <body>
     <div class="no-print">
-        <button onclick="window.print()">Print</button>
-        <button onclick="window.close()">Close</button>
+        <button onclick="window.print()">{{ __('Print') }}</button>
+        <button onclick="window.close()">{{ __('Close') }}</button>
     </div>
 
-    <h2>Shift Report</h2>
+    <h2>{{ __('Shift Report') }}</h2>
     <div class="meta">
-        <div><b>Shift date:</b> {{ $date_from }} – {{ $date_to }}</div>
-        <div><b>Shift:</b> {{ $shift ?: 'All' }}</div>
+        <div><b>{{ __('Shift date') }}:</b> {{ $date_from }} – {{ $date_to }}</div>
+        <div><b>{{ __('Shift') }}:</b> {{ $shift ?: 'All' }}</div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Date</th><th>Shift</th><th>Staff</th><th>Company</th>
-                <th class="num">Orders</th><th class="num">Items</th><th class="num">Sales</th>
-                <th class="num">Refunds</th><th class="num">Advances</th><th class="num">Net</th>
+                <th>{{ __('Date') }}</th><th>{{ __('Shift') }}</th><th>{{ __('Staff') }}</th><th>{{ __('Company') }}</th>
+                <th class="num">{{ __('Orders') }}</th><th class="num">{{ __('Items') }}</th><th class="num">{{ __('Sales') }}</th>
+                <th class="num">{{ __('Refunds') }}</th><th class="num">{{ __('Advances') }}</th><th class="num">{{ __('Net') }}</th>
                 @foreach($totals['methods']->keys() as $m)<th class="num">{{ $m }}</th>@endforeach
             </tr>
         </thead>
@@ -57,13 +57,13 @@
                 @endforeach
             </tr>
             @empty
-            <tr><td colspan="{{ 10 + $totals['methods']->count() }}" style="text-align:center">No shifts found</td></tr>
+            <tr><td colspan="{{ 10 + $totals['methods']->count() }}" style="text-align:center">{{ __('No shifts found') }}</td></tr>
             @endforelse
         </tbody>
         @if($shift_closing->count())
         <tfoot>
             <tr>
-                <td colspan="4" class="num">Total</td>
+                <td colspan="4" class="num">{{ __('Total') }}</td>
                 <td class="num">{{ $totals['orders'] + 0 }}</td>
                 <td class="num">{{ $totals['items'] + 0 }}</td>
                 <td class="num">{{ money($totals['sales']) }}</td>

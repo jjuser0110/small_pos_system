@@ -9,32 +9,32 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Item List </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Item List') }} </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Item List</h5>
+                    <h5 class="card-title mb-0">{{ __('Item List') }}</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
                     <div class="dt-buttons">
                         <a class="dt-button create-new btn btn-secondary" type="button" href="{{ route('product.downloadTemplate') }}">
                             <span><i class="bx bx-download me-sm-1"></i>
-                                <span class="d-none d-sm-inline-block">Download Template</span>
+                                <span class="d-none d-sm-inline-block">{{ __('Download Template') }}</span>
                             </span>
                         </a>
 
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadProductModal">
 
                             <span><i class="bx bx-upload me-sm-1"></i>
-                                <span class="d-none d-sm-inline-block">Import</span>
+                                <span class="d-none d-sm-inline-block">{{ __('Import') }}</span>
                             </span>
                         </button>
 
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('product.create')}}" onclick="showLoading()">
                             <span><i class="bx bx-plus me-sm-1"></i>
-                                <span class="d-none d-sm-inline-block">Add New Record</span>
+                                <span class="d-none d-sm-inline-block">{{ __('Add New Record') }}</span>
                             </span>
                         </a>
                     </div>
@@ -45,18 +45,18 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Item Name</th>
-                            <th>Category</th>
-                            <th>Barcode</th>
-                            <th>Price</th>
-                            <th>Unit</th>
-                            <th>Stock Bal.</th>
-                            <th>Sell Options</th>
-                            <th>Company</th>
-                            <th>Branch</th>
+                            <th>{{ __('Item Name') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Barcode') }}</th>
+                            <th>{{ __('Price') }}</th>
+                            <th>{{ __('Unit') }}</th>
+                            <th>{{ __('Stock Bal.') }}</th>
+                            <th>{{ __('Sell Options') }}</th>
+                            <th>{{ __('Company') }}</th>
+                            <th>{{ __('Branch') }}</th>
                             {{-- <th>Arrange</th> --}}
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>{{ __('Status') }}</th>
+                            <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,10 +77,10 @@
                             <td>{{$row->company->company_code??""}}</td>
                             <td>{{$row->branch->branch_code??""}}</td>
                             {{-- <td>{{$row->arrangement??""}}</td> --}}
-                            <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
+                            <td>@if(isset($row) && $row->is_active == 1)<span style="color:green">{{ __('Active') }}</span>@else<span style="color:red">{{ __('Inactive') }}</span>@endif</td>
                             <td>
                                 @if(Auth::user()->role_id == 1)
-                                <a style="color:#f0ad00;cursor:pointer" title="Adjust Stock"
+                                <a style="color:#f0ad00;cursor:pointer" title="{{ __('Adjust Stock') }}"
                                 onclick="openAdjustModal('{{ $row->id }}', '{{ addslashes($row->product_name) }}', '{{ $row->stock_quantity }}')">
                                     <i class="fa-solid fa-boxes-stacked"></i>
                                 </a>
@@ -103,7 +103,7 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Upload Items Excel</h5>
+                    <h5 class="modal-title">{{ __('Upload Items Excel') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -112,7 +112,7 @@
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="select2Basic" class="form-label">Company</label>
+                            <label for="select2Basic" class="form-label">{{ __('Company') }}</label>
                             <select id="select2Basic" name="company_id" class="select2 form-select" data-allow-clear="true">
                                 @foreach($companies as $company)
                                     <option value="{{ $company->id }}" @if(\App\Support\CompanyPick::id() == $company->id) selected @endif>
@@ -122,17 +122,17 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Select Excel File</label>
+                            <label class="form-label">{{ __('Select Excel File') }}</label>
                             <input type="file" name="file" class="form-control" accept=".xlsx,.csv" required>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                            Cancel
+                            {{ __('Cancel') }}
                         </button>
                         <button type="submit" class="btn btn-primary">
-                            Upload
+                            {{ __('Upload') }}
                         </button>
                     </div>
 
@@ -148,31 +148,31 @@
                 @csrf
                 <input type="hidden" name="product_id" id="adjust_product_id">
                 <div class="modal-header">
-                    <h5 class="modal-title">Adjust Stock: <span id="adjustProductName"></span></h5>
+                    <h5 class="modal-title">{{ __('Adjust Stock') }}: <span id="adjustProductName"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-3">Current stock: <b id="adjustCurrentStock"></b></p>
+                    <p class="mb-3">{{ __('Current stock') }}: <b id="adjustCurrentStock"></b></p>
                     <div class="mb-3">
-                        <label class="form-label">Type</label>
+                        <label class="form-label">{{ __('Type') }}</label>
                         <select name="type" id="adjust_type" class="form-select" required>
-                            <option value="adjust_in">Adjust In (add stock)</option>
-                            <option value="adjust_out">Adjust Out (reduce stock)</option>
+                            <option value="adjust_in">{{ __('Adjust In (add stock)') }}</option>
+                            <option value="adjust_out">{{ __('Adjust Out (reduce stock)') }}</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Quantity</label>
+                        <label class="form-label">{{ __('Quantity') }}</label>
                         <input type="number" step="0.01" min="0.01" name="quantity" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Reason</label>
+                        <label class="form-label">{{ __('Reason') }}</label>
                         <textarea name="reason" class="form-control" rows="3" maxlength="500" required></textarea>
                     </div>
-                    <small class="text-muted">Applied immediately and saved in the stock log.</small>
+                    <small class="text-muted">{{ __('Applied immediately and saved in the stock log.') }}</small>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
                 </div>
             </form>
         </div>

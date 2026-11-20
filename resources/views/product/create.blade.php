@@ -3,19 +3,19 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('product.index')}}">Item List /</a>
-         @if (isset($product)) Edit @else Create @endif
+        <a class="text-muted fw-light" href="{{route('product.index')}}">{{ __('Item List') }} /</a>
+         @if (isset($product)) {{ __('Edit') }} @else {{ __('Create') }} @endif
     </h4>
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <h5 class="card-header">Item Details</h5>
+                <h5 class="card-header">{{ __('Item Details') }}</h5>
                 <div class="card-body">
                     <form class="row g-3" enctype="multipart/form-data" @if (isset($product)) method="post" action="{{ route('product.update',$product) }}" @else method="post" action="{{ route('product.store') }}" @endif onsubmit="showLoading()">
                     @csrf
 
                     <div class="col-md-7 mb-4">
-                        <label for="select2Basic" class="form-label">Category</label>
+                        <label for="select2Basic" class="form-label">{{ __('Category') }}</label>
                         <select id="select2Basic" name="category_id" class="select2 form-select" data-allow-clear="true">
                             @foreach($category as $cat)
                                 <option value="{{ $cat->id }}" @if(isset($product) && $product->category_id == $cat->id) selected @endif>
@@ -25,11 +25,11 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="product_name">Item Name</label>
+                        <label class="form-label" for="product_name">{{ __('Item Name') }}</label>
                         <input
                         type="text"
                         class="form-control"
-                        placeholder="Snack"
+                        placeholder="{{ __('Snack') }}"
                         name="product_name"
                         value="{{$product->product_name??''}}"
                         required/>
@@ -44,20 +44,20 @@
                         value="{{$product->product_code??''}}"/>
                     </div> -->
                     <div class="col-md-6">
-                        <label class="form-label" for="barcode">Barcode</label>
+                        <label class="form-label" for="barcode">{{ __('Barcode') }}</label>
                         <div class="input-group">
                             <input
                             type="text"
                             class="form-control js-barcode"
-                            placeholder="Scan, type, or Generate"
+                            placeholder="{{ __('Scan, type, or Generate') }}"
                             name="barcode"
                             id="barcode"
                             value="{{$product->barcode??''}}"/>
-                            <button type="button" class="btn btn-outline-primary js-gen-barcode" title="Make a new in-store barcode"><i class="bx bx-barcode"></i> Generate</button>
+                            <button type="button" class="btn btn-outline-primary js-gen-barcode" title="{{ __('Make a new in-store barcode') }}"><i class="bx bx-barcode"></i> {{ __('Generate') }}</button>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="arrangement">Arrangement</label>
+                        <label class="form-label" for="arrangement">{{ __('Arrangement') }}</label>
                         <input
                         type="text"
                         class="form-control"
@@ -66,7 +66,7 @@
                         value="{{$product->arrangement??''}}"/>
                     </div>
                     <div class="col-md-6 mb-4">
-                        <label for="select2Basic" class="form-label">Base Unit (UOM)</label>
+                        <label for="select2Basic" class="form-label">{{ __('Base Unit (UOM)') }}</label>
                         <select id="select2Basic" name="uom" class="select2 form-select" data-allow-clear="true">
                             @foreach($uom as $row)
                                 <option value="{{ $row->id }}" @if(isset($product) && $product->uom == $row->id) selected @endif>
@@ -76,7 +76,7 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="initial">Initial Quantity (base units)</label>
+                        <label class="form-label" for="initial">{{ __('Initial Quantity (base units)') }}</label>
                         <input
                         type="number"
                         class="form-control"
@@ -87,20 +87,20 @@
                     <div class="col-12">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label" for="average_cost">Average cost per base unit (RM)</label>
+                                <label class="form-label" for="average_cost">{{ __('Average cost per base unit (RM)') }}</label>
                                 <input type="text" class="form-control bg-light" id="average_cost" readonly tabindex="-1"
                                        data-cost="{{ $averageCost ?? '' }}"
                                        value="{{ $averageCost !== null ? number_format($averageCost, 4) : 'No stock cost yet' }}">
-                                <small class="text-muted">From the stock you have added (stock on hand). Updates by itself.</small>
+                                <small class="text-muted">{{ __('From the stock you have added (stock on hand). Updates by itself.') }}</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label" for="margin">Margin (%)</label>
+                                <label class="form-label" for="margin">{{ __('Margin (%)') }}</label>
                                 <input type="number" class="form-control" id="margin" name="margin" step="0.01" min="-100" inputmode="decimal"
                                        placeholder="e.g. 25" value="{{ old('margin', isset($product) && $product->margin !== null ? $product->margin + 0 : '') }}">
                                 <small class="text-muted">Selling price = average cost + margin %.</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label" for="selling_price">Selling Price per base unit (RM)</label>
+                                <label class="form-label" for="selling_price">{{ __('Selling Price per base unit (RM)') }}</label>
                                 <input
                                 type="number"
                                 class="form-control"
@@ -116,63 +116,63 @@
                     </div>
                     @if(isset($product))
                     <div class="col-md-7">
-                        <label class="form-label" for="password">Is Active?</label>
+                        <label class="form-label" for="password">{{ __('Is Active?') }}</label>
                         <select name="is_active" class="form-control">
-                            <option value="1" <?php echo isset($product)&&$product->is_active == 1?'selected':'' ?>>Active</option>
-                            <option value="0" <?php echo isset($product)&&$product->is_active == 0?'selected':'' ?>>Inactive</option>
+                            <option value="1" <?php echo isset($product)&&$product->is_active == 1?'selected':'' ?>>{{ __('Active') }}</option>
+                            <option value="0" <?php echo isset($product)&&$product->is_active == 0?'selected':'' ?>>{{ __('Inactive') }}</option>
                         </select>
                     </div>
                     @endif
                     <hr>
                     <div class="col-12">
-                        <h6 class="mb-1">Sell Options</h6>
+                        <h6 class="mb-1">{{ __('Sell Options') }}</h6>
                         <p class="text-muted small mb-2">
-                            Other ways to sell this item. Stock is always counted in the base unit above.
-                            Example for Cola (base unit Tin): <b>Carton</b> = 24 tins for RM 50.00, <b>3 for RM10</b> = 3 tins for RM 10.00.
+                            {{ __('Other ways to sell this item. Stock is always counted in the base unit above.') }}
+                            Example for Cola (base unit Tin): <b>{{ __('Carton') }}</b> = 24 tins for RM 50.00, <b>{{ __('3 for RM10') }}</b> = 3 tins for RM 10.00.
                         </p>
                         <div class="table-responsive">
                         <table class="table table-sm table-bordered" id="unitsTable">
                             <thead>
-                                <tr><th>Name</th><th style="width:150px">Base units in it</th><th style="width:150px">Price (RM)</th><th>Barcode</th><th style="width:50px"></th></tr>
+                                <tr><th>{{ __('Name') }}</th><th style="width:150px">{{ __('Base units in it') }}</th><th style="width:150px">{{ __('Price (RM)') }}</th><th>{{ __('Barcode') }}</th><th style="width:50px"></th></tr>
                             </thead>
                             <tbody>
                                 @foreach(old('units', isset($product) ? $product->allUnits->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'base_qty' => $u->base_qty + 0, 'price' => $u->price, 'barcode' => $u->barcode, 'is_active' => $u->is_active])->all() : []) as $i => $u)
                                 <tr>
                                     <td>
                                         <input type="hidden" name="units[{{ $i }}][id]" value="{{ $u['id'] ?? '' }}">
-                                        <input type="text" class="form-control form-control-sm" name="units[{{ $i }}][name]" value="{{ $u['name'] ?? '' }}" placeholder="Carton" required>
+                                        <input type="text" class="form-control form-control-sm" name="units[{{ $i }}][name]" value="{{ $u['name'] ?? '' }}" placeholder="{{ __('Carton') }}" required>
                                     </td>
                                     <td><input type="number" class="form-control form-control-sm" name="units[{{ $i }}][base_qty]" value="{{ $u['base_qty'] ?? '' }}" min="0.0001" step="any" required></td>
                                     <td><input type="number" class="form-control form-control-sm" name="units[{{ $i }}][price]" value="{{ $u['price'] ?? '' }}" min="0" step="0.01" required></td>
                                     <td>
                                         <div class="input-group input-group-sm">
                                             <input type="text" class="form-control form-control-sm js-barcode" name="units[{{ $i }}][barcode]" value="{{ $u['barcode'] ?? '' }}">
-                                            <button type="button" class="btn btn-outline-primary js-gen-barcode" title="Make a new in-store barcode"><i class="bx bx-barcode"></i></button>
+                                            <button type="button" class="btn btn-outline-primary js-gen-barcode" title="{{ __('Make a new in-store barcode') }}"><i class="bx bx-barcode"></i></button>
                                         </div>
                                     </td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger js-remove-unit" title="Remove">&times;</button></td>
+                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger js-remove-unit" title="{{ __('Remove') }}">&times;</button></td>
                                 </tr>
                                 @endforeach
                             </tbody>
                         </table>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addUnitRow()">+ Add sell option</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addUnitRow()">{{ __('+ Add sell option') }}</button>
                     </div>
                     <hr>
 
                     <div class="col-12">
-                        <h6 class="mb-1">Barcode labels</h6>
+                        <h6 class="mb-1">{{ __('Barcode labels') }}</h6>
                         <p class="text-muted small mb-2">
-                            No barcode for a bundle, box or special? Press <b>Generate</b>, save, then download the label image here,
-                            put it in your Word file and print it for the counter. Scanning it adds that item or sell option straight to the cart.
+                            {{ __('No barcode for a bundle, box or special? Press') }} <b>{{ __('Generate') }}</b>, save, then download the label image here,
+                            {{ __('put it in your Word file and print it for the counter. Scanning it adds that item or sell option straight to the cart.') }}
                         </p>
                         <div id="barcodeLabels" class="d-flex flex-wrap gap-3"></div>
-                        <p id="barcodeLabelsEmpty" class="text-muted small mb-0">No barcodes yet.</p>
+                        <p id="barcodeLabelsEmpty" class="text-muted small mb-0">{{ __('No barcodes yet.') }}</p>
                     </div>
                     <hr>
 
                     <div class="col-12">
-                        <button type="submit" name="submitButton" class="btn btn-primary">Submit</button>
+                        <button type="submit" name="submitButton" class="btn btn-primary">{{ __('Submit') }}</button>
                     </div>
                     </form>
                 </div>
@@ -335,7 +335,7 @@ function drawLabels() {
         try { canvas = labelCanvas(label); } catch (err) { return; }   // not a printable code (yet)
         const url = canvas.toDataURL('image/png');
         const card = document.createElement('div');
-        card.className = 'border rounded p-2 text-center bg-white';
+        card.className = 'border rounded p-2 text-center bg-white keep-white';
         card.style.width = '240px';
         const img = document.createElement('img');
         img.src = url; img.alt = label.title; img.style.width = '100%';

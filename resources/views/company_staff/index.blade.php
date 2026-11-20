@@ -3,19 +3,19 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Staff </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Staff') }} </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Staff Listing</h5>
+                    <h5 class="card-title mb-0">{{ __('Staff Listing') }}</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
                     <div class="dt-buttons"> 
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('company_staff.create')}}" onclick="showLoading()">
                             <span><i class="bx bx-plus me-sm-1"></i> 
-                                <span class="d-none d-sm-inline-block">Add New Record</span>
+                                <span class="d-none d-sm-inline-block">{{ __('Add New Record') }}</span>
                             </span>
                         </a> 
                     </div>
@@ -25,15 +25,15 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>No</th>
-                            <th>Branch</th>
-                            <th>Company</th>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Role</th>
-                            <th>Shift</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('Branch') }}</th>
+                            <th>{{ __('Company') }}</th>
+                            <th>{{ __('Username') }}</th>
+                            <th>{{ __('Name') }}</th>
+                            <th>{{ __('Role') }}</th>
+                            <th>{{ __('Shift') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,7 +46,7 @@
                             <td><a href="{{ route('company_staff.show', $row) }}">{{$row->name??""}}</a></td>
                             <td>{{$row->role->title??""}}</td>
                             <td>{{$row->shift??""}}</td>
-                            <td><?php echo isset($row)&&$row->is_active == 1?'<span style="color:green">Active</span>':'<span style="color:red">Inactive</span>'?></td>
+                            <td>@if(isset($row) && $row->is_active == 1)<span style="color:green">{{ __('Active') }}</span>@else<span style="color:red">{{ __('Inactive') }}</span>@endif</td>
                             <td>
                                 <a href="{{ route('company_staff.edit',$row) }}" onclick="showLoading()"><i class="fa-solid fa-pen-to-square"></i></a>
                                 <a style="color:red;cursor:pointer" onclick="if(confirm('Are you sure you want to delete?')){showLoading();window.location.href='{{ route('company_staff.destroy',$row) }}'}"><i class="fa-solid fa-trash"></i></a>

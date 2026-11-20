@@ -4,41 +4,41 @@
 <style>#mytable th, #mytable td { padding: 10px; }</style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Damage
+        <a class="text-muted fw-light" href="{{ route('home') }}">{{ __('Home') }} /</a> {{ __('Damage') }}
     </h4>
 
     @if($canReport)
     <div class="card mb-4">
-        <h5 class="card-header">Report Damage</h5>
+        <h5 class="card-header">{{ __('Report Damage') }}</h5>
         <div class="card-body">
             <form method="post" action="{{ route('damage.store') }}" class="row g-3" onsubmit="showLoading()">
                 @csrf
                 <div class="col-md-3">
-                    <label class="form-label">Company</label>
+                    <label class="form-label">{{ __('Company') }}</label>
                     <select name="company_id" id="damage_company" class="form-select" required>
-                        <option value="">-- Choose company --</option>
+                        <option value="">{{ __('-- Choose company --') }}</option>
                         @foreach($companies as $c)
                             <option value="{{ $c->id }}" @selected(\App\Support\CompanyPick::id() === $c->id)>{{ $c->company_name }} ({{ $c->company_code }})</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Item</label>
+                    <label class="form-label">{{ __('Item') }}</label>
                     <select name="product_id" id="damage_product" class="form-select" required>
-                        <option value="">-- Choose company first --</option>
+                        <option value="">{{ __('-- Choose company first --') }}</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Quantity</label>
+                    <label class="form-label">{{ __('Quantity') }}</label>
                     <input type="number" step="0.01" min="0.01" name="quantity" class="form-control" required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Reason</label>
-                    <input type="text" name="reason" maxlength="500" class="form-control" placeholder="e.g. bottle broken" required>
+                    <label class="form-label">{{ __('Reason') }}</label>
+                    <input type="text" name="reason" maxlength="500" class="form-control" placeholder="{{ __('e.g. bottle broken') }}" required>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                    <small class="text-muted ms-2">Stock is only removed after the superadmin approves.</small>
+                    <button type="submit" class="btn btn-primary">{{ __('Submit') }}</button>
+                    <small class="text-muted ms-2">{{ __('Stock is only removed after the superadmin approves.') }}</small>
                 </div>
             </form>
         </div>
@@ -47,10 +47,10 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Damage Reports</h5>
+            <h5 class="mb-0">{{ __('Damage Reports') }}</h5>
             <form method="get">
                 <select name="status" class="form-select no-select2" onchange="this.form.submit()">
-                    <option value="">All</option>
+                    <option value="">{{ __('All') }}</option>
                     @foreach(['pending','approved','rejected'] as $s)
                         <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                     @endforeach
@@ -60,7 +60,7 @@
         <div class="card-datatable text-nowrap">
             <table class="dt-column-search table table-bordered" id="mytable">
                 <thead>
-                    <tr><th>#</th><th>Date</th><th>Company</th><th>Item</th><th>Qty</th><th>Reason</th><th>Reported By</th><th>Status</th><th>Processed By</th><th>Action</th></tr>
+                    <tr><th>#</th><th>{{ __('Date') }}</th><th>{{ __('Company') }}</th><th>{{ __('Item') }}</th><th>{{ __('Qty') }}</th><th>{{ __('Reason') }}</th><th>{{ __('Reported By') }}</th><th>{{ __('Status') }}</th><th>{{ __('Processed By') }}</th><th>{{ __('Action') }}</th></tr>
                 </thead>
                 <tbody>
                     @foreach($damages as $d)
@@ -73,9 +73,9 @@
                         <td>{{ $d->reason }}</td>
                         <td>{{ $d->requester->name ?? '' }}</td>
                         <td>
-                            @if($d->status == 'pending') <span style="color:orange">Pending</span>
-                            @elseif($d->status == 'approved') <span style="color:green">Approved</span>
-                            @else <span style="color:red">Rejected</span>@if($d->reject_reason)<br><small>{{ $d->reject_reason }}</small>@endif
+                            @if($d->status == 'pending') <span style="color:orange">{{ __('Pending') }}</span>
+                            @elseif($d->status == 'approved') <span style="color:green">{{ __('Approved') }}</span>
+                            @else <span style="color:red">{{ __('Rejected') }}</span>@if($d->reject_reason)<br><small>{{ $d->reject_reason }}</small>@endif
                             @endif
                         </td>
                         <td>{{ $d->approver->name ?? '' }}<br><small>{{ $d->status_at }}</small></td>
@@ -84,12 +84,12 @@
                                 <div class="d-flex gap-2">
                                     <form method="post" action="{{ route('damage.approve', $d) }}" class="m-0" onsubmit="return confirm('Approve? {{ $d->quantity + 0 }} will be removed from stock.')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                        <button type="submit" class="btn btn-sm btn-success">{{ __('Approve') }}</button>
                                     </form>
                                     <form method="post" action="{{ route('damage.reject', $d) }}" class="m-0" onsubmit="var x = prompt('Reject reason (optional):'); if (x === null) return false; this.reject_reason.value = x; return true;">
                                         @csrf
                                         <input type="hidden" name="reject_reason">
-                                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ __('Reject') }}</button>
                                     </form>
                                 </div>
                             @endif

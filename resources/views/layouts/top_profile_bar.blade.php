@@ -26,8 +26,8 @@
                   @csrf
                   <i class="bx bx-buildings bx-sm text-primary me-2 d-none d-sm-inline"></i>
                   <select name="company_id" class="form-select form-select-lg no-select2 fw-semibold {{ $pickedCompany ? 'border-primary text-primary' : '' }}"
-                          onchange="this.form.submit()" aria-label="Show company">
-                    <option value="">All companies</option>
+                          onchange="this.form.submit()" aria-label="{{ __('Show company') }}">
+                    <option value="">{{ __('All companies') }}</option>
                     @foreach(\App\Support\CompanyPick::options() as $c)
                       <option value="{{ $c->id }}" @selected($pickedCompany?->id === $c->id)>{{ $c->company_name }}</option>
                     @endforeach
@@ -443,6 +443,8 @@
                   </li> -->
                   <!--/ Notification -->
 
+                  @include('layouts.pref-switch', ['variant' => 'nav'])
+
                   <!-- User -->
                   <li class="nav-item navbar-dropdown dropdown-user dropdown">
                     <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -461,7 +463,7 @@
                             </div>
                             <div class="flex-grow-1">
                               <span class="fw-medium d-block lh-1">{{Auth::user()->username??''}}</span>
-                              <small>{{Auth::user()->role->title??''}}</small>
+                              <small>{{ __(Auth::user()->role->title??'') }}</small>
                             </div>
                           </div>
                         </a>
@@ -473,7 +475,7 @@
                         <a class="dropdown-item" style="cursor:pointer" data-bs-toggle="modal"
                           data-bs-target="#basicModal">
                           <i class="bx bx-user me-2"></i>
-                          <span class="align-middle">Change Password</span>
+                          <span class="align-middle">{{ __('Change Password') }}</span>
                         </a>
                       </li>
                       <li>
@@ -482,7 +484,7 @@
                       <li>
                         <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                           <i class="bx bx-power-off me-2"></i>
-                          <span class="align-middle">Log Out</span>
+                          <span class="align-middle">{{ __('Log Out') }}</span>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                 @csrf
                             </form>

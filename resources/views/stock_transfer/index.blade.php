@@ -6,35 +6,35 @@
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('home') }}">Home /</a> Stock Transfer
+        <a class="text-muted fw-light" href="{{ route('home') }}">{{ __('Home') }} /</a> {{ __('Stock Transfer') }}
     </h4>
 
     @if($canSend)
     <div class="card mb-4">
-        <h5 class="card-header">Send Stock to Another Company</h5>
+        <h5 class="card-header">{{ __('Send Stock to Another Company') }}</h5>
         <div class="card-body">
             <form method="post" action="{{ route('stock_transfer.store') }}" id="transferForm" onsubmit="return checkTransfer()">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label" for="transfer_no">Transfer No</label>
+                        <label class="form-label" for="transfer_no">{{ __('Transfer No') }}</label>
                         <input type="text" name="transfer_no" id="transfer_no" maxlength="50" class="form-control"
                                value="{{ old('transfer_no', $nextNumber) }}" placeholder="{{ $nextNumber }}">
-                        <small class="text-muted">Change it to your own slip no if you have one.</small>
+                        <small class="text-muted">{{ __('Change it to your own slip no if you have one.') }}</small>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="from_company">From company</label>
+                        <label class="form-label" for="from_company">{{ __('From company') }}</label>
                         <select name="from_company_id" id="from_company" class="form-select" required>
-                            <option value="">-- Select --</option>
+                            <option value="">{{ __('-- Select --') }}</option>
                             @foreach($fromCompanies as $c)
                                 <option value="{{ $c->id }}" @selected((string) old('from_company_id', \App\Support\CompanyPick::id()) === (string) $c->id)>{{ $c->company_name }} ({{ $c->company_code }})</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="to_company">To company</label>
+                        <label class="form-label" for="to_company">{{ __('To company') }}</label>
                         <select name="to_company_id" id="to_company" class="form-select" required>
-                            <option value="">-- Select --</option>
+                            <option value="">{{ __('-- Select --') }}</option>
                             @foreach($toCompanies as $c)
                                 <option value="{{ $c->id }}" @selected((string) old('to_company_id') === (string) $c->id)>{{ $c->company_name }} ({{ $c->company_code }})</option>
                             @endforeach
@@ -42,25 +42,25 @@
                     </div>
                 </div>
 
-                <h6 class="mt-4 mb-2">Items</h6>
+                <h6 class="mt-4 mb-2">{{ __('Items') }}</h6>
                 <div class="row g-2 d-none d-md-flex text-muted small fw-semibold">
-                    <div class="col-md-5">From item (sending company)</div>
-                    <div class="col-md-4">To item (same goods in the receiving company, may have a different name)</div>
-                    <div class="col-md-2">Quantity</div>
+                    <div class="col-md-5">{{ __('From item (sending company)') }}</div>
+                    <div class="col-md-4">{{ __('To item (same goods in the receiving company, may have a different name)') }}</div>
+                    <div class="col-md-2">{{ __('Quantity') }}</div>
                     <div class="col-md-1"></div>
                 </div>
                 <div id="transferLines"></div>
-                <p id="linesHint" class="text-muted small my-2">Choose the from and to company first, then add items.</p>
-                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addLine"><i class="bx bx-plus"></i> Add item</button>
+                <p id="linesHint" class="text-muted small my-2">{{ __('Choose the from and to company first, then add items.') }}</p>
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addLine"><i class="bx bx-plus"></i> {{ __('Add item') }}</button>
 
                 <div class="row g-3 mt-1">
                     <div class="col-12">
-                        <label class="form-label" for="reason">Reason (for the whole transfer)</label>
+                        <label class="form-label" for="reason">{{ __('Reason (for the whole transfer)') }}</label>
                         <input type="text" name="reason" id="reason" maxlength="500" class="form-control" value="{{ old('reason') }}">
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Create Transfer</button>
-                        <small class="text-muted ms-2 d-block d-md-inline mt-2 mt-md-0">The sending company's staff confirm it is sent, then the receiving company's staff confirm it is received. Only then does stock move.</small>
+                        <button type="submit" class="btn btn-primary">{{ __('Create Transfer') }}</button>
+                        <small class="text-muted ms-2 d-block d-md-inline mt-2 mt-md-0">{{ __('The sending company\'s staff confirm it is sent, then the receiving company\'s staff confirm it is received. Only then does stock move.') }}</small>
                     </div>
                 </div>
             </form>
@@ -70,10 +70,10 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Transfers</h5>
+            <h5 class="mb-0">{{ __('Transfers') }}</h5>
             <form method="get">
                 <select name="status" class="form-select no-select2" onchange="this.form.submit()">
-                    <option value="">All</option>
+                    <option value="">{{ __('All') }}</option>
                     @foreach(['pending' => 'Waiting', 'approved' => 'Received', 'rejected' => 'Rejected'] as $s => $label)
                         <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -85,16 +85,16 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Transfer No</th>
-                        <th>Date</th>
+                        <th>{{ __('Transfer No') }}</th>
+                        <th>{{ __('Date') }}</th>
                         <th>From &rarr; To</th>
-                        <th>Items</th>
-                        <th>Reason</th>
-                        <th>Sent By</th>
-                        <th>Status</th>
-                        <th>Sender Confirmed</th>
-                        <th>Received / Rejected</th>
-                        <th>Action</th>
+                        <th>{{ __('Items') }}</th>
+                        <th>{{ __('Reason') }}</th>
+                        <th>{{ __('Sent By') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th>{{ __('Sender Confirmed') }}</th>
+                        <th>{{ __('Received / Rejected') }}</th>
+                        <th>{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,18 +123,18 @@
                                     @if($t->status == 'pending_sender')
                                     <form method="post" action="{{ route('stock_transfer.approve', $t) }}" class="m-0" onsubmit="return confirm('Confirm transfer {{ addslashes($t->transfer_no) }} ({{ $t->items->count() }} item line(s)) is correct and being sent to {{ addslashes($t->toCompany->company_code ?? '') }}?')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">Confirm Sent</button>
+                                        <button type="submit" class="btn btn-sm btn-success">{{ __('Confirm Sent') }}</button>
                                     </form>
                                     @else
                                     <form method="post" action="{{ route('stock_transfer.approve', $t) }}" class="m-0" onsubmit="return confirm('Confirm you received everything in transfer {{ addslashes($t->transfer_no) }} ({{ $t->items->count() }} item line(s))? The stock will be moved now.')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-success">Confirm Received</button>
+                                        <button type="submit" class="btn btn-sm btn-success">{{ __('Confirm Received') }}</button>
                                     </form>
                                     @endif
                                     <form method="post" action="{{ route('stock_transfer.reject', $t) }}" class="m-0" onsubmit="var r = prompt('Reject reason (optional):'); if (r === null) return false; this.reject_reason.value = r; return true;">
                                         @csrf
                                         <input type="hidden" name="reject_reason">
-                                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">{{ __('Reject') }}</button>
                                     </form>
                                 </div>
                             @endif

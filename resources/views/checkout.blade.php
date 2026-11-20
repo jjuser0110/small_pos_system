@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ \App\Support\Preferences::htmlLang() }}" class="{{ \App\Support\Preferences::dark() ? 'dark-style' : 'light-style' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - POS System</title>
+    <title>{{ __('Checkout - POS System') }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -375,6 +375,7 @@
             margin: 2px 0;
         }
     </style>
+@include('layouts.pos-dark')
 </head>
 <body>
     <div class="checkout-container">
@@ -394,19 +395,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
-                <h1>Order Summary</h1>
+                <h1>{{ __('Order Summary') }}</h1>
             </div>
 
             <div class="order-items-container" id="orderItems"></div>
 
             <div class="summary-section">
                 <div class="summary-row">
-                    <span>Subtotal:</span>
-                    <span id="subtotal">RM 0.00</span>
+                    <span>{{ __('Subtotal') }}:</span>
+                    <span id="subtotal">{{ __('RM 0.00') }}</span>
                 </div>
                 <div class="summary-row total">
-                    <span>TOTAL:</span>
-                    <span id="total">RM 0.00</span>
+                    <span>{{ __('TOTAL') }}:</span>
+                    <span id="total">{{ __('RM 0.00') }}</span>
                 </div>
             </div>
         </div>
@@ -414,11 +415,11 @@
         <!-- Right Side - Payment -->
         <div class="card">
             <div class="page-header" style="border: none; padding-bottom: 0; margin-bottom: 12px;">
-                <h1>Payment</h1>
+                <h1>{{ __('Payment') }}</h1>
             </div>
 
             <div class="payment-section">
-                <div class="section-title">Payment Method</div>
+                <div class="section-title">{{ __('Payment Method') }}</div>
                 <div class="payment-methods">
                     @foreach($payment_method as $row=> $payment)
                     <div class="payment-method @if($row == 0) active @endif" data-method="{{ $payment->payment_method_name??'' }}" onclick="selectPayment('{{ $payment->payment_method_name??'' }}')">
@@ -429,24 +430,24 @@
                 </div>
 
                 <div class="amount-section">
-                    <div class="amount-label">Amount Received</div>
+                    <div class="amount-label">{{ __('Amount Received') }}</div>
                     <input type="number" id="amountReceived" class="amount-input" placeholder="0.00" step="0.01" oninput="calculateChange()">
 
                     <div class="quick-amount-btns">
-                        <button class="quick-amount-btn" onclick="setQuickAmount(10)">RM 10</button>
-                        <button class="quick-amount-btn" onclick="setQuickAmount(20)">RM 20</button>
-                        <button class="quick-amount-btn" onclick="setQuickAmount(50)">RM 50</button>
-                        <button class="quick-amount-btn" onclick="setQuickAmount(100)">RM 100</button>
+                        <button class="quick-amount-btn" onclick="setQuickAmount(10)">{{ __('RM 10') }}</button>
+                        <button class="quick-amount-btn" onclick="setQuickAmount(20)">{{ __('RM 20') }}</button>
+                        <button class="quick-amount-btn" onclick="setQuickAmount(50)">{{ __('RM 50') }}</button>
+                        <button class="quick-amount-btn" onclick="setQuickAmount(100)">{{ __('RM 100') }}</button>
                     </div>
 
                     <div id="insufficientMsg" class="insufficient-payment" style="display: none;">
-                        ⚠️ Insufficient Payment Amount!
+                        {{ __('⚠️ Insufficient Payment Amount!') }}
                     </div>
 
                     <div id="changeDisplay" style="display: none;">
                         <div class="change-display">
-                            <div class="change-label">Change</div>
-                            <div class="change-amount" id="changeAmount">RM 0.00</div>
+                            <div class="change-label">{{ __('Change') }}</div>
+                            <div class="change-amount" id="changeAmount">{{ __('RM 0.00') }}</div>
                         </div>
                     </div>
 
@@ -455,7 +456,7 @@
                             🖨️ Print Receipt
                         </button> -->
                         <button class="btn btn-complete" id="completeBtn" onclick="completeOrder()" disabled>
-                            <span class="btn-text">✓ Complete</span>
+                            <span class="btn-text">{{ __('✓ Complete') }}</span>
                             <span class="spinner-border spinner-border-sm d-none" role="status"></span>
                         </button>
                     </div>
@@ -490,7 +491,7 @@
                 })
                 .catch(err => {
                     console.error('Error loading cart:', err);
-                    alert('Failed to load cart items');
+                    alert(@json(__('Failed to load cart items')));
                 });
         }
 
@@ -498,7 +499,7 @@
             document.getElementById('orderItems').innerHTML = `
                 <div class="empty-cart">
                     <div class="empty-icon">🛒</div>
-                    <p style="font-size: 18px;">Your cart is empty</p>
+                    <p style="font-size: 18px;">{{ __('Your cart is empty') }}</p>
                 </div>
             `;
         }
@@ -580,13 +581,13 @@
 
         function completeOrder() {
             if (cart.length === 0) {
-                alert('Cart is empty!');
+                alert(@json(__('Cart is empty!')));
                 return;
             }
 
             const received = parseFloat(document.getElementById('amountReceived').value) || 0;
             if (received < totalAmount) {
-                alert('Insufficient payment amount!');
+                alert(@json(__('Insufficient payment amount!')));
                 return;
             }
 
@@ -596,7 +597,7 @@
 
             btn.disabled = true;
             spinner.classList.remove('d-none');
-            btnText.textContent = 'Processing...';
+            btnText.textContent = @json(__('Processing...'));
 
             const change = received - totalAmount;
 
@@ -625,13 +626,13 @@
                     // Clear cart and redirect
                     window.location.href = '/receipt/'+data.order_id;
                 } else {
-                    alert('Failed to place order: ' + (data.message || 'Unknown error'));
+                    alert(@json(__('Failed to place order')) + ': ' + (data.message || @json(__('Unknown error'))));
                     resetButton();
                 }
             })
             .catch(err => {
                 console.error('Error placing order:', err);
-                alert('Failed to place order. Please try again.');
+                alert(@json(__('Failed to place order. Please try again.')));
                 resetButton();
             });
         }

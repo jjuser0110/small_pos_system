@@ -4,26 +4,26 @@
 @php $fmt = fn ($m) => \App\Http\Controllers\StaffAttendanceController::formatMinutes($m); @endphp
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{ route('company_staff.index') }}">Staff /</a> {{ $staff->name }}
+        <a class="text-muted fw-light" href="{{ route('company_staff.index') }}">{{ __('Staff') }} /</a> {{ $staff->name }}
     </h4>
 
     <div class="row">
         <div class="col-md-4 mb-4">
             <div class="card h-100"><div class="card-body">
                 <h5 class="mb-3">{{ $staff->name }}</h5>
-                <p class="mb-1">Username: <b>{{ $staff->username }}</b></p>
-                <p class="mb-1">Company: <b>{{ $staff->company->company_name ?? '' }}</b> ({{ $staff->company->domain ?? 'no domain' }})</p>
+                <p class="mb-1">{{ __('Username') }}: <b>{{ $staff->username }}</b></p>
+                <p class="mb-1">{{ __('Company') }}: <b>{{ $staff->company->company_name ?? '' }}</b> ({{ $staff->company->domain ?? 'no domain' }})</p>
                 <p class="mb-1">Branch: {{ $staff->branch->branch_name ?? '' }}</p>
                 @php $def = config('fsmart.shifts.' . $staff->shift); @endphp
-                <p class="mb-1">Shift: <b>{{ $staff->shift ?? '-' }}</b> @if($def)({{ $def['start'] }} – {{ $def['end'] }})@endif</p>
+                <p class="mb-1">{{ __('Shift') }}: <b>{{ $staff->shift ?? '-' }}</b> @if($def)({{ $def['start'] }} – {{ $def['end'] }})@endif</p>
                 <p class="mb-0">Status: {!! $staff->is_active ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>' !!}</p>
-                <a href="{{ route('company_staff.edit', $staff) }}" class="btn btn-sm btn-outline-primary mt-3">Edit</a>
+                <a href="{{ route('company_staff.edit', $staff) }}" class="btn btn-sm btn-outline-primary mt-3">{{ __('Edit') }}</a>
             </div></div>
         </div>
         <div class="col-md-8 mb-4">
             <form method="get" class="d-flex gap-2 mb-3">
                 <input type="month" name="month" class="form-control" style="max-width:200px" value="{{ $month }}">
-                <button class="btn btn-primary">Show</button>
+                <button class="btn btn-primary">{{ __('Show') }}</button>
             </form>
             <div class="row">
                 @foreach([
@@ -50,7 +50,7 @@
         <div class="table-responsive">
             <table class="table table-bordered mb-0">
                 <thead>
-                    <tr><th>Date</th><th>Company</th><th>Shift</th><th>Login</th><th>Logout</th><th>How it ended</th><th>Hours</th><th class="text-end">Sales (after refunds)</th></tr>
+                    <tr><th>{{ __('Date') }}</th><th>{{ __('Company') }}</th><th>{{ __('Shift') }}</th><th>{{ __('Login') }}</th><th>{{ __('Logout') }}</th><th>{{ __('How it ended') }}</th><th>{{ __('Hours') }}</th><th class="text-end">{{ __('Sales (after refunds)') }}</th></tr>
                 </thead>
                 <tbody>
                     @forelse($attendance as $a)
@@ -64,8 +64,8 @@
                             @switch($a->clock_out_reason)
                                 @case('closing') Closing button @break
                                 @case('logout') Logged out @break
-                                @case('auto') <span class="text-warning">Auto logout</span> @break
-                                @default <span class="text-success">Working now</span>
+                                @case('auto') <span class="text-warning">{{ __('Auto logout') }}</span> @break
+                                @default <span class="text-success">{{ __('Working now') }}</span>
                             @endswitch
                         </td>
                         <td>{{ $a->minutesWorked() !== null ? $fmt($a->minutesWorked()) : '' }}</td>
@@ -73,7 +73,7 @@
                         <td class="text-end">{{ money($dayShifts->sum('total_order_amount') - $dayShifts->sum('refund_amount')) }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="8" class="text-muted">No shifts this month.</td></tr>
+                    <tr><td colspan="8" class="text-muted">{{ __('No shifts this month.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -84,7 +84,7 @@
         <h5 class="card-header">Advances in {{ \Carbon\Carbon::parse($month . '-01')->format('F Y') }}</h5>
         <div class="table-responsive">
             <table class="table table-bordered mb-0">
-                <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Reason</th><th>Status</th><th>Processed By</th></tr></thead>
+                <thead><tr><th>{{ __('Date') }}</th><th class="text-end">{{ __('Amount') }}</th><th>{{ __('Reason') }}</th><th>{{ __('Status') }}</th><th>{{ __('Processed By') }}</th></tr></thead>
                 <tbody>
                     @forelse($advances as $b)
                     <tr>
@@ -95,7 +95,7 @@
                         <td>{{ $b->approver->name ?? '' }}</td>
                     </tr>
                     @empty
-                    <tr><td colspan="5" class="text-muted">No advances this month.</td></tr>
+                    <tr><td colspan="5" class="text-muted">{{ __('No advances this month.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

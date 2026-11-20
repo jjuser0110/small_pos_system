@@ -15,8 +15,9 @@
 
 <!-- Core CSS -->
 <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core.css') }}?v=2" />
-<link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default.css') }}?v=2" />
+@php $themeSuffix = \App\Support\Preferences::dark() ? '-dark' : ''; @endphp
+<link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/core' . $themeSuffix . '.css') }}?v=3" />
+<link rel="stylesheet" href="{{ asset('assets/vendor/css/rtl/theme-default' . $themeSuffix . '.css') }}?v=3" />
 <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
 <!-- Vendors CSS -->
@@ -62,3 +63,12 @@
     width: 100%;
   }
 </style>
+@if(\App\Support\Preferences::dark())
+<style>
+  /* dark mode: a few page-made light boxes */
+  .bg-white:not(.keep-white) { background-color: #2b2c40 !important; }
+  .bg-light { background-color: #353649 !important; }
+  .table-light, .table-light > th, .table-light > td { --bs-table-bg: #353649; color: #cfd3ec; }
+  .select2-container--default .select2-selection, .select2-dropdown { background-color: #2b2c40; color: #cfd3ec; }
+</style>
+@endif

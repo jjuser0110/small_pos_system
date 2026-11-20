@@ -3,19 +3,19 @@
     <!-- Content -->
 
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">Branch </span></h4>
+        <h4 class="py-3 breadcrumb-wrapper mb-4"><span class="text-muted fw-light">{{ __('Branch') }} </span></h4>
 
         <!-- DataTable with Buttons -->
         <div class="card">
             <div class="card-header flex-column flex-md-row">
                 <div class="head-label">
-                    <h5 class="card-title mb-0">Branch Listing</h5>
+                    <h5 class="card-title mb-0">{{ __('Branch Listing') }}</h5>
                 </div>
                 <div class="dt-action-buttons text-end pt-3 pt-md-0">
                     <div class="dt-buttons"> 
                         <a class="dt-button create-new btn btn-primary" type="button" href="{{route('branch.create')}}" onclick="showLoading()">
                             <span><i class="bx bx-plus me-sm-1"></i> 
-                                <span class="d-none d-sm-inline-block">Add New Record</span>
+                                <span class="d-none d-sm-inline-block">{{ __('Add New Record') }}</span>
                             </span>
                         </a> 
                     </div>
@@ -25,10 +25,10 @@
                 <table class="dt-column-search table table-bordered" id="mytable">
                     <thead>
                         <tr>
-                            <th>No</th>
-                            <th>Branch Name</th>
-                            <th>Branch Code</th>
-                            <th>Actions</th>
+                            <th>{{ __('No') }}</th>
+                            <th>{{ __('Branch Name') }}</th>
+                            <th>{{ __('Branch Code') }}</th>
+                            <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>

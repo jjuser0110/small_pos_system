@@ -31,19 +31,19 @@
 </style>
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="py-3 breadcrumb-wrapper mb-4">
-        <a class="text-muted fw-light" href="{{route('batch.index')}}">Stock /</a>
-         @if (isset($batch)) {{ $batch->batch_no }} @else Add Stock @endif
+        <a class="text-muted fw-light" href="{{route('batch.index')}}">{{ __('Stock') }} /</a>
+         @if (isset($batch)) {{ $batch->batch_no }} @else {{ __('Add Stock') }} @endif
     </h4>
     <div class="row">
         <div class="col-12">
             <div class="card">
-            <h5 class="card-header">Stock Entry Details</h5>
+            <h5 class="card-header">{{ __('Stock Entry Details') }}</h5>
             <div class="card-body">
                 <form class="row g-3" @if (isset($batch)) method="post" action="{{ route('batch.update',$batch) }}" @else method="post" action="{{ route('batch.store') }}" @endif onsubmit="showLoading()">
                 @csrf
                 @if(isset($batch)) <input type="hidden" name="back" value="edit"> @endif
                 <div class="col-md-6">
-                    <label class="form-label">Company</label>
+                    <label class="form-label">{{ __('Company') }}</label>
                     <select name="company_id" class="form-select" @if(isset($batch)) disabled @endif>
                         @foreach($company as $com)
                             <option value="{{ $com->id }}" @if((isset($batch) && $batch->company_id == $com->id) || old('company_id') == $com->id || (!isset($batch) && !old('company_id') && \App\Support\CompanyPick::id() == $com->id)) selected @endif>{{ $com->company_name ?? '' }}</option>
@@ -51,23 +51,23 @@
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="batch_no">Stock No</label>
+                    <label class="form-label" for="batch_no">{{ __('Stock No') }}</label>
                     <input type="text" class="form-control" name="batch_no" value="{{ $batch->batch_no ?? $batch_no ?? '' }}" readonly/>
                 </div>
                 <input type="hidden" name="code" value="{{ $code ?? '' }}">
                 <input type="hidden" name="year" value="{{ $year ?? '' }}">
                 <input type="hidden" name="month" value="{{ $month ?? '' }}">
                 <div class="col-md-6">
-                    <label class="form-label" for="batch_date">Stock Date</label>
+                    <label class="form-label" for="batch_date">{{ __('Stock Date') }}</label>
                     <input type="date" class="form-control" name="batch_date" value="{{ $batch->batch_date ?? date('Y-m-d') }}" required @if(isset($batch)) disabled @endif/>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="supplier_id">Supplier</label>
+                    <label class="form-label" for="supplier_id">{{ __('Supplier') }}</label>
                     @if(isset($batch))
                         <input type="text" class="form-control" value="{{ $batch->supplier->name ?? ($batch->batch_no && str_starts_with($batch->batch_no, 'TRF') ? 'Stock transfer' : '-') }}" disabled>
                     @else
                         <select name="supplier_id" id="supplier_id" class="form-select" required>
-                            <option value="">-- Choose supplier --</option>
+                            <option value="">{{ __('-- Choose supplier --') }}</option>
                             @foreach($suppliers as $sup)
                                 <option value="{{ $sup->id }}" @if(old('supplier_id') == $sup->id) selected @endif>{{ $sup->name }}@if(Auth::user()->role_id != 3 && $sup->branch) ({{ $sup->branch->branch_name }})@endif</option>
                             @endforeach
@@ -78,35 +78,35 @@
                     @endif
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="supplier_invoice">Supplier Invoice No.</label>
+                    <label class="form-label" for="supplier_invoice">{{ __('Supplier Invoice No.') }}</label>
                     <div class="input-group">
                         <input type="text" class="form-control" name="supplier_invoice" id="supplier_invoice" maxlength="100"
-                            value="{{ old('supplier_invoice', $batch->supplier_invoice ?? '') }}" placeholder="e.g. INV-20261114-01"
+                            value="{{ old('supplier_invoice', $batch->supplier_invoice ?? '') }}" placeholder="{{ __('e.g. INV-20261114-01') }}"
                             @if(isset($batch) && $batch->status != 'Open') disabled @endif>
                         @if(isset($batch) && $batch->status == 'Open')
-                            <button type="submit" class="btn btn-outline-primary">Save</button>
+                            <button type="submit" class="btn btn-outline-primary">{{ __('Save') }}</button>
                         @endif
                     </div>
                 </div>
                 <hr>
                 @if(isset($batch))
                 <div class="col-md-8">
-                    <label class="form-label">Status</label>
+                    <label class="form-label">{{ __('Status') }}</label>
                     <div class="input-group">
                         <input type="text" class="form-control" value="{{ $batch->status ?? 'Open' }}" readonly>
                         @if($batch->status == 'Open')
-                        <a class="btn btn-primary" onclick="if(confirm('Are you sure you want to complete this stock entry? The items will be added to stock.')){showLoading();window.location.href='{{ route('batch.complete',$batch) }}'}">Complete and Add to Stock</a>
+                        <a class="btn btn-primary" onclick="if(confirm('Are you sure you want to complete this stock entry? The items will be added to stock.')){showLoading();window.location.href='{{ route('batch.complete',$batch) }}'}">{{ __('Complete and Add to Stock') }}</a>
                         @else
-                            <button type="button" class="btn btn-outline-secondary" onclick="printReceipt()">Print</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="printReceipt()">{{ __('Print') }}</button>
                         @endif
                     </div>
                 </div>
                 @endif
                 <div class="col-12">
                     @if(isset($batch))
-                        <a href="{{ route('batch.index') }}" class="btn btn-secondary">Back</a>
+                        <a href="{{ route('batch.index') }}" class="btn btn-secondary">{{ __('Back') }}</a>
                     @else
-                        <button type="submit" name="submitButton" class="btn btn-primary">Next: add items</button>
+                        <button type="submit" name="submitButton" class="btn btn-primary">{{ __('Next: add items') }}</button>
                     @endif
                 </div>
                 </form>
@@ -114,11 +114,11 @@
                 @if(isset($batch))
                 <div class="col-12" style="margin-top:30px">
                     <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-2">
-                        <h5 class="card-title mb-0">Items</h5>
+                        <h5 class="card-title mb-0">{{ __('Items') }}</h5>
                         @if($batch->status == 'Open')
                         <div class="dt-buttons">
-                            <a class="btn btn-secondary btn-sm" href="{{ route('batch.downloadTemplate', $batch) }}"><i class="bx bx-download me-1"></i>Download Template</a>
-                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadBatchItemModal"><i class="bx bx-upload me-1"></i>Import</button>
+                            <a class="btn btn-secondary btn-sm" href="{{ route('batch.downloadTemplate', $batch) }}"><i class="bx bx-download me-1"></i>{{ __('Download Template') }}</a>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadBatchItemModal"><i class="bx bx-upload me-1"></i>{{ __('Import') }}</button>
                         </div>
                         @endif
                     </div>
@@ -126,9 +126,9 @@
                     @if($batch->status == 'Open')
                     <div class="row g-2 align-items-end mb-3">
                         <div class="col-md-7">
-                            <label class="form-label">Add item (type to search, or scan a barcode anywhere on this page)</label>
+                            <label class="form-label">{{ __('Add item (type to search, or scan a barcode anywhere on this page)') }}</label>
                             <select id="addItemPicker" class="form-select">
-                                <option value="">-- Choose an item --</option>
+                                <option value="">{{ __('-- Choose an item --') }}</option>
                                 @foreach($product as $prod)
                                     <option value="{{ $prod->id }}|">{{ $prod->product_name }} ({{ $prod->uom_dt->uom_name ?? 'unit' }})@if($prod->barcode) [{{ $prod->barcode }}]@endif</option>
                                     @foreach($prod->units as $unit)
@@ -138,8 +138,8 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Barcode</label>
-                            <input type="text" id="barcode" class="form-control" placeholder="Scan or type + Enter" autocomplete="off">
+                            <label class="form-label">{{ __('Barcode') }}</label>
+                            <input type="text" id="barcode" class="form-control" placeholder="{{ __('Scan or type + Enter') }}" autocomplete="off">
                         </div>
                         <div class="col-md-2"><small class="text-muted" id="addStatus"></small></div>
                     </div>
@@ -149,17 +149,17 @@
                         <table class="table table-bordered" id="mytable">
                             <thead>
                                 <tr>
-                                    <th>No</th>
-                                    <th>Barcode</th>
-                                    <th>Item</th>
-                                    <th>Unit</th>
-                                    <th>Qty</th>
-                                    <th>Cost per unit</th>
-                                    <th>Total Cost</th>
-                                    <th>In base units</th>
-                                    <th>Expiry date</th>
-                                    <th>Balance</th>
-                                    <th>Actions</th>
+                                    <th>{{ __('No') }}</th>
+                                    <th>{{ __('Barcode') }}</th>
+                                    <th>{{ __('Item') }}</th>
+                                    <th>{{ __('Unit') }}</th>
+                                    <th>{{ __('Qty') }}</th>
+                                    <th>{{ __('Cost per unit') }}</th>
+                                    <th>{{ __('Total Cost') }}</th>
+                                    <th>{{ __('In base units') }}</th>
+                                    <th>{{ __('Expiry date') }}</th>
+                                    <th>{{ __('Balance') }}</th>
+                                    <th>{{ __('Actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -167,12 +167,12 @@
                                     @include('batch._row', ['row' => $row, 'index' => $index, 'batch' => $batch])
                                 @endforeach
                                 @if($batch->batch_items->isEmpty())
-                                    <tr class="js-empty"><td colspan="11" class="text-center text-muted py-4">No items yet. Choose an item above or scan a barcode.</td></tr>
+                                    <tr class="js-empty"><td colspan="11" class="text-center text-muted py-4">{{ __('No items yet. Choose an item above or scan a barcode.') }}</td></tr>
                                 @endif
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <th colspan="6" style="text-align:right">Total:</th>
+                                    <th colspan="6" style="text-align:right">{{ __('Total') }}:</th>
                                     <th id="grandTotal">{{ money($batch->batch_items->sum('total_cost')) }}</th>
                                     <th colspan="4"></th>
                                 </tr>
@@ -192,20 +192,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Upload Stock Items Excel</h5>
+                <h5 class="modal-title">{{ __('Upload Stock Items Excel') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('batch.import', $batch) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select Excel File</label>
+                        <label class="form-label">{{ __('Select Excel File') }}</label>
                         <input type="file" name="file" class="form-control" accept=".xlsx,.csv" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Upload') }}</button>
                 </div>
             </form>
         </div>
@@ -223,35 +223,35 @@
                         @csrf
                         <div class="modal-header">
                             <h5 class="modal-title">Adjust {{ $batch_item->product->product_name ?? '' }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-6">
-                                    <label class="col-form-label">Original Quantity</label>
+                                    <label class="col-form-label">{{ __('Original Quantity') }}</label>
                                     <p><strong>{{ $batch_item->quantity + 0 }} {{ $batch_item->product->uom_dt->uom_unit ?? '' }}</strong></p>
                                 </div>
                                 <div class="col-6">
-                                    <label class="col-form-label">Balance</label>
+                                    <label class="col-form-label">{{ __('Balance') }}</label>
                                     <p><strong>{{ $batch_item->balance + 0 }}</strong></p>
                                 </div>
                                 <div class="col-12">
-                                    <label class="col-form-label">Quantity (base units)</label>
+                                    <label class="col-form-label">{{ __('Quantity (base units)') }}</label>
                                     <input class="form-control" type="number" step="0.01" min="0" name="quantity" value="{{ $batch_item->quantity + 0 }}" onkeyup="countCost(this)" required>
                                 </div>
                                 <div class="col-12">
-                                    <label class="col-form-label">Cost per base unit (RM)</label>
+                                    <label class="col-form-label">{{ __('Cost per base unit (RM)') }}</label>
                                     <input class="form-control" type="number" step="0.01" min="0" name="cost_per_unit" value="{{ round($batch_item->cost_per_unit, 2) }}" onkeyup="countCost(this)" required>
                                 </div>
                                 <div class="col-12">
-                                    <label class="col-form-label">Total Cost (RM)</label>
+                                    <label class="col-form-label">{{ __('Total Cost (RM)') }}</label>
                                     <input class="form-control" type="number" step="0.01" min="0" name="total_cost" value="{{ round($batch_item->total_cost, 2) }}" onkeyup="countCost(this)" required>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
+                            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('Save changes') }}</button>
                         </div>
                     </form>
                 </div>
@@ -274,7 +274,7 @@
     </style>
 
     <div class="c b">{!! nl2br(e(($receipt->header ?? '') ?: config('app.name', 'My Shop'))) !!}</div>
-    <div class="c b" style="margin-top:4px">STOCK IN</div>
+    <div class="c b" style="margin-top:4px">{{ __('STOCK IN') }}</div>
     <div class="line"></div>
 
     <div>No : {{ $batch->batch_no }}</div>
@@ -297,8 +297,8 @@
     @endforeach
 
     <div class="line"></div>
-    <div class="row b"><span>Items</span><span>{{ $batch->batch_items->count() }}</span></div>
-    <div class="row b"><span>Total Cost</span><span>{{ money($batch->batch_items->sum('total_cost')) }}</span></div>
+    <div class="row b"><span>{{ __('Items') }}</span><span>{{ $batch->batch_items->count() }}</span></div>
+    <div class="row b"><span>{{ __('Total Cost') }}</span><span>{{ money($batch->batch_items->sum('total_cost')) }}</span></div>
     <div class="line"></div>
 
     <div class="c">{!! nl2br(e(($receipt->footer ?? '') ?: 'Thank you')) !!}</div>

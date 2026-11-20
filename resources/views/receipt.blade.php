@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt Preview</title>
+    <title>{{ __('Receipt Preview') }}</title>
     <style>
         body {
             background: #f5f5f5;
@@ -171,7 +171,7 @@
      <button 
         onclick="window.location.href='/counter'"
         style="position: fixed; top: 20px; left: 20px; padding: 10px 18px; background:#444; color:#fff; border: none; border-radius: 6px; cursor: pointer; z-index: 999;">
-        Back
+        {{ __('Back') }}
     </button>
      <button onclick="window.print()" 
         style="
@@ -187,7 +187,7 @@
             font-size: 14px;
             z-index: 999;
         ">
-        Print Receipt
+        {{ __('Print Receipt') }}
     </button>
     <div class="receipt">
         <!-- Header -->
@@ -196,29 +196,29 @@
         </div>
 
         <!-- Receipt Title -->
-        <div class="receipt-title">SALES RECEIPT</div>
+        <div class="receipt-title">{{ __('SALES RECEIPT') }}</div>
 
         <!-- Receipt Info -->
         <div class="receipt-info">
             <div class="info-row">
-                <span>Receipt No:</span>
+                <span>{{ __('Receipt No') }}:</span>
                 <span><strong>{{$order->order_no??''}}</strong></span>
             </div>
             <div class="info-row">
-                <span>Date:</span>
+                <span>{{ __('Date') }}:</span>
                 <span>{{$order->created_at??''}}</span>
             </div>
             <div class="info-row">
-                <span>Cashier:</span>
+                <span>{{ __('Cashier') }}:</span>
                 <span>{{$order->user->username??''}}</span>
             </div>
         </div>
 
         <!-- Items Header -->
         <div class="items-header">
-            <span>Item</span>
-            <span style="text-align: center;">Qty</span>
-            <span style="text-align: right;">Price</span>
+            <span>{{ __('Item') }}</span>
+            <span style="text-align: center;">{{ __('Qty') }}</span>
+            <span style="text-align: right;">{{ __('Price') }}</span>
         </div>
 
         <!-- Items Section -->
@@ -241,7 +241,7 @@
         <div class="totals">
             
             <div class="total-row grand-total">
-                <span>TOTAL:</span>
+                <span>{{ __('TOTAL') }}:</span>
                 <span>{{ money($order->total_price??0) }}</span>
             </div>
         </div>
@@ -249,15 +249,15 @@
         <!-- Payment Info -->
         <div class="payment-info">
             <div class="payment-row">
-                <span>Payment Method:</span>
+                <span>{{ __('Payment Method') }}:</span>
                 <span><strong>{{$order->payment_method??''}}</strong></span>
             </div>
             <div class="payment-row">
-                <span>Amount Paid:</span>
+                <span>{{ __('Amount Paid') }}:</span>
                 <span>{{ money($order->amount_received??0) }}</span>
             </div>
             <div class="payment-row" style="font-weight: bold;">
-                <span>Change:</span>
+                <span>{{ __('Change') }}:</span>
                 <span>{{ money($order->change??0) }}</span>
             </div>
         </div>
