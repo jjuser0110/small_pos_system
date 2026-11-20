@@ -178,6 +178,12 @@ class BatchController extends Controller
         if($batch->batch_items->isEmpty()){
             return redirect()->back()->withErrors('No Batch Items to process');
         }
+        // an item deleted from the Item List cannot take new stock
+        $gone = $batch->batch_items->filter(fn ($i) => !$i->product || $i->product->trashed());
+        if ($gone->isNotEmpty()) {
+            $names = $gone->map(fn ($i) => $i->product->product_name ?? 'Unknown item')->unique()->implode(', ');
+            return redirect()->back()->withErrors("Remove the deleted item(s) first: $names.");
+        }
         $total_product = $batch->batch_items->count();
         $total_item = $batch->batch_items->sum('quantity');
         $total_cost = $batch->batch_items->sum('total_cost');
@@ -383,6 +389,10 @@ class BatchController extends Controller
     public function updateBatchItem(Request $request, BatchItem $batchItem)
     {
         $this->authorizeRecord($batchItem);
+        // changing stock that was already added: superadmin only
+        if (Auth::user()->role_id != 1) {
+            abort(403, 'Only the superadmin can adjust a completed stock entry.');
+        }
 
         // open entries are edited inline (no stock yet); this adjusts stock already added
         if ($batchItem->batch->status !== 'Completed') {

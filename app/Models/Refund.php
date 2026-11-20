@@ -17,9 +17,9 @@ class Refund extends Model
     public function order()     { return $this->belongsTo(Order::class); }
     public function items()     { return $this->hasMany(RefundItem::class); }
     public function shift()     { return $this->belongsTo(ShiftClosing::class, 'shift_closing_id'); }
-    public function company()   { return $this->belongsTo(Company::class); }
-    public function requester() { return $this->belongsTo(User::class, 'requested_by'); }
-    public function approver()  { return $this->belongsTo(User::class, 'approved_by'); }
+    public function company()   { return $this->belongsTo(Company::class)->withTrashed(); }
+    public function requester() { return $this->belongsTo(User::class, 'requested_by')->withTrashed(); }
+    public function approver()  { return $this->belongsTo(User::class, 'approved_by')->withTrashed(); }
 
     /** Only the superadmin approves or rejects refunds. */
     public function canBeDecidedBy(?User $user): bool

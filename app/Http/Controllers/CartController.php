@@ -25,6 +25,9 @@ class CartController extends Controller
     /** Cart lines for the counter and checkout. */
     public function load()
     {
+        // an item deleted from the Item List after it went into the cart cannot be sold
+        Cart::where('user_id', auth()->id())->whereDoesntHave('product')->delete();
+
         $cart = Cart::with(['product', 'unit'])
             ->where('user_id', auth()->id())
             ->orderBy('id')
@@ -200,7 +203,11 @@ class CartController extends Controller
 
     private function processItem($order, $cart)
     {
-        $product = Product::findOrFail($cart->product_id);
+        $product = Product::find($cart->product_id);
+        if (!$product) {
+            // deleted from the Item List after it was put in the cart
+            throw new \RuntimeException('An item in the cart was deleted. Remove it from the cart and try again.');
+        }
         $unit = $cart->product_unit_id ? ProductUnit::withTrashed()->find($cart->product_unit_id) : null;
         $baseQty = $unit ? (float) $unit->base_qty : 1.0;          // e.g. Carton = 24 tins
 

@@ -15,9 +15,9 @@ class Damage extends Model
     ];
 
     public function product()   { return $this->belongsTo(Product::class)->withTrashed(); }
-    public function company()   { return $this->belongsTo(Company::class); }
-    public function requester() { return $this->belongsTo(User::class, 'requested_by'); }
-    public function approver()  { return $this->belongsTo(User::class, 'approved_by'); }
+    public function company()   { return $this->belongsTo(Company::class)->withTrashed(); }
+    public function requester() { return $this->belongsTo(User::class, 'requested_by')->withTrashed(); }
+    public function approver()  { return $this->belongsTo(User::class, 'approved_by')->withTrashed(); }
 
     public static function pendingFor(?User $user)
     {

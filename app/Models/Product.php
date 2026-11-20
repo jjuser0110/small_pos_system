@@ -32,22 +32,22 @@ class Product extends Model
 
     public function branch()
     {
-        return $this->belongsTo('App\Models\Branch');
+        return $this->belongsTo('App\Models\Branch')->withTrashed();
     }
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company');
+        return $this->belongsTo('App\Models\Company')->withTrashed();
     }
 
     public function category()
     {
-        return $this->belongsTo('App\Models\Category');
+        return $this->belongsTo('App\Models\Category')->withTrashed();
     }
 
     public function uom_dt()
     {
-        return $this->belongsTo('App\Models\Uom','uom');
+        return $this->belongsTo('App\Models\Uom','uom')->withTrashed();
     }
 
     public function stockLogs()
@@ -72,7 +72,7 @@ class Product extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class)->withTrashed();
     }
 
     /** Sell options (Carton, bundle...), stock always counted in this item's base unit. */

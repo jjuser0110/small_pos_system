@@ -35,22 +35,22 @@ class BatchItem extends Model
 
     public function branch()
     {
-        return $this->belongsTo('App\Models\Branch');
+        return $this->belongsTo('App\Models\Branch')->withTrashed();
     }
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company');
+        return $this->belongsTo('App\Models\Company')->withTrashed();
     }
 
     public function category()
     {
-        return $this->belongsTo('App\Models\Category');
+        return $this->belongsTo('App\Models\Category')->withTrashed();
     }
 
     public function product()
     {
-        return $this->belongsTo('App\Models\Product');
+        return $this->belongsTo('App\Models\Product')->withTrashed();
     }
 
     /** "10 Carton" when keyed in by a sell option, otherwise the base quantity. */

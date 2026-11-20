@@ -24,12 +24,12 @@ class StaffBorrow extends Model
 
     public function user()
     {
-        return $this->belongsTo('App\Models\User', 'user_id');
+        return $this->belongsTo('App\Models\User', 'user_id')->withTrashed();
     }
 
     public function approver()
     {
-        return $this->belongsTo('App\Models\User', 'approved_by');
+        return $this->belongsTo('App\Models\User', 'approved_by')->withTrashed();
     }
 
     public function shift()
@@ -45,6 +45,6 @@ class StaffBorrow extends Model
 
     public function branch()
     {
-        return $this->belongsTo('App\Models\Branch');
+        return $this->belongsTo('App\Models\Branch')->withTrashed();
     }
 }

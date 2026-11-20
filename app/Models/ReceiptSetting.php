@@ -21,7 +21,7 @@ class ReceiptSetting extends Model
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Branch::class)->withTrashed();
     }
 
     /** The branch's own setting, else the default, else the oldest one. */

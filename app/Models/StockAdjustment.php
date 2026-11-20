@@ -25,11 +25,11 @@ class StockAdjustment extends Model
         'reject_reason',
     ];
 
-    public function product()       { return $this->belongsTo('App\Models\Product'); }
-    public function company()       { return $this->belongsTo('App\Models\Company'); }
-    public function targetCompany() { return $this->belongsTo('App\Models\Company', 'target_company_id'); }
-    public function requester()     { return $this->belongsTo('App\Models\User', 'requested_by'); }
-    public function approver()      { return $this->belongsTo('App\Models\User', 'approved_by'); }
+    public function product()       { return $this->belongsTo('App\Models\Product')->withTrashed(); }
+    public function company()       { return $this->belongsTo('App\Models\Company')->withTrashed(); }
+    public function targetCompany() { return $this->belongsTo('App\Models\Company', 'target_company_id')->withTrashed(); }
+    public function requester()     { return $this->belongsTo('App\Models\User', 'requested_by')->withTrashed(); }
+    public function approver()      { return $this->belongsTo('App\Models\User', 'approved_by')->withTrashed(); }
 
     public function typeLabel()
     {

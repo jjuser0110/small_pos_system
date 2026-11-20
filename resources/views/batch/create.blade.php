@@ -214,7 +214,7 @@
 @endif
 
 {{-- completed entries: adjust a row (stock already added, so changes are logged as adjustments) --}}
-@if(isset($batch) && $batch->status != 'Open')
+@if(isset($batch) && $batch->status != 'Open' && auth()->user()->role_id == 1)
     @foreach ($batch->batch_items as $batch_item)
         <div class="modal fade" id="editModal{{ $batch_item->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog" role="document">

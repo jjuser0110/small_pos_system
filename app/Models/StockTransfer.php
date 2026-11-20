@@ -30,14 +30,14 @@ class StockTransfer extends Model
         'received_batch_id',
     ];
 
-    public function fromCompany()     { return $this->belongsTo(Company::class, 'from_company_id'); }
-    public function toCompany()       { return $this->belongsTo(Company::class, 'to_company_id'); }
+    public function fromCompany()     { return $this->belongsTo(Company::class, 'from_company_id')->withTrashed(); }
+    public function toCompany()       { return $this->belongsTo(Company::class, 'to_company_id')->withTrashed(); }
     public function fromProduct()     { return $this->belongsTo(Product::class, 'from_product_id')->withTrashed(); }
     public function toProduct()       { return $this->belongsTo(Product::class, 'to_product_id')->withTrashed(); }
     public function items()           { return $this->hasMany(StockTransferItem::class); }
-    public function requester()       { return $this->belongsTo(User::class, 'requested_by'); }
-    public function senderConfirmer() { return $this->belongsTo(User::class, 'sender_confirmed_by'); }
-    public function approver()        { return $this->belongsTo(User::class, 'approved_by'); }
+    public function requester()       { return $this->belongsTo(User::class, 'requested_by')->withTrashed(); }
+    public function senderConfirmer() { return $this->belongsTo(User::class, 'sender_confirmed_by')->withTrashed(); }
+    public function approver()        { return $this->belongsTo(User::class, 'approved_by')->withTrashed(); }
 
     public function isPending(): bool
     {

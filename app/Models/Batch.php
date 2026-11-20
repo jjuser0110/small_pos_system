@@ -26,12 +26,12 @@ class Batch extends Model
 
     public function branch()
     {
-        return $this->belongsTo('App\Models\Branch');
+        return $this->belongsTo('App\Models\Branch')->withTrashed();
     }
 
     public function company()
     {
-        return $this->belongsTo('App\Models\Company');
+        return $this->belongsTo('App\Models\Company')->withTrashed();
     }
 
     public function supplier()

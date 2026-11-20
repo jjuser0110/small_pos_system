@@ -50,22 +50,22 @@ class OrderItemProfit extends Model
 
     public function product()
     {
-        return $this->belongsTo(\App\Models\Product::class, 'product_id');
+        return $this->belongsTo(\App\Models\Product::class, 'product_id')->withTrashed();
     }
 
     public function category()
     {
-        return $this->belongsTo(\App\Models\Category::class, 'category_id');
+        return $this->belongsTo(\App\Models\Category::class, 'category_id')->withTrashed();
     }
 
     public function branch()
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+        return $this->belongsTo(\App\Models\Branch::class, 'branch_id')->withTrashed();
     }
 
     public function company()
     {
-        return $this->belongsTo(\App\Models\Company::class, 'company_id');
+        return $this->belongsTo(\App\Models\Company::class, 'company_id')->withTrashed();
     }
 
     public function stock_logs()

@@ -35,17 +35,17 @@ class Order extends Model
 
     public function branch()
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+        return $this->belongsTo(\App\Models\Branch::class, 'branch_id')->withTrashed();
     }
 
     public function company()
     {
-        return $this->belongsTo(\App\Models\Company::class, 'company_id');
+        return $this->belongsTo(\App\Models\Company::class, 'company_id')->withTrashed();
     }
 
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(\App\Models\User::class, 'user_id')->withTrashed();
     }
 
     public function items()

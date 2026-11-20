@@ -26,13 +26,13 @@ class StaffAttendance extends Model
 
     public function user()
     {
-        return $this->belongsTo('App\Models\User', 'user_id');
+        return $this->belongsTo('App\Models\User', 'user_id')->withTrashed();
     }
 
     /** The company the staff member logged in at that day. */
     public function company()
     {
-        return $this->belongsTo('App\Models\Company', 'company_id');
+        return $this->belongsTo('App\Models\Company', 'company_id')->withTrashed();
     }
 
     /** The day the staff member's current shift started (PM after midnight = yesterday). */

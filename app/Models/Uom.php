@@ -24,7 +24,7 @@ class Uom extends Model
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Branch::class)->withTrashed();
     }
 
     /** Units a branch may use: its own, plus shared ones (no branch). */

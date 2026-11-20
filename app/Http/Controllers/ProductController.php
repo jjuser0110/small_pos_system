@@ -174,7 +174,19 @@ class ProductController extends Controller
         if($product->stock_logs()->count()>0){
             return redirect()->route('product.index')->withErrors('Product has related items. You can not delete this.');
         }
+        // still on a stock entry (even an open one), a sale, or a transfer: deleting would break those pages
+        $inUse = \App\Models\BatchItem::where('product_id', $product->id)->exists()
+            || \App\Models\OrderItem::where('product_id', $product->id)->exists()
+            || \App\Models\StockTransferItem::where(fn ($q) => $q->where('from_product_id', $product->id)->orWhere('to_product_id', $product->id))
+                ->whereHas('transfer', fn ($q) => $q->whereIn('status', [\App\Models\StockTransfer::PENDING_SENDER, \App\Models\StockTransfer::PENDING_RECEIVER]))
+                ->exists();
+        if ($inUse) {
+            return redirect()->route('product.index')
+                ->withErrors('This item is on a stock entry, a sale or a waiting transfer. Remove it there first, or set it inactive instead.');
+        }
         $product->delete();
+        // nobody can sell it any more: take it out of every cart
+        \App\Models\Cart::where('product_id', $product->id)->delete();
 
         return redirect()->route('product.index')->withSuccess('Data deleted');
     }
